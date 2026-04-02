@@ -1,0 +1,374 @@
+{
+  "manifestVersion": "1.0",
+  "project": "villaggio-terrace",
+  "createdAt": "2026-04-02T00:00:00Z",
+  "title": "Worker Implementation Plan",
+  "status": "planned",
+  "scope": [
+    "Web worker simulation offload",
+    "Multi-worker orchestration",
+    "Main-thread and worker separation",
+    "Performance validation and rollout",
+    "Fallback and resilience",
+    "Completion checks expansion",
+    "Verification and regression proofing"
+  ],
+  "intent": {
+    "axiomatic": [
+      "Expensive simulation and coordination logic must not block the main/UI thread",
+      "Worker-backed computation must remain deterministic, versioned, and cancelable",
+      "The program must preserve responsiveness even when simulation work increases"
+    ],
+    "axiological": [
+      "Prioritize user interaction fluidity, modularity, and clear ownership boundaries",
+      "Prefer compact, typed, incremental communication over broad state cloning",
+      "Favor observable, testable, and maintainable concurrency over ad hoc background work"
+    ],
+    "teleological": [
+      "Transform workers into a first-class execution layer for the program",
+      "Scale the app toward dense, interactive scenes without UI stalls",
+      "Enable a robust foundation for future simulation, routing, geometry, and analysis workloads"
+    ]
+  },
+  "objectives": [
+    "Introduce a worker-backed execution model for expensive simulation tasks",
+    "Separate GUI concerns from authoritative simulation logic",
+    "Route overlap, placement, layout, and derived computation off the main thread",
+    "Support multiple workers with role-based task routing where beneficial",
+    "Preserve rendering responsiveness and interaction quality",
+    "Add cancellation, versioning, fallback, and stale-result rejection",
+    "Instrument worker health, latency, and throughput",
+    "Validate correctness and performance against current synchronous behavior"
+  ],
+  "qualityGuards": [
+    "Keep the main thread focused on React, rendering, input, and immediate visual feedback",
+    "Ensure every worker result is versioned and ignored if stale",
+    "Prefer deterministic reducers and pure data messages over mutable shared state",
+    "Batch or coalesce frequent intents to prevent message storms",
+    "Use transferables or compact patches for large payloads when possible",
+    "Avoid worker architectures that increase main-thread rerenders or coordination overhead",
+    "Provide graceful fallback if workers fail, are unavailable, or fall behind",
+    "Measure before and after every migration step"
+  ],
+  "workstreams": [
+    {
+      "id": "worker-foundation",
+      "name": "Worker foundation",
+      "goals": [
+        "Define a stable message protocol",
+        "Create the worker bootstrap and lifecycle management",
+        "Establish versioning, cancellation, and stale-result handling",
+        "Add fallback execution for unavailable or failing workers"
+      ],
+      "phases": [
+        {
+          "id": "phase-a",
+          "name": "Protocol and contracts",
+          "tasks": [
+            "Define command, result, patch, cancel, and error message envelopes",
+            "Add protocol version, requestId, sceneRevision, and task metadata",
+            "Create shared types for simulation intents and responses",
+            "Document worker ownership boundaries and fallback rules"
+          ]
+        },
+        {
+          "id": "phase-b",
+          "name": "Worker runtime",
+          "tasks": [
+            "Create a worker entrypoint and dispatch loop",
+            "Add lifecycle handling for init, ready, shutdown, and error states",
+            "Add cooperative cancellation and stale-result rejection",
+            "Add health and backlog tracking"
+          ]
+        },
+        {
+          "id": "phase-c",
+          "name": "Main-thread bridge",
+          "tasks": [
+            "Create a main-thread worker coordinator",
+            "Route intents from UI and store actions to workers",
+            "Apply worker patches and results in bounded batches",
+            "Keep transient UI state local and responsive"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "simulation-offload",
+      "name": "Simulation offload",
+      "goals": [
+        "Move expensive placement and overlap logic into workers",
+        "Reduce main-thread computation in hot interaction paths",
+        "Preserve current behavior while improving responsiveness"
+      ],
+      "phases": [
+        {
+          "id": "phase-a",
+          "name": "Collision and placement",
+          "tasks": [
+            "Move overlap checks into worker-owned logic",
+            "Move best-position search into the worker",
+            "Move bulk overlap resolution into the worker",
+            "Return resolved positions as patches or results"
+          ]
+        },
+        {
+          "id": "phase-b",
+          "name": "Spatial indexing",
+          "tasks": [
+            "Use or adapt spatial hashing inside the worker",
+            "Build worker-owned query structures for nearby candidate lookup",
+            "Avoid full-scene scans for repeated interactive placement checks"
+          ]
+        },
+        {
+          "id": "phase-c",
+          "name": "History and derived state",
+          "tasks": [
+            "Replace broad deep-clone history with patch or delta generation where applicable",
+            "Move expensive derived state computation off-thread",
+            "Keep undo and redo behavior deterministic and versioned"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi-worker-architecture",
+      "name": "Multi-worker architecture",
+      "goals": [
+        "Support specialized workers when parallelism materially helps",
+        "Keep task routing and load balancing predictable",
+        "Avoid premature complexity while enabling future scale"
+      ],
+      "phases": [
+        {
+          "id": "phase-a",
+          "name": "Worker roles",
+          "tasks": [
+            "Define a layout worker for placement and overlap work",
+            "Define a routing worker for link and path computation",
+            "Define an analysis worker for validation and derived metrics",
+            "Optionally define an export worker for heavy offline transforms"
+          ]
+        },
+        {
+          "id": "phase-b",
+          "name": "Pool orchestration",
+          "tasks": [
+            "Implement role-based task routing",
+            "Implement least-loaded worker selection",
+            "Track active jobs, queue depth, and worker health",
+            "Keep the main thread as the coordinator"
+          ]
+        },
+        {
+          "id": "phase-c",
+          "name": "Cancellation and stale handling",
+          "tasks": [
+            "Assign task generation or revision numbers",
+            "Cancel superseded tasks when newer intents arrive",
+            "Ignore out-of-order or stale results on arrival",
+            "Track cancellation and stale-result rates in telemetry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ui-integration",
+      "name": "Main-thread integration",
+      "goals": [
+        "Integrate workers into the existing app flow",
+        "Preserve responsive rendering and interaction",
+        "Keep UI and simulation state distinct"
+      ],
+      "phases": [
+        {
+          "id": "phase-a",
+          "name": "Intent dispatch",
+          "tasks": [
+            "Dispatch worker intents from app-level interaction handlers",
+            "Keep pointer and camera responsiveness on the main thread",
+            "Treat the worker as the authority for expensive simulation outcomes"
+          ]
+        },
+        {
+          "id": "phase-b",
+          "name": "Patch application",
+          "tasks": [
+            "Apply worker-generated patches in bounded batches",
+            "Minimize React rerenders by collapsing redundant updates",
+            "Separate hot preview state from committed simulation state"
+          ]
+        },
+        {
+          "id": "phase-c",
+          "name": "Rendering stability",
+          "tasks": [
+            "Avoid frame-time spikes caused by worker reconciliation",
+            "Keep animation and rendering independent from worker latency",
+            "Ensure the last valid scene remains visible while new results are pending"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "validation-rollout",
+      "name": "Validation and rollout",
+      "goals": [
+        "Prove correctness and performance improvements",
+        "Roll out worker usage safely in phases",
+        "Provide measurable evidence for every migration step"
+      ],
+      "phases": [
+        {
+          "id": "phase-a",
+          "name": "Instrumentation",
+          "tasks": [
+            "Add telemetry for task duration, queue delay, cancellation, fallback, and stale-result rejection",
+            "Record main-thread frame time and React commit pressure before migration",
+            "Track worker health and queue depth"
+          ]
+        },
+        {
+          "id": "phase-b",
+          "name": "Shadow and canary",
+          "tasks": [
+            "Run worker computations in shadow mode before using results",
+            "Compare worker output against current synchronous behavior",
+            "Enable a canary path for a subset of tasks or sessions"
+          ]
+        },
+        {
+          "id": "phase-c",
+          "name": "Default-on migration",
+          "tasks": [
+            "Route eligible simulation work to workers by default",
+            "Retain synchronous fallback for failure or unsupported environments",
+            "Remove obsolete synchronous code only after sustained stability"
+          ]
+        }
+      ]
+    }
+  ],
+  "currentActions": [
+    "Create the worker protocol types and message envelopes",
+    "Implement a worker entrypoint and main-thread bridge",
+    "Migrate overlap and placement logic first",
+    "Add versioning, cancellation, and stale-result rejection",
+    "Instrument worker telemetry and fallback paths",
+    "Validate against representative scenes and interaction traces",
+    "Add production-grade completion checks and verification checks",
+    "Expand rollout safety coverage for stale results, crash recovery, and fallback"
+  ],
+  "futureActions": [
+    "Expand from a single worker to a role-based worker set if profiling justifies it",
+    "Move additional derived computations into the worker layer",
+    "Use worker-assisted routing, layout, and validation for dense scenes",
+    "Add optional export and analytics workers for heavy offline tasks",
+    "Refine patch batching and render reconciliation to reduce React churn",
+    "Improve fallback behavior for unsupported browsers or degraded environments",
+    "Maintain benchmark baselines and regression checks across releases",
+    "Broaden verification coverage to include soak tests, chaos injection, and cross-version compatibility",
+    "Add automated parity checks against the synchronous baseline for representative scene corpora"
+  ],
+  "debugging": {
+    "enabled": true,
+    "strategy": [
+      "Add structured logs around worker initialization, task dispatch, task completion, cancellation, and fallback",
+      "Validate payload shapes before sending and before applying results",
+      "Track scene revision numbers and discard stale results deterministically",
+      "Profile frame time and main-thread blocking before and after each migration",
+      "Compare worker-backed outputs against synchronous outputs on representative scenes",
+      "Use feature flags to isolate worker subsystems during rollout",
+      "Record queue depth, worker latency, and backpressure conditions",
+      "Expose debug overlays or diagnostics for worker state when needed",
+      "Run shadow-mode comparisons before enabling worker results in production flow",
+      "Inject delayed, duplicated, cancelled, and out-of-order messages during validation",
+      "Measure memory growth and queue saturation during long-running soak tests"
+    ],
+    "completionChecks": [
+      {
+        "id": "check-1",
+        "name": "Worker protocol integrity",
+        "criteria": [
+          "Messages are versioned and typed",
+          "Requests and results can be correlated by requestId",
+          "Stale results are ignored safely",
+          "Cancellation works for superseded work",
+          "Invalid payloads are rejected before mutation",
+          "Protocol mismatches fail closed without corrupting state"
+        ]
+      },
+      {
+        "id": "check-2",
+        "name": "Simulation offload success",
+        "criteria": [
+          "Overlap and placement logic no longer blocks the main thread in hot paths",
+          "Results match current synchronous behavior for representative cases",
+          "Worker latency and queue depth remain within acceptable bounds",
+          "Input responsiveness remains acceptable during dense interaction",
+          "Committed scene state remains deterministic across repeated runs"
+        ]
+      },
+      {
+        "id": "check-3",
+        "name": "Multi-worker coordination",
+        "criteria": [
+          "Tasks route to the correct worker role",
+          "Load balancing favors healthy and less loaded workers",
+          "Out-of-order completion does not corrupt state",
+          "Superseded tasks are cancelled or ignored deterministically",
+          "Worker health and queue depth remain observable during load"
+        ]
+      },
+      {
+        "id": "check-4",
+        "name": "Fallback and resilience",
+        "criteria": [
+          "The app continues functioning if a worker is unavailable or fails",
+          "Fallback behavior is explicit and observable",
+          "Recovery or reinitialization does not lose committed state",
+          "Rollback to synchronous execution is possible without redeploying",
+          "Crash recovery preserves the last committed scene revision"
+        ]
+      },
+      {
+        "id": "check-5",
+        "name": "Performance guardrails",
+        "criteria": [
+          "Frame time does not regress beyond the configured threshold",
+          "React commit pressure does not regress beyond the configured threshold",
+          "Queue depth remains bounded under burst load",
+          "Main-thread input latency remains within the acceptable envelope"
+        ]
+      },
+      {
+        "id": "check-6",
+        "name": "Parity and regression proof",
+        "criteria": [
+          "Worker-backed results match the synchronous baseline on a golden corpus",
+          "Repeated runs on the same input remain deterministic",
+          "Soak tests do not reveal memory growth, drift, or result corruption"
+        ]
+      }
+    ]
+  },
+  "executionOrder": [
+    "Worker foundation",
+    "Simulation offload",
+    "Main-thread integration",
+    "Multi-worker architecture",
+    "Validation and rollout"
+  ],
+  "definitionOfDone": [
+    "Workers are integrated into the program as a first-class execution layer",
+    "The main thread remains responsive during expensive simulation work",
+    "Simulation results are versioned, cancelable, and deterministic",
+    "Fallback paths preserve functionality when workers are unavailable",
+    "Telemetry and benchmarks demonstrate lower main-thread pressure",
+    "At least the initial collision and placement workload runs through workers successfully",
+    "The architecture is ready to expand into specialized workers when profiling justifies it",
+    "Completion checks cover protocol integrity, simulation offload, multi-worker coordination, fallback, performance guardrails, and parity",
+    "Verification checks include golden corpus comparison, crash recovery, cancellation, stale-result rejection, and soak testing"
+  ]
+}

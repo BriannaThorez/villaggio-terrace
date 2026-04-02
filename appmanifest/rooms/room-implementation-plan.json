@@ -1,0 +1,321 @@
+{
+  "manifestVersion": "1.1",
+  "project": "villaggio-terrace",
+  "createdAt": "2026-04-02T00:00:00Z",
+  "title": "Structural Room Feature Implementation Plan",
+  "status": "in-progress",
+  "progress": {
+    "currentPhase": "room-opening-system",
+    "lastValidated": "completionChecks/check-1..check-5",
+    "notes": [
+      "Manifest now reflects the structural room implementation as actively in progress.",
+      "Completion checks cover shell thickness, openings, placement readiness, feature slicing, selection alignment, and canonical face contract alignment."
+    ]
+  },
+  "featureSlice": {
+    "name": "rooms/structural",
+    "constraints": [
+      "No monolithic feature files",
+      "Geometry, types, hooks, and components must remain separated",
+      "Room rendering must be derived from room structure data rather than ad hoc mesh logic",
+      "Future procedural object placement must be supported through explicit metadata",
+      "Selection must anchor to the visible room face, not a brittle hardcoded offset",
+      "Canonical room face contract treats top as ceiling and bottom as floor"
+    ]
+  },
+  "intent": {
+    "axiomatic": [
+      "Rooms are architectural structures with physical thickness, not symbolic boxes",
+      "Openings must be structural cutouts in the room shell",
+      "Room-local geometry and metadata must be the source of truth for future procedural interior placement",
+      "The room shell, not the renderer, is authoritative for wall, floor, ceiling, and opening semantics"
+    ],
+    "axiological": [
+      "Prioritize realism, clarity, extensibility, and GPU-friendly performance",
+      "Preserve the existing room silhouette while upgrading it to true architectural depth",
+      "Avoid overfitting to current assets so the system can scale to future room types",
+      "Prefer deterministic, validated geometry over visually fragile hacks"
+    ],
+    "teleological": [
+      "Evolve room rendering into a reusable structural system for thick walls, floors, ceilings, windows, doors, and cutaways",
+      "Create a stable foundation for future procedural furniture and interior object placement",
+      "Deliver visually credible rooms without introducing monolithic rendering code",
+      "Enable room structure to support future layout intelligence, adjacency rules, and procedural decoration"
+    ]
+  },
+  "structuralPrinciples": [
+    "Room structure is the canonical source of truth",
+    "Renderable geometry is always derived from structural data",
+    "Openings are first-class structural subtractions",
+    "Placement metadata must be independent of mesh tessellation",
+    "Cutaway and debug states must never mutate the authoritative room model",
+    "Every generated structure must be deterministic from identical inputs",
+    "Structural face semantics must map top to ceiling and bottom to floor"
+  ],
+  "scope": [
+    "Build thick structural room shells",
+    "Support parametric openings for windows and doors",
+    "Create room-local anchors and exclusion zones for future procedural placement",
+    "Keep rendering, structure, and validation logic feature-sliced",
+    "Preserve compatibility with the current simulation and selection systems",
+    "Support cutaway-friendly room visibility without sacrificing shell realism",
+    "Maintain compatibility migration from the current room component to the structural room system"
+  ]
+  "objectives": [
+    "Replace thin room representations with thick architectural shells",
+    "Support clean cutaways for visibility into room interiors",
+    "Allow windows and doors to be modeled as true shell openings",
+    "Provide metadata for future object placement and room decoration",
+    "Keep the implementation decomposed into small feature-sliced modules",
+    "Ensure the selection indicator aligns to the room's visible front face"
+  ],
+  "recommendedStructure": {
+    "types": [
+      "RoomShell",
+      "RoomOpening",
+      "RoomAnchor",
+      "RoomExclusionZone",
+      "RoomStructuralSettings",
+      "RoomFaceReference",
+      "RoomPlacementBand"
+    ],
+    "geometry": [
+      "shell generation utilities",
+      "opening subtraction utilities",
+      "frame/reveal helpers",
+      "placement zone derivation",
+      "topology validation helpers",
+      "cutaway projection helpers"
+    ],
+    "components": [
+      "structural room renderer",
+      "opening frame renderer",
+      "debug overlays",
+      "selection anchor alignment helper",
+      "room selection face marker"
+    ]
+  },
+  "workstreams": [
+    {
+      "id": "room-structure-model",
+      "name": "Room structure model",
+      "goals": [
+        "Represent rooms as physical shells with wall, floor, and ceiling thickness",
+        "Store structure data separately from rendering details",
+        "Keep the room definition deterministic and serializable",
+        "Model visible face references and placement bands as part of the room contract"
+      ],
+      "phases": [
+        {
+          "id": "phase-a",
+          "name": "Room structural schema",
+          "tasks": [
+            "Define room shell thickness fields",
+            "Define opening definitions with wall association and offsets",
+            "Define anchor points for walls, floor, ceiling, and openings",
+            "Define exclusion zones for future furniture placement",
+            "Define face references for visible front, back, and side selection alignment"
+          ]
+        },
+        {
+          "id": "phase-b",
+          "name": "Geometry generation contract",
+          "tasks": [
+            "Derive all renderable room geometry from the room structure model",
+            "Ensure geometry generation is repeatable from identical inputs",
+            "Keep shell, opening, and frame generation isolated into reusable helpers",
+            "Separate selection-facing geometry references from render-only meshes"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "room-opening-system",
+      "name": "Room opening system",
+      "goals": [
+        "Support windows, doors, and door openings as structural cutouts",
+        "Maintain a believable wall reveal depth around openings",
+        "Avoid brittle one-off opening logic",
+        "Keep openings valid across thick shell and cutaway configurations"
+      ],
+      "phases": [
+        {
+          "id": "phase-a",
+          "name": "Parametric opening definitions",
+          "tasks": [
+            "Define opening width, height, wall target, and offset",
+            "Support sill, lintel, jamb, and threshold metadata",
+            "Validate openings against wall boundaries and thickness",
+            "Classify openings by semantic role such as transparent, pass-through, or cutaway-only"
+          ]
+        },
+        {
+          "id": "phase-b",
+          "name": "Cutout and reveal generation",
+          "tasks": [
+            "Subtract openings from shell geometry cleanly",
+            "Generate frame/reveal geometry around openings",
+            "Prevent sliver geometry, cracks, and z-fighting",
+            "Ensure reveal depth remains visually credible at oblique camera angles"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "room-placement-foundation",
+      "name": "Room placement foundation",
+      "goals": [
+        "Prepare the system for future procedural interior object placement",
+        "Keep placement rules independent from rendered mesh details",
+        "Expose stable spatial zones for safe object generation",
+        "Represent placement as semantic bands rather than raw mesh coordinates"
+      ],
+      "phases": [
+        {
+          "id": "phase-a",
+          "name": "Anchor generation",
+          "tasks": [
+            "Derive stable room-local anchors for wall, floor, and ceiling placement",
+            "Derive no-placement zones around openings and shell thickness",
+            "Expose placement metadata in a reusable, serializable format",
+            "Include room-local placement bands for wall decor, floor furniture, and ceiling fixtures"
+          ]
+        },
+        {
+          "id": "phase-b",
+          "name": "Future procedural hooks",
+          "tasks": [
+            "Provide hook points for room furniture and decor generation",
+            "Keep placement logic compatible with future procedural systems",
+            "Avoid coupling object placement to geometry implementation details",
+            "Allow semantic reservation of circulation paths and opening-adjacent clearances"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "room-cutaway-visibility",
+      "name": "Room cutaway and visibility",
+      "goals": [
+        "Support cutaway-friendly visibility for interior inspection",
+        "Keep selection and debug visibility separate from physical room data",
+        "Ensure the room remains visually readable as a structured interior volume"
+      ],
+      "phases": [
+        {
+          "id": "phase-a",
+          "name": "Visibility policy",
+          "tasks": [
+            "Define when cutaway visibility applies",
+            "Keep structural cutaway state non-destructive",
+            "Separate selection visibility from debug visibility"
+          ]
+        },
+        {
+          "id": "phase-b",
+          "name": "Selection alignment",
+          "tasks": [
+            "Anchor the selection indicator to the room's visible front face",
+            "Avoid hardcoded front-face offsets",
+            "Keep selection stable under thickness, openings, and rotation"
+          ]
+        }
+      ]
+    }
+  ],
+  "qualityGuards": [
+    "No monolithic room files",
+    "All room structure should be derived from room-local source data",
+    "Separate structure, rendering, selection, and placement concerns",
+    "Preserve temporal stability and avoid geometry-driven flicker or drift",
+    "Keep opening generation deterministic and repeatable",
+    "Avoid brittle hardcoded room-face assumptions",
+    "Prefer reusable helpers and feature-sliced modules over inline geometry logic",
+    "Maintain a single authoritative room model and derive all other representations from it"
+  ],
+  "debugging": {
+    "enabled": true,
+    "strategy": [
+      "Log room shell dimensions, opening bounds, and generated anchors during development",
+      "Add debug overlays for shell thickness, opening cutouts, and exclusion zones",
+      "Validate room geometry after generation for seams, zero-area fragments, and alignment errors",
+      "Verify selection indicator anchoring against the room's visible front face",
+      "Isolate structure, opening, and placement failures with feature flags",
+      "Capture deterministic room-structure snapshots for regression comparison",
+      "Track selection face references separately from mesh geometry during debug runs"
+    ],
+    "completionChecks": [
+      {
+        "id": "check-1",
+        "name": "Structural fidelity",
+        "criteria": [
+          "Rooms render with believable thick walls, floor, and ceiling",
+          "The room silhouette remains readable from the current camera perspective",
+          "Structural thickness is visually apparent without collapsing into a white cube",
+          "Wall, floor, and ceiling thickness remain consistent with the structural model",
+          "The room can be regenerated from the same input without altering topology"
+        ]
+      },
+      {
+        "id": "check-2",
+        "name": "Opening correctness",
+        "criteria": [
+          "Windows and doors are true openings in the shell",
+          "Openings preserve reveal depth and structural readability",
+          "No visible cracks, slivers, or z-fighting appear around openings",
+          "Opening bounds remain fully contained within their target wall faces",
+          "Opening semantics remain consistent for doors, windows, and future cutaway apertures"
+        ]
+      },
+      {
+        "id": "check-3",
+        "name": "Placement readiness",
+        "criteria": [
+          "Room-local anchors are available for future procedural interior objects",
+          "Exclusion zones prevent invalid placement near openings and shell edges",
+          "Placement metadata is deterministic and separate from render-only geometry",
+          "Placement bands support floor, wall, and ceiling use cases",
+          "Placement rules can be evaluated independently of the rendered mesh"
+        ]
+      },
+      {
+        "id": "check-4",
+        "name": "Feature-sliced integrity",
+        "criteria": [
+          "Room logic is split across dedicated structural feature files",
+          "No new monolithic room implementation file is introduced",
+          "Geometry, types, and components remain separated by responsibility",
+          "Hooks or adapters orchestrate derived state instead of embedding generation inline",
+          "Shared helpers remain reusable and do not depend on presentation-layer state"
+        ]
+      },
+      {
+        "id": "check-5",
+        "name": "Visibility and selection alignment",
+        "criteria": [
+          "Selection anchors to the room's visible front face rather than a fixed offset",
+          "Cutaway visibility does not alter the authoritative room model",
+          "Selection remains stable across room rotation and thickness changes",
+          "Debug overlays do not mutate structure or placement data"
+        ]
+      }
+    ]
+  },
+  "executionOrder": [
+    "Room structure model",
+    "Room opening system",
+    "Room placement foundation",
+    "Room cutaway and visibility",
+    "Selection anchor alignment",
+    "Validation and debug overlays"
+  ],
+  "definitionOfDone": [
+    "Rooms are rendered as thick structural shells",
+    "Openings are generated as true architectural cutouts",
+    "Selection aligns to the visible room face",
+    "Placement metadata exists for future procedural interior objects",
+    "The implementation remains feature-sliced and avoids monolithic files",
+    "Debugging and completion checks confirm structural correctness and visual stability",
+    "Room structure remains the canonical source of truth for all derived visuals and metadata"
+  ]
+}

@@ -2,8 +2,12 @@ node_modules/
 build/
 dist/
 coverage/
+telemetry/
+!.gitignore
 .DS_Store
 *.log
 .env*
 !.env.example
 commit-and-push.sh
+# custom
+examples/

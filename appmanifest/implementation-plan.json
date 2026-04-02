@@ -1,0 +1,314 @@
+{
+  "manifestVersion": "1.1",
+  "project": "villaggio-terrace",
+  "createdAt": "2026-04-02T00:00:00Z",
+  "title": "Industry Leading Implementation Plan",
+  "status": "planned",
+  "scope": [
+    "PBR shader tuning",
+    "Shadow and rain refinement",
+    "Physical room rework"
+  ],
+  "intent": {
+    "axiomatic": [
+      "Rooms must be physically grounded architectural volumes rather than flat symbolic placeholders",
+      "Openings, cutaways, and interior visibility must derive from the room's actual physical structure",
+      "Future procedural object placement must depend on stable room-local geometry and metadata"
+    ],
+    "axiological": [
+      "Prioritize realism, spatial credibility, maintainability, and high-performance rendering",
+      "Preserve visual fidelity while preventing temporal instability or unnecessary complexity",
+      "Prefer systems that remain extensible for future procedural content"
+    ],
+    "teleological": [
+      "Evolve the scene toward an architecture system with thick shells, procedural openings, and room-local placement anchors",
+      "Enable future windows, doors, cutaways, and procedural interior objects without redesigning the foundation",
+      "Deliver a visually convincing and ultra-stable room system that can scale across room types"
+    ]
+  },
+  "objectives": [
+    "Improve SDF shader lighting response",
+    "Add roughness and normal detail",
+    "Make node surfaces look more physically plausible",
+    "Improve shadow quality and performance",
+    "Prepare for a future shader-based rain pass",
+    "Rebuild rooms as thick-shell physical volumes with procedural openings",
+    "Enable future procedural interior object placement with stable anchors and clearance zones",
+    "Support windows, doors, and cutaways as true structural features"
+  ],
+  "qualityGuards": [
+    "Preserve visual fidelity while preventing temporal instability such as shimmer, flicker, crawling noise, and specular popping",
+    "Keep rendering changes GPU-friendly and avoid unnecessary CPU-side work in hot paths",
+    "Prefer graceful degradation of secondary effects over visible instability in primary shading",
+    "Apply LOD-aware shading and effect simplification for distant or low-salience surfaces without reducing close-up quality",
+    "Validate visual changes against regression cases to avoid over-tuning, banding, or unnatural surface response",
+    "Keep room geometry deterministic, reproducible, and derived from a single authoritative room definition",
+    "Separate physical shell data, visual cutaway state, and future placement metadata so they do not drift apart",
+    "Avoid brittle ad hoc cutout logic by using parametric openings and stable local coordinate rules"
+  ],
+  "workstreams": [
+    {
+      "id": "pbr-shader-tuning",
+      "name": "PBR shader tuning",
+      "goals": [
+        "Standardize physically based material parameters",
+        "Implement GGX microfacet specular shading",
+        "Add Fresnel and visibility terms",
+        "Add analytic SDF normals and subtle surface variation",
+        "Make wetness affect roughness, albedo, and reflectance"
+      ],
+      "phases": [
+        {
+          "id": "phase-a",
+          "name": "Physically based material structure",
+          "tasks": [
+            "Define baseColor, metalness, roughness, specularF0, clearcoat, clearcoatRoughness, normalStrength, ambientOcclusion, and emissive fields",
+            "Create a consistent material contract for SDF-rendered surfaces",
+            "Keep all parameters artist-friendly and scene-consistent"
+          ]
+        },
+        {
+          "id": "phase-b",
+          "name": "Lighting model upgrade",
+          "tasks": [
+            "Implement GGX specular response",
+            "Implement Schlick Fresnel",
+            "Implement Smith visibility",
+            "Use energy-conserving diffuse/specular balance",
+            "Validate highlight response under multiple light angles"
+          ]
+        },
+        {
+          "id": "phase-c",
+          "name": "Normals and micro-detail",
+          "tasks": [
+            "Compute SDF normals with central differences",
+            "Add procedural noise-driven surface perturbation",
+            "Modulate roughness with subtle noise",
+            "Avoid visible distortion while improving realism"
+          ]
+        },
+        {
+          "id": "phase-d",
+          "name": "Curvature and wear",
+          "tasks": [
+            "Add curvature-aware roughness variation",
+            "Darken cavities and contact areas slightly",
+            "Increase specular variation on exposed areas",
+            "Use wetness and exposure to vary surface response"
+          ]
+        },
+        {
+          "id": "phase-e",
+          "name": "Wet surface response",
+          "tasks": [
+            "Accumulate wetness on upward-facing surfaces",
+            "Reduce roughness when wet",
+            "Slightly darken wet surfaces",
+            "Increase specular intensity under rain",
+            "Keep the effect subtle and physically plausible"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "physical-room-rework",
+      "name": "Physical room rework",
+      "goals": [
+        "Rebuild room geometry as thick architectural shells instead of thin surfaces",
+        "Support procedural openings for windows, doors, and future cutaways",
+        "Create room-local anchors and no-placement zones for future procedural interiors",
+        "Keep room structure deterministic, extensible, and performant"
+      ],
+      "phases": [
+        {
+          "id": "phase-a",
+          "name": "Room shell data model",
+          "tasks": [
+            "Define room-local thickness fields for walls, floor, and ceiling",
+            "Represent each room as an outer shell, inner shell, and structural joins",
+            "Add stable local coordinates for walls, floors, ceilings, and openings",
+            "Separate physical structure from render-only decoration"
+          ]
+        },
+        {
+          "id": "phase-b",
+          "name": "Procedural openings",
+          "tasks": [
+            "Define parametric openings with type, size, wall target, and offset metadata",
+            "Support windows as true openings with visible depth and reveal geometry",
+            "Support doors and door openings as cutaways from the shell",
+            "Keep openings deterministic and derived from the room definition"
+          ]
+        },
+        {
+          "id": "phase-c",
+          "name": "Interior placement framework",
+          "tasks": [
+            "Introduce floor, wall, and ceiling anchor regions for procedural objects",
+            "Define exclusion zones around openings, shell thickness, and trim",
+            "Expose clear room-local placement metadata for future object generation",
+            "Keep placement rules independent from mesh implementation details"
+          ]
+        },
+        {
+          "id": "phase-d",
+          "name": "Cutaway and visibility support",
+          "tasks": [
+            "Allow room cutaways to reveal the far side of the room cleanly",
+            "Keep cutaway state separate from the authoritative physical shell",
+            "Ensure interior-facing surfaces remain finished and non-destructive under section views",
+            "Prevent cutaway artifacts from affecting collision or placement data"
+          ]
+        },
+        {
+          "id": "phase-e",
+          "name": "Legacy compatibility and rollout",
+          "tasks": [
+            "Preserve existing room layouts during migration",
+            "Provide fallback behavior for rooms that do not yet define openings",
+            "Keep geometry generation event-driven rather than per-frame",
+            "Verify that new room definitions remain compatible with existing rendering and selection systems"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shadow-rain-refinement",
+      "name": "Shadow and rain refinement",
+      "goals": [
+        "Improve shadow quality where it matters most",
+        "Reduce shadow cost when it is not needed",
+        "Make rain feel layered and atmospheric",
+        "Provide a path to a shader-based rain solution",
+        "Maintain temporal stability and visual consistency during motion and lighting transitions"
+      ],
+      "phases": [
+        {
+          "id": "phase-a",
+          "name": "Shadow architecture",
+          "tasks": [
+            "Use a high-quality directional light shadow map as the primary source",
+            "Tune bias and normalBias to minimize acne and peter-panning",
+            "Fit the shadow camera tightly to the playable area",
+            "Use ContactShadows for close-field grounding"
+          ]
+        },
+        {
+          "id": "phase-b",
+          "name": "Shadow tuning workflow",
+          "tasks": [
+            "Document shadow map size, camera bounds, bias, and softness settings",
+            "Create a repeatable visual QA checklist for shadow tuning",
+            "Flag shadow-casting behavior per object type where appropriate"
+          ]
+        },
+        {
+          "id": "phase-c",
+          "name": "Adaptive shadow scaling",
+          "tasks": [
+            "Reduce shadow cost when frame time rises",
+            "Scale shadow quality based on camera motion and scene complexity",
+            "Prefer graceful degradation over hard visual drops"
+          ]
+        },
+        {
+          "id": "phase-d",
+          "name": "Rain layering",
+          "tasks": [
+            "Keep lightweight volumetric precipitation",
+            "Add near-camera rain streaks with stronger parallax",
+            "Use mist near the ground and around occluders",
+            "Make surfaces respond to rain through wetness accumulation"
+          ]
+        },
+        {
+          "id": "phase-e",
+          "name": "Screen-space rain path",
+          "tasks": [
+            "Prototype a depth-aware screen-space rain shader",
+            "Compare visual quality and performance against particle rain",
+            "Retain the hybrid option if it proves best overall"
+          ]
+        }
+      ]
+    }
+  ],
+  "debugging": {
+    "enabled": true,
+    "strategy": [
+      "Add targeted logging around shader inputs, shadow settings, weather state, and room shell generation",
+      "Validate material parameter ranges before rendering",
+      "Track frame-time impacts for shader, shadow, weather, and room geometry changes",
+      "Record before-and-after snapshots for visual regressions",
+      "Use feature flags to isolate each rendering subsystem",
+      "Instrument room opening generation with bounds, thickness, and residual geometry reporting",
+      "Expose debug overlays for shell thickness, opening volumes, and placement exclusion zones",
+      "Verify that cutaway state does not mutate the underlying physical room model"
+    ],
+    "completionChecks": [
+      {
+        "id": "check-1",
+        "name": "PBR plausibility",
+        "criteria": [
+          "SDF highlights vary correctly with view angle and light angle",
+          "Roughness variation is visible but subtle",
+          "Wet surfaces become darker and glossier",
+          "Materials remain physically believable across presets"
+        ]
+      },
+      {
+        "id": "check-2",
+        "name": "Shadow quality and stability",
+        "criteria": [
+          "Primary shadows look stable without acne or peter-panning",
+          "Contact shadows ground objects convincingly",
+          "Shadow quality scales down gracefully under load",
+          "No major shadow flicker during camera movement",
+          "Shadow transitions remain temporally stable across camera motion and lighting changes"
+        ]
+      },
+      {
+        "id": "check-3",
+        "name": "Rain realism and stability",
+        "criteria": [
+          "Rain reads clearly in foreground, midground, and distance",
+          "Mist reinforces the rainy atmosphere without obscuring the scene",
+          "Wetness affects surfaces consistently",
+          "Rain remains performant at target frame rate",
+          "Rain motion remains stable without aliasing, popping, or distracting pattern repetition"
+        ]
+      },
+      {
+        "id": "check-4",
+        "name": "Room physical rework validity",
+        "criteria": [
+          "Walls, floor, and ceiling render with believable thickness",
+          "Windows and doors are true openings in the shell",
+          "Cutaways reveal finished interior surfaces without mutating physical structure",
+          "Room-local placement anchors and exclusion zones are available for future procedural objects",
+          "Geometry generation is deterministic and does not introduce seams, cracks, or z-fighting",
+          "Existing room layouts remain compatible or have a documented migration path"
+        ]
+      }
+    ]
+  },
+  "executionOrder": [
+    "Physical room rework",
+    "PBR shader tuning",
+    "Wetness/weather response",
+    "Shadow frustum and bias refinement",
+    "Rain layering improvements",
+    "Screen-space rain prototype"
+  ],
+  "definitionOfDone": [
+    "The scene uses physically plausible material behavior for key SDF objects",
+    "Lighting response is richer and more realistic",
+    "Shadow rendering is stable and performance-aware",
+    "Rain and mist are layered and atmospheric",
+    "Completion checks pass without visual regressions",
+    "Temporal stability is preserved across motion, lighting changes, and scene interaction",
+    "Rendering changes avoid unnecessary CPU-side overhead and remain GPU-friendly",
+    "Room geometry is rebuilt as a thick-shell physical system with procedural openings and future-ready placement metadata"
+  ]
+}

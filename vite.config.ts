@@ -3,7 +3,8 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import { defineConfig } from "vite";
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(() => {
+  const disableHmr = process.env.DISABLE_HMR === "true";
   return {
     base: "/villaggio-terrace/",
     plugins: [react(), tailwindcss()],
@@ -13,9 +14,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
-      hmr: false,
+      hmr: !disableHmr,
     },
   };
 });

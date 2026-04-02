@@ -1,0 +1,17 @@
+intents:
+  axiomatic:
+    title: "Axiomatic Intent (The Fundamental Truths)"
+    description: |
+      A building is not a collection of static 3D meshes; it is a continuous mathematical field.
+      A "Room" is axiomatically defined as the boolean intersection of spatial constraints (floors, ceilings, walls).
+      Structure (beams/pillars) dictates the boundaries, and the "Skin" (drywall, glass, concrete) is a procedural membrane stretched over or between these boundaries.
+  axiological:
+    title: "Axiological Intent (The Value System)"
+    description: |
+      Procedural Emergence over Pre-fabrication: Valuing a system where placing two rooms next to each other automatically merges their shared walls, rather than requiring specific "corner" or "T-junction" 3D models.
+      Structural Honesty: The visual representation of the tower is a direct consequence of its load-bearing graph.
+  teleological:
+    title: "Teleological Intent (The Ultimate Goal)"
+    description: |
+      To build a dynamic, living simulation where the architecture organically adapts to the player's management decisions.
+      Elevators carve boolean subtraction shafts through floors; structural stress dynamically thickens load-bearing pillars; and the entire tower renders as a single, perfectly batched, infinitely scalable mathematical shader.

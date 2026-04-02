@@ -1,0 +1,176 @@
+{
+  "manifestVersion": "1.0",
+  "project": "villaggio-terrace",
+  "createdAt": "2026-04-02T00:00:00Z",
+  "title": "Node/Room Rendering Implementation Plan",
+  "status": "pending",
+  "progress": {
+    "currentPhase": "structural-node-graph",
+    "lastValidated": "not yet validated",
+    "notes": [
+      "Inspired by the modular-spaceship-simulator structural graph (keel, ribs, beams) and its SDF skinning pipeline.",
+      "This plan reuses the same dependency map idea to build rooms/nodes as framed structural volumes before skinning."
+    ]
+  },
+  "sourceInspiration": {
+    "name": "modular-spaceship-simulator",
+    "path": "examples/modular-spaceship-simulator",
+    "description": "Ship shells are driven by a StructuralGraph (Keel, Ribs, HullSections) and a StructuralGenerator that spits out capsules and spheres (beams and ribs) before the shader looms the skin with SDF unions."
+  },
+  "dependencyMap": {
+    "Keel": "central spine that anchors every node/room along the vertical stack; defines t-coordinates for frames.",
+    "Ribs": "planar cross-sections placed along the keel; supply profile, scale, and adjacency references for floors and beams.",
+    "Beams": "capsule primitives (or in our case wing plates) that span between ribs and create frame connections for shared walls.",
+    "Hull Sections / Skin": "a lofted, parametric outer shell that blends between ribs; the shader in the example performs smooth union SDFs to form the skin over the frame.",
+    "Modules (rooms)": "sub-assemblies defined in DNA that carve out pressurized spaces via capsules and boxes/lights."
+  },
+  "intents": {
+    "axiomatic": [
+      "Rooms are the boolean intersections of floors, ceilings, and walls; structure defines these constraints.",
+      "Structure (beams/pillars) dictates the boundaries and the skin is procedural."
+    ],
+    "axiological": [
+      "Procedural emergence over prefab: adjacent rooms automatically merge shared walls via frame connectivity.",
+      "Structural honesty: visualization should directly reflect the load-bearing graph inherited from keel-beam-rib topology."
+    ],
+    "teleological": [
+      "Create a living simulation where structural input reconfigures the rendered shell and all rooms/nodes remain perfectly batched and infinitely scalable."
+    ]
+  },
+  "scope": [
+    "Adapt the spaceship StructuralGraph (Keel + Ribs + Beams) into a tower node graph (foundation + vertical spine + floor plates).",
+    "Drive room generation via that graph so shared walls collapse naturally when nodes touch.",
+    "Render wall skins as procedural SDFs or batched meshes derived from the frame data.",
+    "Expose adjacency metadata for future procedural placement across rooms/corridors."
+  ],
+  "workstreams": [
+    {
+      "id": "structural-node-graph",
+      "name": "Structural Node Graph (Keel + Ribs)",
+      "goals": [
+        "Model each node/room as a slice along a keel with rib references (similar to ship ribs).",
+        "Define core beams that connect ribs, representing vertical/horizontal edges of rooms.",
+        "Store metadata for floors, ceilings, and wall boundaries derived from turned frames."
+      ],
+      "phases": [
+        {
+          "id": "phase-a",
+          "name": "Node spine ingestion",
+          "tasks": [
+            "Introduce a keel-like vertical spline that indexes every level.",
+            "Align rib slices to that spline, deriving width/depth/height per node.",
+            "Record structural adjacency so a downstream beam builder knows which neighbors share walls."
+          ]
+        },
+        {
+          "id": "phase-b",
+          "name": "Beam & rib metadata",
+          "tasks": [
+            "Generate beam primitive definitions (capsules/boxes) spanning adjacent ribs.",
+            "Tag each beam with its role (wall, floor, ceiling, column).",
+            "Keep material/skin hints so later shaders can highlight load-bearing elements."
+          ]
+        }
+      ],
+      "completionCheck": {
+        "status": "pending",
+        "criteria": [
+          "Every node references a keel position and rib pair.",
+          "Beams share endpoints when rooms are adjacent, enabling automatic wall merging.",
+          "Adjacency metadata is serializable and queryable via the node graph."
+        ]
+      }
+    },
+    {
+      "id": "frame-and-wall-generation",
+      "name": "Frame and Wall Generation (Beams → Inner/Outer Walls)",
+      "goals": [
+        "Render the frame using capsule/box primitives derived from the node graph.",
+        "Build inner shell (interior walls, floors) and outer shell (exterior walls, facade).",
+        "Ensure beams behave like ribs from the spaceship shader—they define where the skin must attach."
+      ],
+      "phases": [
+        {
+          "id": "phase-a",
+          "name": "Beam instancing",
+          "tasks": [
+            "Convert beam definitions into instanced SDF primitives or batched meshes.",
+            "Support toggling visibility per beam role (load-bearing vs partition).",
+            "Prepare uniform data for the skin shader to know where beam endpoints reside."
+          ]
+        },
+        {
+          "id": "phase-b",
+          "name": "Inner/outer shell tessellation",
+          "tasks": [
+            "Loft hull surfaces akin to the spaceship shader’s rib lofts using the beam/rib outlines.",
+            "Create separate geometries for inner (interior) and outer (exterior) skins.",
+            "Keep wall thicknesses deterministic from the structural inputs and allow cutaways to reveal interiors."
+          ]
+        }
+      ],
+      "completionCheck": {
+        "status": "pending",
+        "criteria": [
+          "Beam instancing data references actual keel/rib endpoints.",
+          "Inner and outer shells render in sequence so beam outlines align to procedural surfaces.",
+          "The skin generation works even when adjacent nodes share beams, preventing double-walls."
+        ]
+      }
+    },
+    {
+      "id": "skin-and-node-visualization",
+      "name": "Skin & Node Visualization (SDF, Materials, Selection)",
+      "goals": [
+        "Leverage shader-driven SDF unions (as in shaderCompiler.ts) to produce smooth skins over the frame.",
+        "Attach materials to show structural honesty (steel beams, glass inner walls).",
+        "Link selection/cutaway layers to the structural metadata rather than raw mesh offsets."
+      ],
+      "phases": [
+        {
+          "id": "phase-a",
+          "name": "Materialized SDF pipeline",
+          "tasks": [
+            "Compile shader snippets using beam/node data (capsules, boxes, rounding) to match rooms' structural roles.",
+            "Add glow/selection layers similar to the spaceship numeric IDs (1.0 for beams, 2.0 for skin).",
+            "Expose shader constants for wall thickness, adjacency, and cutaway clipping."
+          ]
+        },
+        {
+          "id": "phase-b",
+          "name": "Selection & adjacency overlays",
+          "tasks": [
+            "Bind the selection indicator to canonical structural faces (top/ceiling, bottom/floor) derived from adjacency data.",
+            "Render adjacency metadata (shared walls) so procedural furniture can query safe placement zones.",
+            "Keep cutaway logic non-destructive so structural data remains authoritative."
+          ]
+        }
+      ],
+      "completionCheck": {
+        "status": "pending",
+        "criteria": [
+          "Shader pipeline renders room skins with beam highlights and clean cutaways.",
+          "Selection aligns to the true structural front face and respects adjacency (shared wall merging).",
+          "Adjacency data surfaces placement zones for future object generation."
+        ]
+      }
+    }
+  ],
+  "qualityGuards": [
+    "No manual wall duplication—shared beams should be reconciled via adjacency metadata.",
+    "Keep shaders deterministic; identical structural graphs produce byte-identical SDFs.",
+    "Use feature-sliced modules: graph modeling, frame generation, skinning, overlays.",
+    "Never mutate structural intent during cutaways or selection highlighting."
+  ],
+  "executionOrder": [
+    "Structural Node Graph",
+    "Frame and Wall Generation",
+    "Skin & Node Visualization"
+  ],
+  "definitionOfDone": [
+    "Nodes/rooms rendered from the keel/rib/beam dependency map aligned with rooms-source-of-truth intents.",
+    "Adjacent rooms share walls automatically without duplicate geometry.",
+    "Selection and cutaway layers pull from structural metadata, not ad hoc offsets.",
+    "Completion checks above report `complete` once each section is validated."
+  ]
+}

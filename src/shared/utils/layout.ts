@@ -1,14 +1,17 @@
-import { Shape } from './store';
+import { SimulationNode } from "./store";
 
-export const getMenuOffset = (shape: Shape, allShapes: Shape[]) => {
-  const others = allShapes.filter(s => s.id !== shape.id);
+export const getMenuOffset = (
+  shape: SimulationNode,
+  allShapes: SimulationNode[],
+) => {
+  const others = allShapes.filter((s) => s.id !== shape.id);
   const margin = 10;
   const { position, size } = shape;
-  
+
   const checkOverlapAt = (ox: number, oy: number) => {
     const tx = position[0] + ox;
     const ty = position[1] + oy;
-    return others.some(s => {
+    return others.some((s) => {
       const dx = Math.abs(s.position[0] - tx);
       const dy = Math.abs(s.position[1] - ty);
       return dx < s.size[0] / 2 + margin && dy < s.size[1] / 2 + margin;
