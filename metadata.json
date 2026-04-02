@@ -1,0 +1,5 @@
+{
+  "name": "Villaggio Terrace",
+  "description": "A high-performance WebGL2 side-view tower building simulator",
+  "requestFramePermissions": []
+}
