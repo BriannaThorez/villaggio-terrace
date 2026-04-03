@@ -4,6 +4,7 @@ import {
   Grid,
   Environment,
   ContactShadows,
+  Lightformer,
 } from "@react-three/drei";
 import themes from "../shared/themes/color_palettes.json";
 import { Bloom, Noise, Vignette } from "@react-three/postprocessing";
@@ -288,7 +289,7 @@ const RainMist = ({ isDark }: { isDark: boolean }) => {
 };
 
 const CanvasScene = () => {
-  const { camera, controls, raycaster, mouse, scene, size } = useThree();
+  const { camera, controls, raycaster, pointer, scene, size } = useThree();
   const themeName = useSimulationStore((state) => state.themeName);
 
   const currentTheme = useMemo(() => (themes as any)[themeName], [themeName]);
@@ -343,6 +344,7 @@ const CanvasScene = () => {
   const hasInteractedRef = useRef(false);
   const sphereRef = useRef<THREE.Mesh>(null);
   const lastSyncTimeRef = useRef(0);
+  const lastStampedPos = useRef<string | null>(null);
 
 
 
@@ -869,7 +871,7 @@ const CanvasScene = () => {
 
     if (linkingFrom) {
       wasLinkingRef.current = true;
-      raycaster.setFromCamera(mouse, camera);
+      raycaster.setFromCamera(pointer, camera);
       const intersects = raycaster.intersectObjects(scene.children, true);
       const portIntersect = intersects.find((i) => i.object.name === "port");
 
@@ -914,7 +916,15 @@ const CanvasScene = () => {
           0.55,
         ]}
       />
-      <Environment preset="city" />
+      <Environment preset={isDark ? "night" : "city"} background={false}>
+        {isDark && (
+          <group rotation={[0, 0, 0]}>
+            <Lightformer intensity={3.5} rotation={[Math.PI / 2, 0, 0]} position={[0, 20, -10]} scale={[20, 20, 1]} color="#22d3ee" />
+            <Lightformer intensity={1.5} rotation={[0, Math.PI / 2, 0]} position={[-10, 10, 0]} scale={[20, 10, 1]} color="#a855f7" />
+            <Lightformer intensity={1.5} rotation={[0, -Math.PI / 2, 0]} position={[10, 10, 0]} scale={[20, 10, 1]} color="#3b82f6" />
+          </group>
+        )}
+      </Environment>
 
       <OrbitControls
         makeDefault
@@ -963,45 +973,45 @@ const CanvasScene = () => {
       />
 
       <PlacementIndicator />
-    </group >
-
-        <mesh
-          position={[0, -0.1, 0]}
-          rotation={[-Math.PI / 2, 0, 0]}
-          receiveShadow
-          castShadow={false}
-          onClick={handleClick}
-          onPointerDown={(e) => e.stopPropagation()}
-        >
-          <planeGeometry args={[10000, 10000]} />
-          <meshPhysicalMaterial
-            color="#2e7d32"
-            transparent
-            opacity={0.28}
-            roughness={0.06}
-            metalness={0.0}
-            transmission={0.82}
-            thickness={1.6}
-            ior={1.47}
-            clearcoat={1.0}
-            clearcoatRoughness={0.08}
-          />
-        </mesh>
-
-        <Grid
-          position={[0, 0, 0]}
-          infiniteGrid
-          fadeDistance={500}
-          fadeStrength={5}
-          cellSize={10}
-          sectionSize={40}
-          sectionColor={isDark ? "#8fb2c8" : "#c7d6e2"}
-          sectionThickness={1.3}
-          cellColor={isDark ? "#d8e7f2" : "#edf4f9"}
-          cellThickness={0.8}
-          rotation={[0, 0, 0]}
+      <SimulationNodes />
+      <SimulationLinks />
+      <mesh
+        position={[0, -0.1, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        receiveShadow
+        castShadow={false}
+        onClick={handleClick}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        <planeGeometry args={[10000, 10000]} />
+        <meshPhysicalMaterial
+          color="#2e7d32"
+          transparent
+          opacity={0.28}
+          roughness={0.06}
+          metalness={0.0}
+          transmission={0.82}
+          thickness={1.6}
+          ior={1.47}
+          clearcoat={1.0}
+          clearcoatRoughness={0.08}
         />
-      </group >
+      </mesh>
+
+      <Grid
+        position={[0, 0, 0]}
+        infiniteGrid
+        fadeDistance={500}
+        fadeStrength={5}
+        cellSize={10}
+        sectionSize={40}
+        sectionColor={isDark ? "#8fb2c8" : "#c7d6e2"}
+        sectionThickness={1.3}
+        cellColor={isDark ? "#d8e7f2" : "#edf4f9"}
+        cellThickness={0.8}
+        rotation={[0, 0, 0]}
+      />
+
 
       <mesh ref={sphereRef} position={[0, 0, -500]}>
         <sphereGeometry args={[800, 64, 64]} />
