@@ -42,17 +42,17 @@ const buildFaceCenter = (dimensions: RoomShellDimensions, face: RoomFace) => {
 
   switch (face) {
     case "front":
-      return vec3(0, 0, 0);
+      return vec3(0, hh, 0);
     case "back":
-      return vec3(0, 0, -dimensions.depth);
+      return vec3(0, hh, -dimensions.depth);
     case "left":
-      return vec3(-hw, 0, -dimensions.depth / 2);
+      return vec3(-hw, hh, -dimensions.depth / 2);
     case "right":
-      return vec3(hw, 0, -dimensions.depth / 2);
+      return vec3(hw, hh, -dimensions.depth / 2);
     case "top":
-      return vec3(0, hh, -dimensions.depth / 2);
+      return vec3(0, dimensions.height, -dimensions.depth / 2);
     case "bottom":
-      return vec3(0, -hh, -dimensions.depth / 2);
+      return vec3(0, 0, -dimensions.depth / 2);
   }
 };
 
@@ -81,17 +81,17 @@ const faceCenter = (dimensions: RoomShellDimensions, face: RoomFace) => {
 
   switch (face) {
     case "front":
-      return vec3(0, 0, 0);
+      return vec3(0, hh, 0);
     case "back":
-      return vec3(0, 0, -dimensions.depth);
+      return vec3(0, hh, -dimensions.depth);
     case "left":
-      return vec3(-hw, 0, -dimensions.depth / 2);
+      return vec3(-hw, hh, -dimensions.depth / 2);
     case "right":
-      return vec3(hw, 0, -dimensions.depth / 2);
+      return vec3(hw, hh, -dimensions.depth / 2);
     case "top":
-      return vec3(0, hh, -dimensions.depth / 2);
+      return vec3(0, dimensions.height, -dimensions.depth / 2);
     case "bottom":
-      return vec3(0, -hh, -dimensions.depth / 2);
+      return vec3(0, 0, -dimensions.depth / 2);
   }
 };
 
@@ -637,10 +637,10 @@ export const buildRoomShellGeometry = (
     dimensions.height,
     centeredDepth,
   );
-  outerGeometry.translate(0, 0, -dimensions.depth);
+  outerGeometry.translate(0, dimensions.height / 2, -dimensions.depth / 2);
 
   const innerGeometry = buildInnerGeometry(dimensions);
-  innerGeometry.translate(0, 0, -dimensions.depth);
+  innerGeometry.translate(0, 0, -dimensions.depth / 2);
 
   const revealGeometry = buildRevealGeometry(dimensions, openings);
   const shellGeometry = mergeGeometryList([
@@ -657,7 +657,7 @@ export const buildRoomShellGeometry = (
       Math.max(EPSILON, dimensions.height),
       Math.max(EPSILON, dimensions.depth),
     );
-    fallback.translate(0, 0, -dimensions.depth);
+    fallback.translate(0, dimensions.height / 2, -dimensions.depth / 2);
     fallback.computeBoundingBox();
     fallback.computeBoundingSphere();
     return {

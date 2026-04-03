@@ -89,29 +89,29 @@ const getFrontFaceOverlayFrame = (
 
 const getFallbackOverlayFrame = (shape: SimulationNode): OverlayFrame => {
   const halfWidth = shape.size[0] / 2;
-  const halfHeight = shape.size[1] / 2;
+  const topY = shape.size[1];
   const z = 0;
   const topMargin = 8;
   const cornerX = halfWidth + 22;
 
   return {
     points: [
-      [-halfWidth, -halfHeight, z],
-      [halfWidth, -halfHeight, z],
-      [halfWidth, halfHeight, z],
-      [-halfWidth, halfHeight, z],
-      [-halfWidth, -halfHeight, z],
+      [-halfWidth, 0, z],
+      [halfWidth, 0, z],
+      [halfWidth, topY, z],
+      [-halfWidth, topY, z],
+      [-halfWidth, 0, z],
     ],
-    planePosition: [0, 0, z - 0.05],
+    planePosition: [0, topY / 2, z - 0.05],
     planeRotation: [0, 0, 0],
     planeSize: [shape.size[0], shape.size[1]],
-    menuPosition: [cornerX - shape.size[0] * 0.25, halfHeight + topMargin, 0],
+    menuPosition: [cornerX - shape.size[0] * 0.25, topY + topMargin, 0],
     rotatePosition: [
       cornerX - shape.size[0] * 0.25,
-      -halfHeight - topMargin,
+      -topMargin,
       0,
     ],
-    startPosition: [0, halfHeight + topMargin, START_LABEL_FRONT_FACE_OFFSET],
+    startPosition: [0, topY + topMargin, START_LABEL_FRONT_FACE_OFFSET],
     cornerMarkers: [],
   };
 };
@@ -200,12 +200,12 @@ export const SelectionOverlay: React.FC<SelectionIndicatorProps> = ({
 
   const adjacencyData = roomFace
     ? {
-        roomId: roomFace.room.roomId,
-        canonicalFace: roomFace.face,
-        adjacentRoomIds: roomFace.record.adjacentRoomIds,
-        adjacencyGapIds: roomFace.record.adjacencyGapIds,
-        cutoutIds: roomFace.record.cutoutIds,
-      }
+      roomId: roomFace.room.roomId,
+      canonicalFace: roomFace.face,
+      adjacentRoomIds: roomFace.record.adjacentRoomIds,
+      adjacencyGapIds: roomFace.record.adjacencyGapIds,
+      cutoutIds: roomFace.record.cutoutIds,
+    }
     : undefined;
 
   const handlePointerDown = (e: {

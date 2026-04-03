@@ -37,9 +37,9 @@ const PlacementIndicator = () => {
   const materialRef3 = useRef<THREE.MeshBasicMaterial>(null);
   const materialRef4 = useRef<THREE.LineBasicMaterial>(null);
 
-  const { camera, pointer, raycaster } = useThree();
+  const { camera, pointer, raycaster, size } = useThree();
 
-  useFrame(() => {
+  useFrame((state) => {
     if (
       !groupRef.current ||
       activeTool === "select" ||
@@ -51,30 +51,35 @@ const PlacementIndicator = () => {
     }
 
     raycaster.setFromCamera(pointer, camera);
-    const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -25);
+    const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
     const intersectPoint = new THREE.Vector3();
     raycaster.ray.intersectPlane(plane, intersectPoint);
 
     if (intersectPoint) {
       groupRef.current.visible = true;
-      let size: [number, number] = [40, 40];
-      if (activeTool === "residential") size = [40, 40];
-      else if (activeTool === "office") size = [50, 40];
+      let clashSize: [number, number] = [40, 40];
+      const tool = activeTool;
+      if (tool === "residential") clashSize = [40, 40];
+      else if (tool === "office") clashSize = [50, 40];
       else if (
-        activeTool === "lobby" ||
-        activeTool === "elevator" ||
-        activeTool === "utility"
+        tool === "lobby" ||
+        tool === "elevator" ||
+        tool === "utility"
       ) {
-        size = [10, 40];
-      } else if (activeTool === "text") size = [20, 5];
+        clashSize = [10, 40];
+      } else if (tool === "text") clashSize = [20, 5];
 
-      const snappedX = snapX(intersectPoint.x, size[0]);
+      const snappedX = snapX(intersectPoint.x, clashSize[0]);
       const snappedY =
         activeTool === "lobby"
           ? 0
-          : getPlacementCenterY(intersectPoint.y, size[1]);
+          : getPlacementCenterY(intersectPoint.y, clashSize[1]);
 
-      groupRef.current.position.set(snappedX, snappedY, 0.1);
+      // Spectacular Lerp for Premium Feel
+      groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, snappedX, 0.42);
+      groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, snappedY, 0.42);
+
+      groupRef.current.position.z = 0.5;
 
       const existing = useSimulationStore
         .getState()
@@ -83,6 +88,11 @@ const PlacementIndicator = () => {
         );
 
       const color = existing ? "#ff4444" : currentTheme.accent;
+
+      // Pulse animation for spectacular feedback
+      const pulse = 1 + Math.sin(state.clock.elapsedTime * 6) * 0.05;
+      groupRef.current.scale.set(pulse, pulse, pulse);
+
       if (materialRef1.current) materialRef1.current.color.set(color);
       if (materialRef2.current) materialRef2.current.color.set(color);
       if (materialRef3.current) materialRef3.current.color.set(color);
@@ -100,21 +110,21 @@ const PlacementIndicator = () => {
     return null;
   }
 
-  let size: [number, number] = [40, 40];
-  if (activeTool === "residential") size = [40, 40];
-  else if (activeTool === "office") size = [50, 40];
+  let nodeSize: [number, number] = [40, 40];
+  if (activeTool === "residential") nodeSize = [40, 40];
+  else if (activeTool === "office") nodeSize = [50, 40];
   else if (
     activeTool === "lobby" ||
     activeTool === "elevator" ||
     activeTool === "utility"
   ) {
-    size = [10, 40];
-  } else if (activeTool === "text") size = [20, 5];
+    nodeSize = [10, 40];
+  } else if (activeTool === "text") nodeSize = [20, 5];
 
   return (
     <group ref={groupRef} visible={false}>
-      <mesh>
-        <planeGeometry args={[size[0] + 2, size[1] + 2]} />
+      <mesh position={[0, nodeSize[1] / 2, 0]}>
+        <planeGeometry args={[nodeSize[0] + 2, nodeSize[1] + 2]} />
         <meshBasicMaterial
           ref={materialRef1}
           color={currentTheme.accent}
@@ -122,13 +132,13 @@ const PlacementIndicator = () => {
           opacity={0.3}
         />
       </mesh>
-      <mesh rotation={[0, 0, Math.PI / 4]}>
-        <ringGeometry args={[size[0] / 2 - 1, size[0] / 2, 4]} />
+      <mesh position={[0, nodeSize[1] / 2, 0]} rotation={[0, 0, Math.PI / 4]}>
+        <ringGeometry args={[nodeSize[0] / 2 - 1, nodeSize[0] / 2, 4]} />
         <meshBasicMaterial ref={materialRef2} color={currentTheme.accent} />
       </mesh>
 
-      <mesh>
-        <boxGeometry args={[size[0], size[1], 40]} />
+      <mesh position={[0, nodeSize[1] / 2, -20]}>
+        <boxGeometry args={[nodeSize[0], nodeSize[1], 40]} />
         <meshBasicMaterial
           ref={materialRef3}
           color={currentTheme.accent}
@@ -138,8 +148,8 @@ const PlacementIndicator = () => {
         />
       </mesh>
 
-      <lineSegments>
-        <edgesGeometry args={[new THREE.BoxGeometry(size[0], size[1], 40)]} />
+      <lineSegments position={[0, nodeSize[1] / 2, -20]}>
+        <edgesGeometry args={[new THREE.BoxGeometry(nodeSize[0], nodeSize[1], 40)]} />
         <lineBasicMaterial
           ref={materialRef4}
           color={currentTheme.accent}
@@ -278,7 +288,7 @@ const RainMist = ({ isDark }: { isDark: boolean }) => {
 };
 
 const CanvasScene = () => {
-  const { camera, controls, raycaster, mouse, scene } = useThree();
+  const { camera, controls, raycaster, mouse, scene, size } = useThree();
   const themeName = useSimulationStore((state) => state.themeName);
 
   const currentTheme = useMemo(() => (themes as any)[themeName], [themeName]);
@@ -327,34 +337,40 @@ const CanvasScene = () => {
     (state) => state.requestCameraMove,
   );
 
-  const [isStamping, setIsStamping] = useState(false);
-  const lastStampedPos = useRef<string | null>(null);
+  const lastPlacedCellRef = useRef<string | null>(null);
 
-  const targetZoom = useRef(10);
+  const targetZoom = useRef(useSimulationStore.getState().cameraState.zoom);
+  const hasInteractedRef = useRef(false);
   const sphereRef = useRef<THREE.Mesh>(null);
+  const lastSyncTimeRef = useRef(0);
+
+
 
   useEffect(() => {
     if (shouldResetCamera) {
-      targetZoom.current = 7.5;
-      camera.position.set(0, 0, 100);
-      (camera as THREE.OrthographicCamera).zoom = 7.5;
+      const { cameraState, cameraRotation } = useSimulationStore.getState();
+      targetZoom.current = cameraState.zoom;
+      camera.position.set(...(cameraState.position as [number, number, number]));
+      (camera as THREE.OrthographicCamera).zoom = cameraState.zoom;
       camera.updateProjectionMatrix();
       if (controls) {
         const orbit = controls as any;
         orbit.target.set(0, 0, 0);
-        orbit.setAzimuthalAngle((-10 * Math.PI) / 180);
-        orbit.setPolarAngle(Math.PI / 2 - (2 * Math.PI) / 180);
+        orbit.setAzimuthalAngle(cameraRotation.azimuth);
+        orbit.setPolarAngle(cameraRotation.polar);
         orbit.update();
       }
       setShouldResetCamera(false);
     }
   }, [shouldResetCamera, camera, controls, setShouldResetCamera]);
 
+  // Manual mount overrides removed to allow Store/Canvas props to lead
   useEffect(() => {
     if (controls) {
+      const { cameraRotation } = useSimulationStore.getState();
       const orbit = controls as any;
-      orbit.setAzimuthalAngle((-10 * Math.PI) / 180);
-      orbit.setPolarAngle(Math.PI / 2 - (2 * Math.PI) / 180);
+      orbit.setAzimuthalAngle(cameraRotation.azimuth);
+      orbit.setPolarAngle(cameraRotation.polar);
       orbit.update();
     }
   }, [controls]);
@@ -379,7 +395,13 @@ const CanvasScene = () => {
     const frameStart = performance.now();
     const cam = camera as THREE.OrthographicCamera;
 
+    // Detect first interaction to prevent startup drift
+    if (!hasInteractedRef.current && (Math.abs(state.pointer.x) > 0.01 || Math.abs(state.pointer.y) > 0.01)) {
+      hasInteractedRef.current = true;
+    }
+
     if (Math.abs(cam.zoom - targetZoom.current) > 0.001) {
+
       const oldZoom = cam.zoom;
       cam.zoom = targetZoom.current;
 
@@ -387,16 +409,21 @@ const CanvasScene = () => {
         .set(state.pointer.x, state.pointer.y, 0)
         .unproject(cam);
       const zoomRatio = 1 - oldZoom / cam.zoom;
-      const moveVector = moveVectorRef.current
-        .subVectors(mouseWorld, cam.position)
-        .multiplyScalar(zoomRatio);
 
-      moveVector.z = 0;
-      cam.position.add(moveVector);
-      if (controls) {
-        (controls as any).target.add(moveVector);
-        (controls as any).update();
+      // Only shift position if user has interacted, otherwise keep centered on default POS
+      if (hasInteractedRef.current) {
+        const moveVector = moveVectorRef.current
+          .subVectors(mouseWorld, cam.position)
+          .multiplyScalar(zoomRatio);
+
+        moveVector.z = 0;
+        cam.position.add(moveVector);
+        if (controls) {
+          (controls as any).target.add(moveVector);
+          (controls as any).update();
+        }
       }
+
 
       cam.updateProjectionMatrix();
     }
@@ -404,46 +431,6 @@ const CanvasScene = () => {
     if (sphereRef.current) {
       sphereRef.current.position.x = cam.position.x;
       sphereRef.current.position.y = cam.position.y;
-    }
-
-    const currentZoom = cam.zoom;
-    const worldWidth = state.size.width / currentZoom;
-    const worldHeight = state.size.height / currentZoom;
-
-    const prevCameraState = useSimulationStore.getState().cameraState;
-    if (
-      prevCameraState.position[0] !== cam.position.x ||
-      prevCameraState.position[1] !== cam.position.y ||
-      prevCameraState.position[2] !== cam.position.z ||
-      prevCameraState.zoom !== currentZoom ||
-      prevCameraState.worldWidth !== worldWidth ||
-      prevCameraState.worldHeight !== worldHeight
-    ) {
-      setCameraState(
-        [cam.position.x, cam.position.y, cam.position.z],
-        currentZoom,
-        worldWidth,
-        worldHeight,
-      );
-    }
-
-    if (controls) {
-      const orbit = controls as any;
-      const azimuth = orbit.getAzimuthalAngle();
-      const polar = orbit.getPolarAngle();
-      const prevRotation = useSimulationStore.getState().cameraRotation;
-      if (
-        Math.abs(prevRotation.azimuth - azimuth) > 0.001 ||
-        Math.abs(prevRotation.polar - polar) > 0.001
-      ) {
-        setCameraRotation(azimuth, polar);
-      }
-    }
-
-    const frameMs = performance.now() - frameStart;
-    if (frameMs > 16.7) {
-      const _ = frameMs;
-      void _;
     }
   });
 
@@ -556,9 +543,15 @@ const CanvasScene = () => {
       return;
     }
 
-    if (!event.point) return;
+    // Unify raycasting math for bit-for-bit placement parity (Industry leading finish)
+    raycaster.setFromCamera(pointer, camera);
+    const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    const intersectPoint = new THREE.Vector3();
+    raycaster.ray.intersectPlane(plane, intersectPoint);
 
-    let size: [number, number] = [40, 40];
+    if (!intersectPoint) return;
+
+    let nodeSize: [number, number] = [40, 40];
     let vertices: [number, number][] = [
       [-20, -20],
       [20, -20],
@@ -577,7 +570,7 @@ const CanvasScene = () => {
     const isRoom = roomTypes.includes(activeTool);
 
     if (activeTool === "text") {
-      size = [20, 5];
+      nodeSize = [20, 5];
       vertices = [
         [-10, -2.5],
         [10, -2.5],
@@ -585,7 +578,7 @@ const CanvasScene = () => {
         [-10, 2.5],
       ];
     } else if (activeTool === "residential") {
-      size = [40, 40];
+      nodeSize = [40, 40];
       vertices = [
         [-20, -20],
         [20, -20],
@@ -593,7 +586,7 @@ const CanvasScene = () => {
         [-20, 20],
       ];
     } else if (activeTool === "office") {
-      size = [50, 40];
+      nodeSize = [50, 40];
       vertices = [
         [-25, -20],
         [25, -20],
@@ -605,7 +598,7 @@ const CanvasScene = () => {
       activeTool === "elevator" ||
       activeTool === "utility"
     ) {
-      size = [10, 40];
+      nodeSize = [10, 40];
       vertices = [
         [-5, -20],
         [5, -20],
@@ -613,7 +606,7 @@ const CanvasScene = () => {
         [-5, 20],
       ];
     } else if (isRoom) {
-      size = [40, 40];
+      nodeSize = [40, 40];
       vertices = [
         [-20, -20],
         [20, -20],
@@ -621,7 +614,7 @@ const CanvasScene = () => {
         [-20, 20],
       ];
     } else if (activeTool === "terminal") {
-      size = [25, 10];
+      nodeSize = [25, 10];
       vertices = [
         [-12.5, -5],
         [12.5, -5],
@@ -629,7 +622,7 @@ const CanvasScene = () => {
         [-12.5, 5],
       ];
     } else if (activeTool === "parallelogram") {
-      size = [22, 15];
+      nodeSize = [22, 15];
       vertices = [
         [-11, -7.5],
         [11, -7.5],
@@ -637,7 +630,7 @@ const CanvasScene = () => {
         [-11, 7.5],
       ];
     } else if (activeTool === "hexagon") {
-      size = [24, 15];
+      nodeSize = [24, 15];
       vertices = [
         [-12, -7.5],
         [12, -7.5],
@@ -645,7 +638,7 @@ const CanvasScene = () => {
         [-12, 7.5],
       ];
     } else if (activeTool === "trapezoid") {
-      size = [22, 15];
+      nodeSize = [22, 15];
       vertices = [
         [-11, -7.5],
         [11, -7.5],
@@ -653,7 +646,7 @@ const CanvasScene = () => {
         [-11, 7.5],
       ];
     } else if (activeTool === "display") {
-      size = [24, 15];
+      nodeSize = [24, 15];
       vertices = [
         [-12, -7.5],
         [12, -7.5],
@@ -662,13 +655,15 @@ const CanvasScene = () => {
       ];
     }
 
-    const snappedX = snapX(event.point.x, size[0]);
-    const isLobby = activeTool === "lobby";
-    const snappedY = isLobby
+    const snappedX = snapX(intersectPoint.x, nodeSize[0]);
+    const snappedY = activeTool === "lobby"
       ? 0
-      : getPlacementCenterY(event.point.y, size[1]);
-    const position: [number, number] = [snappedX, snappedY];
+      : getPlacementCenterY(intersectPoint.y, nodeSize[1]);
 
+    const position: [number, number] = [snappedX, snappedY];
+    const gridKey = `${snappedX},${snappedY}`;
+
+    // Block overlapping clicks
     const existing = useSimulationStore
       .getState()
       .shapes.find(
@@ -676,18 +671,26 @@ const CanvasScene = () => {
       );
     if (existing) return;
 
-    const id = Math.random().toString(36);
+    // Block rapid multiple placements (dealt with after uniqueness check)
+    if (lastPlacedCellRef.current === gridKey) return;
+    lastPlacedCellRef.current = gridKey;
 
+    // Reset guard after short delay
+    setTimeout(() => {
+      lastPlacedCellRef.current = null;
+    }, 100);
+
+    const id = Math.random().toString(36);
     addShape(
       {
         id,
         type: activeTool as any,
         position,
-        size,
+        size: nodeSize,
         vertices,
         text: activeTool === "text" ? "" : undefined,
       },
-      isRoom,
+      true, // Force exact position since we already checked existence
     );
 
     setSelectedId(id);
@@ -745,9 +748,7 @@ const CanvasScene = () => {
     }
 
     if (e.point) {
-      if (isStamping && activeTool === "lobby") {
-        placeAtPoint(e.point, true);
-      }
+      // Stamping logic removed to enforce single-click placement
     }
 
     const zoom = (camera as THREE.OrthographicCamera).zoom;
@@ -838,14 +839,6 @@ const CanvasScene = () => {
       return;
     }
 
-    if (e.point && activeTool === "lobby") {
-      setIsStamping(true);
-      lastStampedPos.current = null;
-      useSimulationStore.getState().pushToHistory();
-      placeAtPoint(e.point, true);
-      return;
-    }
-
     if (e.nativeEvent.target.tagName !== "CANVAS") return;
 
     if (mode === "viewer" || activeTool !== "select") return;
@@ -855,8 +848,6 @@ const CanvasScene = () => {
   const handlePointerUp = (e: any) => {
     setIsPanning(false);
     setIsRotating(false);
-    setIsStamping(false);
-    lastStampedPos.current = null;
 
     let wasStaticClick = false;
     if (pointerDownPos.current) {
@@ -933,7 +924,7 @@ const CanvasScene = () => {
         dampingFactor={0.1}
         enabled={!isDragging && !linkingFrom && !isRotating && !isPanning}
         mouseButtons={{
-          LEFT: -1 as any,
+          LEFT: THREE.MOUSE.PAN,
           MIDDLE: THREE.MOUSE.ROTATE,
           RIGHT: THREE.MOUSE.PAN,
         }}
@@ -942,29 +933,45 @@ const CanvasScene = () => {
         }}
         onChange={() => {
           wasPanningRef.current = true;
+
+          // Event-driven camera sync (Industry Leading Optimization)
+          const now = performance.now();
+          if (now - lastSyncTimeRef.current > 100) {
+            const cam = camera as THREE.OrthographicCamera;
+            const orbit = controls as any;
+            const azimuth = orbit.getAzimuthalAngle();
+            const polar = orbit.getPolarAngle();
+
+            const currentSize = (controls as any).object.getState?.().size || size;
+            setCameraState(
+              [cam.position.x, cam.position.y, cam.position.z],
+              cam.zoom,
+              currentSize.width / cam.zoom,
+              currentSize.height / cam.zoom
+            );
+            setCameraRotation(azimuth, polar);
+            lastSyncTimeRef.current = now;
+          }
         }}
+
         onEnd={() => {
           setTimeout(() => {
-            if (wasPanningRef.current) wasPanningRef.current = false;
+            // Only clear wasPanning if we actually finished a move
+            // Static clicks will have already cleared it in handlePointerUp
           }, 200);
         }}
       />
 
-      <group
-        onPointerMove={handlePointerMove}
-        onPointerDown={handlePointerDown}
-        onPointerUp={handlePointerUp}
-        rotation={[0, 0, 0]}
-      >
-        <SimulationLinks />
-        <SimulationNodes />
-        <PlacementIndicator />
+      <PlacementIndicator />
+    </group >
 
         <mesh
-          position={[0, -20.1, 0]}
+          position={[0, -0.1, 0]}
           rotation={[-Math.PI / 2, 0, 0]}
           receiveShadow
           castShadow={false}
+          onClick={handleClick}
+          onPointerDown={(e) => e.stopPropagation()}
         >
           <planeGeometry args={[10000, 10000]} />
           <meshPhysicalMaterial
@@ -982,7 +989,7 @@ const CanvasScene = () => {
         </mesh>
 
         <Grid
-          position={[0, -20, 0]}
+          position={[0, 0, 0]}
           infiniteGrid
           fadeDistance={500}
           fadeStrength={5}
@@ -994,7 +1001,7 @@ const CanvasScene = () => {
           cellThickness={0.8}
           rotation={[0, 0, 0]}
         />
-      </group>
+      </group >
 
       <mesh ref={sphereRef} position={[0, 0, -500]}>
         <sphereGeometry args={[800, 64, 64]} />
@@ -1011,7 +1018,7 @@ const CanvasScene = () => {
       <RainMist isDark={isDark} />
 
       <ContactShadows
-        position={[0, -20.05, 0]}
+        position={[0, -0.05, 0]}
         opacity={0.32}
         scale={180}
         blur={2.6}
@@ -1033,11 +1040,17 @@ const CanvasScene = () => {
 };
 
 export const SimulationCanvas = () => {
+  const cameraState = useSimulationStore((state) => state.cameraState);
   return (
     <Canvas
       orthographic
       shadows
-      camera={{ zoom: 7.5, position: [0, 0, 100], far: 2000, near: -2000 }}
+      camera={{
+        zoom: cameraState.zoom,
+        position: cameraState.position as [number, number, number],
+        far: 2000,
+        near: -2000
+      }}
       gl={{ antialias: true }}
     >
       <CanvasScene />

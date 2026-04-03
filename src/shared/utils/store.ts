@@ -53,8 +53,8 @@ export const getFloorIndex = (y: number) =>
 
 export const getFloorBaseY = (y: number) => getFloorIndex(y) * GRID_SIZE_Y;
 
-export const getPlacementCenterY = (y: number, height: number) =>
-  getFloorBaseY(y) + Math.max(0, height / 2);
+export const getPlacementCenterY = (y: number, _height: number) =>
+  getFloorBaseY(y);
 
 export const snapY = (y: number, _height?: number) => {
   return getFloorBaseY(y);
@@ -95,16 +95,16 @@ export interface SimulationState {
   resources: Resources;
   towerGrid: Map<string, string>; // "x,y" -> shapeId
   activeTool:
-    | SimulationNodeType
-    | "link"
-    | "select"
-    | "vertex"
-    | "residential"
-    | "commercial"
-    | "office"
-    | "utility"
-    | "lobby"
-    | "elevator";
+  | SimulationNodeType
+  | "link"
+  | "select"
+  | "vertex"
+  | "residential"
+  | "commercial"
+  | "office"
+  | "utility"
+  | "lobby"
+  | "elevator";
   mode: "studio" | "viewer";
   selectedId: string | null;
   editingId: string | null;
@@ -191,6 +191,8 @@ export interface SimulationState {
   activeTooltipId: string | null;
   setActiveTooltipId: (id: string | null) => void;
 }
+
+export const getGridKey = (x: number, y: number) => `${x},${y}`;
 
 const getAABB = (shape: SimulationNode) => {
   const rotation = shape.rotation || 0;
@@ -320,16 +322,23 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     shouldResetCamera: false,
 
     addShape: (shape, force = false, skipHistory = false) => {
+      const state = get();
+      const gridKey = getGridKey(shape.position[0], shape.position[1]);
+
+      // Prevent placement on same cell during initial build
+      if (!force && state.shapes.some(s => getGridKey(s.position[0], s.position[1]) === gridKey)) {
+        return;
+      }
+
       if (!skipHistory) {
         pushToHistory();
       }
-      set((state) => {
-        const safePos = force
-          ? shape.position
-          : findBestPosition(shape, state.shapes);
-        const nextShape = { ...shape, position: safePos };
-        return { shapes: [...state.shapes, nextShape] };
-      });
+
+      const safePos = force
+        ? shape.position
+        : findBestPosition(shape, state.shapes);
+      const nextShape = { ...shape, position: safePos };
+      set((state) => ({ shapes: [...state.shapes, nextShape] }));
     },
     updateShape: (id, updates, skipHistory = false) => {
       if (!skipHistory) {
@@ -492,8 +501,8 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     setShouldResetCamera: (val) => set({ shouldResetCamera: val }),
 
     cameraState: {
-      position: [0, 0, 100],
-      zoom: 7.5,
+      position: [-100, 80, 120],
+      zoom: 3.5,
       worldWidth: 20,
       worldHeight: 20,
     },
@@ -503,8 +512,8 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       }),
 
     cameraRotation: {
-      azimuth: 0,
-      polar: 0,
+      azimuth: (-30 * Math.PI) / 180,
+      polar: (70 * Math.PI) / 180, // Pitch 20 from horizon = 70 from zenith
     },
     setCameraRotation: (azimuth, polar) =>
       set({

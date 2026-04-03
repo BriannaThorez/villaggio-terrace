@@ -51,11 +51,10 @@ const RotateHandle = ({ rotation }: { rotation: number }) => {
         pointerEvents="none"
       >
         <div
-          className={`pointer-events-none w-40 h-40 rounded-full bg-white border-8 text-black flex items-center justify-center transition-all duration-300 ${
-            hovered
+          className={`pointer-events-none w-40 h-40 rounded-full bg-white border-8 text-black flex items-center justify-center transition-all duration-300 ${hovered
               ? "border-gray-300 scale-110 shadow-[0_0_100px_rgba(255,255,255,0.8)]"
               : "border-gray-100 shadow-[0_0_80px_rgba(255,255,255,0.4)]"
-          }`}
+            }`}
         >
           <div className="scale-[4]">
             <RotateCw
@@ -325,7 +324,7 @@ export const SimulationNodes = () => {
     if (!meshRef.current) return;
 
     renderedShapes.forEach((shape, i) => {
-      tempPosition.current.set(shape.position[0], shape.position[1], 0);
+      tempPosition.current.set(shape.position[0], shape.position[1] + shape.size[1] / 2, 0);
       tempEuler.current.set(0, 0, shape.rotation || 0);
       tempRotation.current.setFromEuler(tempEuler.current);
 
@@ -585,7 +584,7 @@ export const SimulationNodes = () => {
             {/* Text Rendering */}
             {(shape.text || editingId === shape.id) && (
               <Text
-                position={[0, 0, 0.1]}
+                position={[0, shape.size[1] / 2, 0.1]}
                 fontSize={2}
                 color={
                   (themes as any)[themeName].mode === "dark"

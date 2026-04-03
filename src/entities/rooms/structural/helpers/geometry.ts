@@ -1,5 +1,4 @@
-import        isVertical:),
-t, 0Faceconst gtRoom {
+import {
   createRoomVec3,
   type RoomDimensions,
   type RoomFace,
@@ -43,11 +42,11 @@ const axisSignForFace = (face: RoomFace): 1 | -1 => {
 };
 
 const roomCenterToBounds = (dimensions: RoomDimensions): RoomOpeningBounds => ({
-  min: createRoomVec3(-dimensions.width / 2, 0, -dimensions.depth / 2),
+  min: createRoomVec3(-dimensions.width / 2, 0, -dimensions.depth),
   max: createRoomVec3(
     dimensions.width / 2,
     dimensions.height,
-    dimensions.depth / 2,
+    0,
   ),
 });
 
@@ -100,16 +99,15 @@ export const getRoomShellGeometry = (
   const innerDepth = Math.max(0, dimensions.depth - thickness.wall * 2);
 
   const innerBounds: RoomOpeningBounds = {
-    min: createRoomVec3(-innerWidth / 2, thickness.bottom, -innerDepth / 2),
+    min: createRoomVec3(-innerWidth / 2, thickness.bottom, -dimensions.depth + thickness.wall),
     max: createRoomVec3(
       innerWidth / 2,
       dimensions.height - thickness.top,
-      innerDepth / 2,
+      -thickness.wall,
     ),
   };
 
-  return
- {
+  return {
     outerBounds,
     innerBounds,
     floorBounds: {
@@ -147,42 +145,42 @@ export const getRoomFaceGeometry = (
       return {
         face,
         normal: getRoomFaceNormal(face),
-        center: createRoomVec3(0, 0, -halfDepth),
+        center: createRoomVec3(0, 0, -dimensions.depth),
         isVertical: true,
       };
     case "south":
       return {
         face,
         normal: getRoomFaceNormal(face),
-        center: createRoomVec3(0, 0, halfDepth),
+        center: createRoomVec3(0, 0, 0),
         isVertical: true,
       };
     case "east":
       return {
         face,
         normal: getRoomFaceNormal(face),
-        center: createRoomVec3(halfWidth, 0, 0),
+        center: createRoomVec3(halfWidth, 0, -halfDepth),
         isVertical: true,
       };
     case "west":
       return {
         face,
         normal: getRoomFaceNormal(face),
-        center: createRoomVec3(-halfWidth, 0, 0),
+        center: createRoomVec3(-halfWidth, 0, -halfDepth),
         isVertical: true,
       };
     case "bottom":
       return {
         face,
         normal: getRoomFaceNormal(face),
-        center: createRoomVec3(0, 0, 0),
+        center: createRoomVec3(0, 0, -halfDepth),
         isVertical: false,
       };
     case "top":
       return {
         face,
         normal: getRoomFaceNormal(face),
-        center: createRoomVec3(0, dimensions.height, 0),
+        center: createRoomVec3(0, dimensions.height, -halfDepth),
         isVertical: false,
       };
   }
@@ -204,12 +202,12 @@ export const getOpeningBounds = (
       min: createRoomVec3(
         center.x - halfWidth,
         center.y - halfHeight,
-        -wallDepth,
+        center.z - wallDepth,
       ),
       max: createRoomVec3(
         center.x + halfWidth,
         center.y + halfHeight,
-        wallDepth,
+        center.z + wallDepth,
       ),
     };
   }
@@ -217,12 +215,12 @@ export const getOpeningBounds = (
   if (face === "east" || face === "west") {
     return {
       min: createRoomVec3(
-        -wallWidth,
+        center.x - wallWidth,
         center.y - halfHeight,
         center.z - halfWidth,
       ),
       max: createRoomVec3(
-        wallWidth,
+        center.x + wallWidth,
         center.y + halfHeight,
         center.z + halfWidth,
       ),
@@ -293,17 +291,17 @@ export const getFacePlacementAnchor = (
 
   switch (face) {
     case "north":
-      return createRoomVec3(0, 0, -halfDepth + inset);
+      return createRoomVec3(0, 0, -dimensions.depth + inset);
     case "south":
-      return createRoomVec3(0, 0, halfDepth - inset);
+      return createRoomVec3(0, 0, 0 - inset);
     case "east":
-      return createRoomVec3(halfWidth - inset, 0, 0);
+      return createRoomVec3(halfWidth - inset, 0, -halfDepth);
     case "west":
-      return createRoomVec3(-halfWidth + inset, 0, 0);
+      return createRoomVec3(-halfWidth + inset, 0, -halfDepth);
     case "bottom":
-      return createRoomVec3(0, 0 + inset, 0);
+      return createRoomVec3(0, 0 + inset, -halfDepth);
     case "top":
-      return createRoomVec3(0, dimensions.height - inset, 0);
+      return createRoomVec3(0, dimensions.height - inset, -halfDepth);
   }
 };
 
