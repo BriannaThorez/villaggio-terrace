@@ -82,13 +82,11 @@ const PlacementIndicator = () => {
 
       groupRef.current.position.z = 0.5;
 
-      const existing = useSimulationStore
+      const isValid = useSimulationStore
         .getState()
-        .shapes.find(
-          (s) => s.position[0] === snappedX && s.position[1] === snappedY,
-        );
+        .checkPlacement(snappedX, snappedY, clashSize[0], clashSize[1]);
 
-      const color = existing ? "#ff4444" : currentTheme.accent;
+      const color = !isValid ? "#ff4444" : currentTheme.accent;
 
       // Pulse animation for spectacular feedback
       const pulse = 1 + Math.sin(state.clock.elapsedTime * 6) * 0.05;
@@ -666,12 +664,10 @@ const CanvasScene = () => {
     const gridKey = `${snappedX},${snappedY}`;
 
     // Block overlapping clicks
-    const existing = useSimulationStore
+    const isValid = useSimulationStore
       .getState()
-      .shapes.find(
-        (s) => s.position[0] === snappedX && s.position[1] === snappedY,
-      );
-    if (existing) return;
+      .checkPlacement(snappedX, snappedY, nodeSize[0], nodeSize[1]);
+    if (!isValid) return;
 
     // Block rapid multiple placements (dealt with after uniqueness check)
     if (lastPlacedCellRef.current === gridKey) return;

@@ -112,6 +112,7 @@ export interface SimulationState {
   isRotating: boolean;
   isPanning: boolean;
   dragOffset: [number, number];
+  preDragPosition: [number, number] | null;
 
   // Drag-to-link state
   linkingFrom: { id: string; port: PortType } | null;
@@ -144,6 +145,8 @@ export interface SimulationState {
   setIsRotating: (isRotating: boolean) => void;
   setIsPanning: (isPanning: boolean) => void;
   setDragOffset: (offset: [number, number]) => void;
+  setPreDragPosition: (pos: [number, number] | null) => void;
+  checkPlacement: (x: number, y: number, w: number, h: number, ignoreId?: string) => boolean;
   setLinkingFrom: (linking: { id: string; port: PortType } | null) => void;
   setLinkingTo: (pos: [number, number] | null) => void;
   resolveAllOverlaps: () => void;
@@ -236,43 +239,7 @@ const checkOverlap = (s1: SimulationNode, s2: SimulationNode) => {
   );
 };
 
-const findBestPosition = (
-  shape: SimulationNode,
-  allShapes: SimulationNode[],
-): [number, number] => {
-  const [startX, startY] = shape.position;
-  const others = allShapes.filter((s) => s.id !== shape.id);
 
-  if (
-    !others.some((s) =>
-      checkOverlap({ ...shape, position: [startX, startY] }, s),
-    )
-  ) {
-    return [startX, startY];
-  }
-
-  const stepX = 10;
-  const stepY = 40;
-  const maxIterations = 200;
-
-  for (let i = 1; i < maxIterations; i++) {
-    for (let dx = -i; dx <= i; dx++) {
-      for (let dy = -i; dy <= i; dy++) {
-        if (Math.abs(dx) !== i && Math.abs(dy) !== i) continue;
-
-        const nx = startX + dx * stepX;
-        const ny = startY + dy * stepY;
-        const testShape = { ...shape, position: [nx, ny] as [number, number] };
-
-        if (!others.some((s) => checkOverlap(testShape, s))) {
-          return [nx, ny];
-        }
-      }
-    }
-  }
-
-  return [startX, startY];
-};
 
 interface HistoryState {
   shapes: SimulationNode[];
@@ -317,28 +284,45 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     isRotating: false,
     isPanning: false,
     dragOffset: [0, 0],
+    preDragPosition: null,
     linkingFrom: null,
     linkingTo: null,
     shouldResetCamera: false,
 
+    checkPlacement: (x, y, w, h, ignoreId) => {
+      const state = get();
+      const cx1 = x;
+      const cy1 = y;
+
+      for (const s2 of state.shapes) {
+        if (s2.id === ignoreId) continue;
+        const aabb2 = getAABB(s2);
+        const cx2 = s2.position[0] + aabb2.cx;
+        const cy2 = s2.position[1] + aabb2.cy;
+
+        if (
+          Math.abs(cx1 - cx2) < (w + aabb2.w) / 2 - 0.1 &&
+          Math.abs(cy1 - cy2) < (h + aabb2.h) / 2 - 0.1
+        ) {
+          return false; // Collision detected
+        }
+      }
+      return true; // Valid placement
+    },
+
     addShape: (shape, force = false, skipHistory = false) => {
       const state = get();
-      const gridKey = getGridKey(shape.position[0], shape.position[1]);
 
-      // Prevent placement on same cell during initial build
-      if (!force && state.shapes.some(s => getGridKey(s.position[0], s.position[1]) === gridKey)) {
-        return;
+      // Prevent exact placement duplicate or box intersection
+      if (!force && !state.checkPlacement(shape.position[0], shape.position[1], shape.size[0], shape.size[1], shape.id)) {
+        return; // Placements must be strictly non-overlapping
       }
 
       if (!skipHistory) {
         pushToHistory();
       }
 
-      const safePos = force
-        ? shape.position
-        : findBestPosition(shape, state.shapes);
-      const nextShape = { ...shape, position: safePos };
-      set((state) => ({ shapes: [...state.shapes, nextShape] }));
+      set((state) => ({ shapes: [...state.shapes, shape] }));
     },
     updateShape: (id, updates, skipHistory = false) => {
       if (!skipHistory) {
@@ -434,22 +418,31 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     },
     setIsDragging: (isDragging) => {
       const state = get();
-      if (!isDragging && state.isDragging && state.selectedId) {
-        const shape = state.shapes.find((s) => s.id === state.selectedId);
-        if (shape) {
-          const safePos = findBestPosition(shape, state.shapes);
-          state.updateShape(shape.id, { position: safePos });
+      if (isDragging) {
+        const shape = state.selectedId ? state.shapes.find(s => s.id === state.selectedId) : null;
+        set({ isDragging, preDragPosition: shape ? [...shape.position] : null });
+      } else {
+        if (state.isDragging && state.selectedId) {
+          const shape = state.shapes.find((s) => s.id === state.selectedId);
+          if (shape) {
+            if (!state.checkPlacement(shape.position[0], shape.position[1], shape.size[0], shape.size[1], shape.id)) {
+              if (state.preDragPosition) {
+                state.updateShape(shape.id, { position: state.preDragPosition }, true);
+              }
+            }
+          }
         }
+        set({ isDragging, preDragPosition: null });
       }
-      set({ isDragging });
     },
     setIsRotating: (isRotating) => {
       const state = get();
       if (!isRotating && state.isRotating && state.selectedId) {
         const shape = state.shapes.find((s) => s.id === state.selectedId);
         if (shape) {
-          const safePos = findBestPosition(shape, state.shapes);
-          state.updateShape(shape.id, { position: safePos });
+          if (!state.checkPlacement(shape.position[0], shape.position[1], shape.size[0], shape.size[1], shape.id)) {
+            // Let it revert or stay invalid, typically rotation shouldn't collide inside a bounding box
+          }
         }
       }
       set({ isRotating });
@@ -459,26 +452,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     setLinkingFrom: (linkingFrom) => set({ linkingFrom }),
     setLinkingTo: (linkingTo) => set({ linkingTo }),
     resolveAllOverlaps: () => {
-      const state = get();
-      let newShapes = [...state.shapes];
-      let changed = false;
-
-      for (let i = 0; i < newShapes.length; i++) {
-        const shape = newShapes[i];
-        const safePos = findBestPosition(shape, newShapes);
-        if (
-          safePos[0] !== shape.position[0] ||
-          safePos[1] !== shape.position[1]
-        ) {
-          newShapes[i] = { ...shape, position: safePos };
-          changed = true;
-        }
-      }
-
-      if (changed) {
-        pushToHistory();
-        set({ shapes: newShapes });
-      }
+      // Legacy layout resolution disabled in strict mode
     },
     undo: () => {
       if (history.length > 0) {
