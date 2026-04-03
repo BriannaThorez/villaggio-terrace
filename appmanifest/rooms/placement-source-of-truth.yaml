@@ -1,0 +1,266 @@
+schemaVersion: 1.0
+project: villaggio-terrace
+title: Placement Source of Truth for Room/Node Restrictions
+status: draft
+
+intent:
+  axiomatic:
+    title: "Axiomatic Intent"
+    description: |
+      Placement is not arbitrary node dropping. It is a constrained architectural operation
+      that must respect structural support, circulation, adjacency, face orientation, and
+      room program logic. A room or node may only occupy a location when the placement
+      conditions are satisfied.
+  axiological:
+    title: "Axiological Intent"
+    description: |
+      The system values believable tower planning, structural coherence, readable circulation,
+      and emergent architectural layouts over permissive freeform placement. Shared edges,
+      support continuity, and construction logic should feel like real tower design systems
+      such as SimTower, Yoot Tower, and Project Highrise.
+  teleological:
+    title: "Teleological Intent"
+    description: |
+      Enable a tower simulation where rooms, nodes, and services can be placed, rejected,
+      or adapted according to layered rules, allowing the player to build a functional,
+      structurally plausible, and visually legible high-rise.
+
+references:
+  structuralTruth: "appmanifest/rooms/rooms-source-of-truth.yaml"
+
+placementPrinciples:
+  - name: "Support before occupancy"
+    description: |
+      A node or room should not float unsupported unless its type explicitly allows it.
+      Structural rooms require valid bearing, adjacency, or core anchoring.
+  - name: "Face-aware placement"
+    description: |
+      Nodes that bind to a wall, corridor, facade, or core face must align to canonical
+      structural faces and not arbitrary offsets.
+  - name: "Circulation preservation"
+    description: |
+      Placement may not block required circulation unless the node itself is a circulation
+      element or intentionally modifies pathing.
+  - name: "Adjacency consistency"
+    description: |
+      Rooms that depend on shared walls, doors, or service connections must only place
+      where adjacency can be satisfied or negotiated.
+  - name: "Negative space protection"
+    description: |
+      Doors, windows, shafts, and cutouts reserve space that cannot be consumed by other
+      placement unless explicitly designed to overlap.
+  - name: "Program compatibility"
+    description: |
+      The room type must be compatible with the target zone, height band, access conditions,
+      and building system constraints.
+  - name: "Deterministic rejection"
+    description: |
+      When placement fails, the reason should be deterministic, explainable, and visible to
+      future logic or UI feedback.
+
+placementLayers:
+  - id: zoning
+    name: "Zoning and Envelope"
+    purpose: "Validate whether a room/node is allowed in the target building envelope."
+  - id: support
+    name: "Support and Load"
+    purpose: "Ensure the room/node has sufficient support, anchoring, or explicit suspension rules."
+  - id: access
+    name: "Access and Circulation"
+    purpose: "Ensure doors, corridors, stairs, elevators, and service routes remain viable."
+  - id: adjacency
+    name: "Adjacency and Shared Faces"
+    purpose: "Validate shared walls, connected systems, and neighboring program compatibility."
+  - id: opening
+    name: "Openings and Cutouts"
+    purpose: "Protect windows, doors, shafts, and other negative spaces from invalid overlap."
+  - id: visibility
+    name: "Visibility and Readability"
+    purpose: "Support player-facing placement clarity, previews, and structural legibility."
+  - id: specialization
+    name: "Room/Node Specialization"
+    purpose: "Apply type-specific placement rules for residential, commercial, utility, service, and core nodes."
+
+conditionalLogic:
+  - id: residential-basic
+    when:
+      nodeType: "residential"
+    rules:
+      - if: "not hasAdjacentSupport and not isCoreAnchored"
+        then: "reject"
+        reason: "Residential nodes require a valid support condition or core anchoring."
+      - if: "wouldBlockRequiredCirculation"
+        then: "reject"
+        reason: "Residential placement may not block required circulation paths."
+      - if: "conflictsWithOpeningOrShaft"
+        then: "reject"
+        reason: "Residential nodes may not occupy reserved negative space."
+      - if: "sharesWallWithIncompatibleNode"
+        then: "reject"
+        reason: "Residential nodes require compatible adjacency for shared faces."
+      - if: "allConditionsPass"
+        then: "accept"
+
+  - id: commercial-basic
+    when:
+      nodeType: "commercial"
+    rules:
+      - if: "not hasPublicAccess"
+        then: "reject"
+        reason: "Commercial nodes require public or semi-public access."
+      - if: "not hasAdequateFacadeOrFrontage"
+        then: "reject"
+        reason: "Commercial nodes need readable frontage or customer-facing exposure."
+      - if: "conflictsWithServiceCoreOrShaft"
+        then: "reject"
+        reason: "Commercial nodes may not overlap reserved service infrastructure."
+      - if: "loadOrSpanExceedsSupportRule"
+        then: "reject"
+        reason: "Commercial nodes cannot exceed available structural support."
+      - if: "allConditionsPass"
+        then: "accept"
+
+  - id: office-basic
+    when:
+      nodeType: "office"
+    rules:
+      - if: "not hasReliableAccessToCirculation"
+        then: "reject"
+        reason: "Office nodes require dependable access to circulation."
+      - if: "not fitsWithinModularGrid"
+        then: "reject"
+        reason: "Office nodes should conform to modular tower planning."
+      - if: "conflictsWithWindowOrCoreRules"
+        then: "reject"
+        reason: "Office nodes may not violate facade or core restrictions."
+      - if: "allConditionsPass"
+        then: "accept"
+
+  - id: utility-service
+    when:
+      nodeType: "utility"
+    rules:
+      - if: "not nearServiceCore"
+        then: "reject"
+        reason: "Utility nodes should be near service infrastructure."
+      - if: "wouldInterruptCriticalSystems"
+        then: "reject"
+        reason: "Utility nodes may not break elevator, shaft, or service routing."
+      - if: "canAttachToExistingServiceBand"
+        then: "accept"
+      - if: "allConditionsPass"
+        then: "accept"
+
+  - id: lobby-hub
+    when:
+      nodeType: "lobby"
+    rules:
+      - if: "not connectedToPrimaryCirculation"
+        then: "reject"
+        reason: "Lobby nodes must attach to the main circulation network."
+      - if: "not hasFacadePresenceOrAtriumRelation"
+        then: "reject"
+        reason: "Lobby nodes should have visible presence or atrium relation."
+      - if: "allConditionsPass"
+        then: "accept"
+
+  - id: elevator-core
+    when:
+      nodeType: "elevator"
+    rules:
+      - if: "not alignedToVerticalCore"
+        then: "reject"
+        reason: "Elevator nodes must align to a valid vertical core."
+      - if: "conflictsWithFloorSlabOrBeamRules"
+        then: "reject"
+        reason: "Elevator nodes must satisfy shaft and slab constraints."
+      - if: "allConditionsPass"
+        then: "accept"
+
+  - id: corridor-link
+    when:
+      nodeType: "corridor"
+    rules:
+      - if: "not connectsAtLeastTwoSpaces"
+        then: "reject"
+        reason: "Corridors must connect at least two places."
+      - if: "overlapsReservedOpeningSpace"
+        then: "reject"
+        reason: "Corridors may not consume reserved opening space."
+      - if: "allConditionsPass"
+        then: "accept"
+
+  - id: facade-facing
+    when:
+      requiresFaceOrientation: true
+    rules:
+      - if: "not faceMatchesTargetFace"
+        then: "reject"
+        reason: "Face-oriented nodes must match the target structural face."
+      - if: "wouldInvertOpeningDirection"
+        then: "reject"
+        reason: "Opening direction must remain consistent with the face."
+      - if: "allConditionsPass"
+        then: "accept"
+
+  - id: cutout-preserving
+    when:
+      overlapsOpening: true
+    rules:
+      - if: "not explicitlyAllowedToOverlapOpening"
+        then: "reject"
+        reason: "Nodes may not overlap openings unless explicitly permitted."
+      - if: "wouldInvalidateFramingBeams"
+        then: "reject"
+        reason: "Framing beams must remain intact around negative spaces."
+      - if: "allConditionsPass"
+        then: "accept"
+
+nodePlacementFlags:
+  requiresSupport:
+    description: "Placement depends on a support relationship or explicit anchoring."
+  requiresFacade:
+    description: "Placement depends on facade access or visible frontage."
+  requiresCoreAnchor:
+    description: "Placement depends on attachment to a vertical or structural core."
+  requiresCirculation:
+    description: "Placement depends on access to circulation, corridor, or path network."
+  faceLocked:
+    description: "Placement must align to a specific canonical face."
+  openingAware:
+    description: "Placement must account for doors, windows, shafts, and other cutouts."
+  adjacencyRequired:
+    description: "Placement must negotiate shared wall or neighbor conditions."
+  serviceBandPreferred:
+    description: "Placement prefers service bands or utility strata."
+  rejectIfUnsupported:
+    description: "Reject placement when the support condition is absent."
+  rejectIfBlocking:
+    description: "Reject placement when circulation or critical paths are blocked."
+
+restrictionExamples:
+  - nodeType: residential
+    description: "Can occupy supported floor plates and shared walls, but not unsupported voids."
+  - nodeType: commercial
+    description: "Needs frontage, access, and compatible circulation."
+  - nodeType: office
+    description: "Prefers modular, repeatable floor layouts with stable access."
+  - nodeType: utility
+    description: "Prefers service cores, shafts, and maintenance bands."
+  - nodeType: elevator
+    description: "Requires vertical alignment and shaft continuity."
+  - nodeType: lobby
+    description: "Requires connection to main circulation and a readable public interface."
+
+implementationNotes:
+  - "This file defines conditional logic and rule intent only; exact enforcement belongs in gameplay and placement systems."
+  - "Rules should remain deterministic and report explicit failure causes."
+  - "Placement previews should visualize pass/fail state without mutating the canonical room graph."
+  - "The logic should be extensible for future rules from tower simulators such as SimTower, Yoot Tower, and Project Highrise."
+
+nextSteps:
+  - "Map these conditions into a validated placement resolver."
+  - "Add type-specific adjacency and support evaluators."
+  - "Connect UI previews to pass/fail reasons."
+  - "Integrate with structural face and opening metadata from the room truth model."
+  - "QA note: if the roadmap shifts to a single thick wall between beams, revalidate support, opening carve-out, and face-visibility rules so the simplification does not collapse interior readability."

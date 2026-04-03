@@ -1,4 +1,5 @@
-import {
+import        isVertical:),
+t, 0Faceconst gtRoom {
   createRoomVec3,
   type RoomDimensions,
   type RoomFace,
@@ -42,14 +43,10 @@ const axisSignForFace = (face: RoomFace): 1 | -1 => {
 };
 
 const roomCenterToBounds = (dimensions: RoomDimensions): RoomOpeningBounds => ({
-  min: createRoomVec3(
-    -dimensions.width / 2,
-    -dimensions.height / 2,
-    -dimensions.depth / 2,
-  ),
+  min: createRoomVec3(-dimensions.width / 2, 0, -dimensions.depth / 2),
   max: createRoomVec3(
     dimensions.width / 2,
-    dimensions.height / 2,
+    dimensions.height,
     dimensions.depth / 2,
   ),
 });
@@ -103,42 +100,35 @@ export const getRoomShellGeometry = (
   const innerDepth = Math.max(0, dimensions.depth - thickness.wall * 2);
 
   const innerBounds: RoomOpeningBounds = {
-    min: createRoomVec3(
-      -innerWidth / 2,
-      -innerHeight / 2 + thickness.bottom,
-      -innerDepth / 2,
-    ),
+    min: createRoomVec3(-innerWidth / 2, thickness.bottom, -innerDepth / 2),
     max: createRoomVec3(
       innerWidth / 2,
-      innerHeight / 2 - thickness.top,
+      dimensions.height - thickness.top,
       innerDepth / 2,
     ),
   };
 
-  return {
+  return
+ {
     outerBounds,
     innerBounds,
     floorBounds: {
-      min: createRoomVec3(
-        outerBounds.min.x,
-        outerBounds.min.y,
-        outerBounds.min.z,
-      ),
+      min: createRoomVec3(outerBounds.min.x, 0, outerBounds.min.z),
       max: createRoomVec3(
         outerBounds.max.x,
-        outerBounds.min.y + thickness.bottom,
+        thickness.bottom,
         outerBounds.max.z,
       ),
     },
     ceilingBounds: {
       min: createRoomVec3(
         outerBounds.min.x,
-        outerBounds.max.y - thickness.top,
+        dimensions.height - thickness.top,
         outerBounds.min.z,
       ),
       max: createRoomVec3(
         outerBounds.max.x,
-        outerBounds.max.y,
+        dimensions.height,
         outerBounds.max.z,
       ),
     },
@@ -150,7 +140,6 @@ export const getRoomFaceGeometry = (
   dimensions: RoomDimensions,
 ): RoomFaceGeometry => {
   const halfWidth = dimensions.width / 2;
-  const halfHeight = dimensions.height / 2;
   const halfDepth = dimensions.depth / 2;
 
   switch (face) {
@@ -186,14 +175,14 @@ export const getRoomFaceGeometry = (
       return {
         face,
         normal: getRoomFaceNormal(face),
-        center: createRoomVec3(0, -halfHeight, 0),
+        center: createRoomVec3(0, 0, 0),
         isVertical: false,
       };
     case "top":
       return {
         face,
         normal: getRoomFaceNormal(face),
-        center: createRoomVec3(0, halfHeight, 0),
+        center: createRoomVec3(0, dimensions.height, 0),
         isVertical: false,
       };
   }
@@ -300,7 +289,6 @@ export const getFacePlacementAnchor = (
   inset = 0,
 ): RoomVec3 => {
   const halfWidth = dimensions.width / 2;
-  const halfHeight = dimensions.height / 2;
   const halfDepth = dimensions.depth / 2;
 
   switch (face) {
@@ -313,9 +301,9 @@ export const getFacePlacementAnchor = (
     case "west":
       return createRoomVec3(-halfWidth + inset, 0, 0);
     case "bottom":
-      return createRoomVec3(0, -halfHeight + inset, 0);
+      return createRoomVec3(0, 0 + inset, 0);
     case "top":
-      return createRoomVec3(0, halfHeight - inset, 0);
+      return createRoomVec3(0, dimensions.height - inset, 0);
   }
 };
 
@@ -328,20 +316,24 @@ export const getStructuralPlacementZones = (
   return {
     shell,
     floorZone: {
-      min: shell.innerBounds.min,
+      min: createRoomVec3(shell.innerBounds.min.x, 0, shell.innerBounds.min.z),
       max: createRoomVec3(
         shell.innerBounds.max.x,
-        shell.innerBounds.min.y + thickness.bottom,
+        thickness.bottom,
         shell.innerBounds.max.z,
       ),
     },
     ceilingZone: {
       min: createRoomVec3(
         shell.innerBounds.min.x,
-        shell.innerBounds.max.y - thickness.top,
+        dimensions.height - thickness.top,
         shell.innerBounds.min.z,
       ),
-      max: shell.innerBounds.max,
+      max: createRoomVec3(
+        shell.innerBounds.max.x,
+        dimensions.height,
+        shell.innerBounds.max.z,
+      ),
     },
   };
 };

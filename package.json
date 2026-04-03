@@ -1,5 +1,5 @@
 {
-  "name": "laurianna-flow",
+  "name": "villaggio-terrace",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test:structural": "tsx --test src/features/rooms/structural/graph/cellBeamGraph.test.ts"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

@@ -6,7 +6,6 @@ import React, {
   useMemo,
 } from "react";
 import { useSimulationStore } from "../shared/utils/store";
-import { getMenuOffset } from "../shared/utils/layout";
 import {
   Palette,
   Trash2,
@@ -18,6 +17,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import themes from "../shared/themes/color_palettes.json";
+import { getMenuOffset } from "../shared/utils/layout";
 
 interface RadialMenuProps {
   shapeId: string;
@@ -112,6 +112,10 @@ export const RadialMenu: React.FC<RadialMenuProps> = ({ shapeId }) => {
   const setIsPanning = useSimulationStore((state) => state.setIsPanning);
   const themeName = useSimulationStore((state) => state.themeName);
 
+  const shape = useMemo(
+    () => shapes.find((s) => s.id === shapeId),
+    [shapes, shapeId],
+  );
   const currentTheme = useMemo(() => (themes as any)[themeName], [themeName]);
   const themeColors = useMemo(
     () => [
@@ -126,6 +130,12 @@ export const RadialMenu: React.FC<RadialMenuProps> = ({ shapeId }) => {
 
   const activeMenu = menuStack[menuStack.length - 1];
   const containerRef = useRef<HTMLDivElement>(null);
+  const menuOffset = useMemo(() => {
+    if (!shape) {
+      return { x: 0, y: 0 };
+    }
+    return getMenuOffset(shape, shapes);
+  }, [shape, shapes]);
 
   const handleToggle = useCallback(
     (e: React.MouseEvent) => {
@@ -143,7 +153,6 @@ export const RadialMenu: React.FC<RadialMenuProps> = ({ shapeId }) => {
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const handleTriggerPointerDown = (e: React.PointerEvent) => {
-    // Record start position
     pointerStartRef.current = { x: e.clientX, y: e.clientY };
     setIsPanning(true);
     e.stopPropagation();
@@ -157,7 +166,6 @@ export const RadialMenu: React.FC<RadialMenuProps> = ({ shapeId }) => {
     const dy = e.clientY - pointerStartRef.current.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    // If moved more than 5 pixels, assume it's a drag/pan and don't toggle
     if (distance < 5) {
       handleToggle(e as any);
     }
@@ -174,7 +182,6 @@ export const RadialMenu: React.FC<RadialMenuProps> = ({ shapeId }) => {
     }
   }, [menuStack]);
 
-  // Global right-click handler for "outside radius" logic
   useEffect(() => {
     if (!isOpen) return;
 
@@ -192,7 +199,6 @@ export const RadialMenu: React.FC<RadialMenuProps> = ({ shapeId }) => {
       const dy = e.clientY - centerY;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      // Radius of the menu is 240, plus button radius (80) and some buffer
       const menuRadius = 350;
 
       if (distance > menuRadius) {
@@ -218,7 +224,7 @@ export const RadialMenu: React.FC<RadialMenuProps> = ({ shapeId }) => {
         ...(shape?.themeColors || {}),
         [themeName]: color,
       };
-      updateShape(shapeId, { themeColors: newThemeColors, color }); // color as fallback
+      updateShape(shapeId, { themeColors: newThemeColors, color });
       setIsOpen(false);
     },
     [shapeId, updateShape, themeName, shapes],
@@ -290,9 +296,9 @@ export const RadialMenu: React.FC<RadialMenuProps> = ({ shapeId }) => {
         zIndex: 5000,
         width: 0,
         height: 0,
+        transform: `translate3d(${menuOffset.x}px, ${menuOffset.y}px, 0)`,
       }}
     >
-      {/* Main Trigger Button - Centered on anchor */}
       <motion.button
         whileHover={{
           scale: 1.1,
@@ -321,7 +327,6 @@ export const RadialMenu: React.FC<RadialMenuProps> = ({ shapeId }) => {
         </div>
       </motion.button>
 
-      {/* Radial Menu Items */}
       <AnimatePresence>
         {isOpen && (
           <motion.div

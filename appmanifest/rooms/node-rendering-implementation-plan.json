@@ -1,176 +1,214 @@
 {
-  "manifestVersion": "1.0",
+  "manifestVersion": "1.1",
   "project": "villaggio-terrace",
   "createdAt": "2026-04-02T00:00:00Z",
-  "title": "Node/Room Rendering Implementation Plan",
+  "title": "Node/Room Rendering Implementation Plan (Cell + Beam Framing)",
   "status": "pending",
   "progress": {
-    "currentPhase": "structural-node-graph",
-    "lastValidated": "not yet validated",
+    "currentPhase": "framing-beams-and-openings",
+    "lastValidated": "2026-04-02T07:00:00Z",
     "notes": [
-      "Inspired by the modular-spaceship-simulator structural graph (keel, ribs, beams) and its SDF skinning pipeline.",
-      "This plan reuses the same dependency map idea to build rooms/nodes as framed structural volumes before skinning."
+      "The plan now treats every room as a collection of grid cells anchored by beams and framing elements.",
+      "Framing beams act as termination points for drywall skin to carve openings (doors/windows) exactly like real construction.",
+      "Cell+Beam Graph gate verified—shared adjacency, canonical faces, and beam descriptors came from deterministic cell graph logic.",
+      "The room body should be simplified to one procedural thick wall volume between beams rather than separate inner and outer wall layers."
     ]
   },
-  "sourceInspiration": {
-    "name": "modular-spaceship-simulator",
-    "path": "examples/modular-spaceship-simulator",
-    "description": "Ship shells are driven by a StructuralGraph (Keel, Ribs, HullSections) and a StructuralGenerator that spits out capsules and spheres (beams and ribs) before the shader looms the skin with SDF unions."
-  },
-  "dependencyMap": {
-    "Keel": "central spine that anchors every node/room along the vertical stack; defines t-coordinates for frames.",
-    "Ribs": "planar cross-sections placed along the keel; supply profile, scale, and adjacency references for floors and beams.",
-    "Beams": "capsule primitives (or in our case wing plates) that span between ribs and create frame connections for shared walls.",
-    "Hull Sections / Skin": "a lofted, parametric outer shell that blends between ribs; the shader in the example performs smooth union SDFs to form the skin over the frame.",
-    "Modules (rooms)": "sub-assemblies defined in DNA that carve out pressurized spaces via capsules and boxes/lights."
+  "inspiration": {
+    "sourceTruth": "appmanifest/rooms/rooms-source-of-truth.yaml",
+    "description": "Procedural emergence dictated by structural constraints; the skin is a procedural membrane stretched between beam endpoints."
   },
   "intents": {
     "axiomatic": [
-      "Rooms are the boolean intersections of floors, ceilings, and walls; structure defines these constraints.",
-      "Structure (beams/pillars) dictates the boundaries and the skin is procedural."
+      "A room equals the boolean intersection of floors, ceilings, and walls defined by the grid + beam graph.",
+      "Beams and framing elements outline the structural limits and inform where the procedural skin may or may not span.",
+      "Each wall boundary should resolve into one thick procedural wall volume between beams, not separate inner and outer wall entities."
     ],
     "axiological": [
-      "Procedural emergence over prefab: adjacent rooms automatically merge shared walls via frame connectivity.",
-      "Structural honesty: visualization should directly reflect the load-bearing graph inherited from keel-beam-rib topology."
+      "Procedural emergence: adding cells automatically reuses shared beams for shared walls instead of duplicating geometry.",
+      "Structural honesty: rendered visuals are a direct byproduct of the beam graph covering all load-bearing/frame elements.",
+      "Reduced structural complexity: one canonical thick wall between beams is easier to reason about than dual wall shells."
     ],
     "teleological": [
-      "Create a living simulation where structural input reconfigures the rendered shell and all rooms/nodes remain perfectly batched and infinitely scalable."
+      "Deliver a living tower simulation where cells, beams, framing, and thick procedural wall volumes recompute instantly as rooms change, enabling continuous architectural response."
     ]
   },
   "scope": [
-    "Adapt the spaceship StructuralGraph (Keel + Ribs + Beams) into a tower node graph (foundation + vertical spine + floor plates).",
-    "Drive room generation via that graph so shared walls collapse naturally when nodes touch.",
-    "Render wall skins as procedural SDFs or batched meshes derived from the frame data.",
-    "Expose adjacency metadata for future procedural placement across rooms/corridors."
+    "Represent each room as a set of grid cells with associated beam endpoints at every corner.",
+    "Use beam definitions to construct shared walls, floors, and ceilings; framing beams carve openings for doors/windows.",
+    "Drive the skin (drywall/glass) from the beam/framing graph so it only ever spans sanctioned surfaces.",
+    "Emit adjacency metadata for future procedural placement and selection indicators that follow structural faces.",
+    "Keep all modules feature-sliced (grid logic, beam graph, wall volume generation, skin shader) and deterministic.",
+    "Model each boundary as a single thick wall volume between beams, with openings carved directly from that wall body."
   ],
   "workstreams": [
     {
-      "id": "structural-node-graph",
-      "name": "Structural Node Graph (Keel + Ribs)",
+      "id": "cell-beam-graph",
+      "name": "Cell + Beam Graph",
       "goals": [
-        "Model each node/room as a slice along a keel with rib references (similar to ship ribs).",
-        "Define core beams that connect ribs, representing vertical/horizontal edges of rooms.",
-        "Store metadata for floors, ceilings, and wall boundaries derived from turned frames."
+        "Map every room to a contiguous set of grid cells.",
+        "Generate beams at every cell corner along horizontal/vertical planes so shared walls are captured.",
+        "Make beams directional (wall, floor, ceiling) and track adjacency when cells expand or shrink."
       ],
       "phases": [
         {
           "id": "phase-a",
-          "name": "Node spine ingestion",
+          "name": "Cell graph modeling",
           "tasks": [
-            "Introduce a keel-like vertical spline that indexes every level.",
-            "Align rib slices to that spline, deriving width/depth/height per node.",
-            "Record structural adjacency so a downstream beam builder knows which neighbors share walls."
+            "Store cell footprints for each room/node in a serializable graph.",
+            "Calculate negative-space indicators for cells that share walls (so the skin can merge them).",
+            "Track canonical faces per room using cell orientation metadata."
           ]
         },
         {
           "id": "phase-b",
-          "name": "Beam & rib metadata",
+          "name": "Beam endpoint generation",
           "tasks": [
-            "Generate beam primitive definitions (capsules/boxes) spanning adjacent ribs.",
-            "Tag each beam with its role (wall, floor, ceiling, column).",
-            "Keep material/skin hints so later shaders can highlight load-bearing elements."
+            "For each occupied cell, produce beams at its four corners (capsules/boxes) spanning top/bottom and vertical edges.",
+            "Share beams between rooms when cells are adjacent so walls reuse the same structural primitive.",
+            "Tag beams with roles (interior partition, exterior wall, floor/ceiling) for skin shaders to interpret."
+          ]
+        }
+      ],
+      "completionCheck": {
+        "status": "complete",
+        "criteria": [
+          "Every room has a deterministic cell footprint and beam endpoint list.",
+          "Adjacency metadata records shared beams so expanding rooms do not double-draw walls.",
+          "Canonical face references (front, back, ceiling, floor) derive from the beam graph."
+        ]
+      }
+    },
+    {
+      "id": "framing-beams-and-openings",
+      "name": "Framing Beams + Openings",
+      "goals": [
+        "Introduce framing beams (smaller beams) around constrained openings to keep drywall from spanning them.",
+        "Model doors/windows as explicit negative spaces bounded by framing so the skin understands where not to render.",
+        "Allow framing beams to adapt as rooms grow/shrink on the grid."
+      ],
+      "phases": [
+        {
+          "id": "phase-a",
+          "name": "Framing beam generation",
+          "tasks": [
+            "Define framing beam primitives for door headers, sills, and jambs at cell boundaries.",
+            "Respond to opening metadata (width/height/placement) by placing framing beams along to prevent skin overlap.",
+            "Expose framing beam IDs so shaders or renderers can treat them as cutout boundaries."
+          ]
+        },
+        {
+          "id": "phase-b",
+          "name": "Opening metadata and validation",
+          "tasks": [
+            "Validate openings stay contained within the span of the surrounding beams.",
+            "Ensure the framing graph reconnects automatically when openings close or relocate.",
+            "Provide explicit adjacency data for placement logic (no door should be placed without framing beams)."
           ]
         }
       ],
       "completionCheck": {
         "status": "pending",
         "criteria": [
-          "Every node references a keel position and rib pair.",
-          "Beams share endpoints when rooms are adjacent, enabling automatic wall merging.",
-          "Adjacency metadata is serializable and queryable via the node graph."
+          "Framing beams prevent the skin from spanning openings; the graph data clearly shows cutout boundaries.",
+          "Opening validation prohibits dangling beams or uncovered gaps.",
+          "Shaders/renderers can query framed openings to adjust materials (glass vs drywall)."
         ]
       }
     },
     {
-      "id": "frame-and-wall-generation",
-      "name": "Frame and Wall Generation (Beams → Inner/Outer Walls)",
+      "id": "single-thick-wall-volume",
+      "name": "Single Thick Wall Volume",
       "goals": [
-        "Render the frame using capsule/box primitives derived from the node graph.",
-        "Build inner shell (interior walls, floors) and outer shell (exterior walls, facade).",
-        "Ensure beams behave like ribs from the spaceship shader—they define where the skin must attach."
+        "Replace dual inner/outer wall layering with one canonical thick wall volume between beams.",
+        "Derive visible faces from the wall body instead of modeling separate wall shells.",
+        "Carve openings directly from the wall volume while preserving framing and adjacency semantics."
       ],
       "phases": [
         {
           "id": "phase-a",
-          "name": "Beam instancing",
+          "name": "Wall volume contract",
           "tasks": [
-            "Convert beam definitions into instanced SDF primitives or batched meshes.",
-            "Support toggling visibility per beam role (load-bearing vs partition).",
-            "Prepare uniform data for the skin shader to know where beam endpoints reside."
+            "Define a single wall primitive per beam span with explicit thickness.",
+            "Store openings, thickness, and face metadata on the wall body instead of duplicated surfaces.",
+            "Remove assumptions that walls need separate inner and outer structural objects."
           ]
         },
         {
           "id": "phase-b",
-          "name": "Inner/outer shell tessellation",
+          "name": "Wall volume generation",
           "tasks": [
-            "Loft hull surfaces akin to the spaceship shader’s rib lofts using the beam/rib outlines.",
-            "Create separate geometries for inner (interior) and outer (exterior) skins.",
-            "Keep wall thicknesses deterministic from the structural inputs and allow cutaways to reveal interiors."
+            "Generate thick wall geometry from beam endpoints and span bounds.",
+            "Subtract openings and preserve reveal geometry around door/window cutouts.",
+            "Keep face shading and visibility as a render-time concern rather than a second wall model."
           ]
         }
       ],
       "completionCheck": {
         "status": "pending",
         "criteria": [
-          "Beam instancing data references actual keel/rib endpoints.",
-          "Inner and outer shells render in sequence so beam outlines align to procedural surfaces.",
-          "The skin generation works even when adjacent nodes share beams, preventing double-walls."
+          "Rooms render from one thick wall volume per boundary instead of paired inner/outer walls.",
+          "Openings are carved from the wall body without mutating beam framing data.",
+          "Wall thickness is procedural and consistent across all room spans."
         ]
       }
     },
     {
-      "id": "skin-and-node-visualization",
-      "name": "Skin & Node Visualization (SDF, Materials, Selection)",
+      "id": "skin-drywall-visualization",
+      "name": "Skin (Drywall) Visualization and Selection",
       "goals": [
-        "Leverage shader-driven SDF unions (as in shaderCompiler.ts) to produce smooth skins over the frame.",
-        "Attach materials to show structural honesty (steel beams, glass inner walls).",
-        "Link selection/cutaway layers to the structural metadata rather than raw mesh offsets."
+        "Render wall faces from the single thick wall volume and beam/framing metadata.",
+        "Use beam/framing metadata to inform shader-driven materials (concrete, drywall, glass) and cutaway logic.",
+        "Tie selection overlays and adjacency-based features (procedural placement, cutaways) to structural faces derived from this graph."
       ],
       "phases": [
         {
           "id": "phase-a",
-          "name": "Materialized SDF pipeline",
+          "name": "Drywall skin generator",
           "tasks": [
-            "Compile shader snippets using beam/node data (capsules, boxes, rounding) to match rooms' structural roles.",
-            "Add glow/selection layers similar to the spaceship numeric IDs (1.0 for beams, 2.0 for skin).",
-            "Expose shader constants for wall thickness, adjacency, and cutaway clipping."
+            "Build shader or mesh logic that drapes drywall across the canonical wall volume derived from beams.",
+            "Create exterior skin surfaces representing facade walls using exterior beams.",
+            "Allow the skin to respond to framing by leaving door/window holes open."
           ]
         },
         {
           "id": "phase-b",
           "name": "Selection & adjacency overlays",
           "tasks": [
-            "Bind the selection indicator to canonical structural faces (top/ceiling, bottom/floor) derived from adjacency data.",
-            "Render adjacency metadata (shared walls) so procedural furniture can query safe placement zones.",
-            "Keep cutaway logic non-destructive so structural data remains authoritative."
+            "Anchor selection indicators to structural faces computed from the beam graph so they align to visible walls.",
+            "Expose adjacency data for future procedural furnishing so placement avoids framing zones.",
+            "Keep cutaway visibility non-destructive and derived from the beam/skin graph."
           ]
         }
       ],
       "completionCheck": {
         "status": "pending",
         "criteria": [
-          "Shader pipeline renders room skins with beam highlights and clean cutaways.",
-          "Selection aligns to the true structural front face and respects adjacency (shared wall merging).",
-          "Adjacency data surfaces placement zones for future object generation."
+          "Wall faces render from a single thick wall volume with openings carved by framing beams.",
+          "Selection overlays always reference structural faces instead of fixed offsets.",
+          "Adjacency metadata surfaces placement zones for future procedural decorators."
         ]
       }
     }
   ],
   "qualityGuards": [
-    "No manual wall duplication—shared beams should be reconciled via adjacency metadata.",
-    "Keep shaders deterministic; identical structural graphs produce byte-identical SDFs.",
-    "Use feature-sliced modules: graph modeling, frame generation, skinning, overlays.",
-    "Never mutate structural intent during cutaways or selection highlighting."
+    "No duplicate walls—shared beams must be resolved via adjacency metadata.",
+    "Framing beams feed the skin shader so drywall never spans door/window gaps.",
+    "Structure, beam generation, wall volume generation, and skin rendering remain feature-sliced modules.",
+    "Cutaways and selection overlays never mutate the canonical structure graph.",
+    "Each wall boundary should have one canonical thick wall body, not separate inner and outer shells."
   ],
   "executionOrder": [
-    "Structural Node Graph",
-    "Frame and Wall Generation",
-    "Skin & Node Visualization"
+    "Cell + Beam Graph",
+    "Framing Beams + Openings",
+    "Single Thick Wall Volume",
+    "Skin (Drywall) Visualization"
   ],
   "definitionOfDone": [
-    "Nodes/rooms rendered from the keel/rib/beam dependency map aligned with rooms-source-of-truth intents.",
-    "Adjacent rooms share walls automatically without duplicate geometry.",
-    "Selection and cutaway layers pull from structural metadata, not ad hoc offsets.",
-    "Completion checks above report `complete` once each section is validated."
+    "Rooms render from grid cells + beams + framing loops in accordance with rooms-source-of-truth.",
+    "Doors/windows remain true negative spaces because framing beams terminate the wall volume.",
+    "Selection and procedural placement use adjacency metadata derived from the beams.",
+    "Each workstream’s completion check reports `complete` once its criteria are satisfied.",
+    "Wall thickness is represented by one procedural wall body per boundary rather than paired wall layers."
   ]
 }

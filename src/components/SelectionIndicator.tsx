@@ -1,112 +1,217 @@
-import React from "react";
-import { Line } from "@react-three/drei";
-import { useSimulationStore, SimulationNode } from "../shared/utils/store";
+import React, { useMemo } from "react";
+import { Html, Line } from "@react-three/drei";
+import * as THREE from "three";
+import { useSimulationStore, type SimulationNode } from "../shared/utils/store";
+import type {
+  StructuralCanonicalFace,
+  StructuralFace,
+  StructuralRoomMetadata,
+} from "../features/rooms/structural/graph";
+import { RadialMenu } from "./RadialMenu";
 
-type StructuralFace = "front" | "back" | "left" | "right" | "top" | "bottom";
-type StructuralAnchorFace =
-  | "front"
-  | "back"
-  | "left"
-  | "right"
-  | "floor"
-  | "ceiling";
+const START_LABEL_COLOR = "#ffffff";
+const START_LABEL_SHADOW = "0 0 12px rgba(0, 0, 0, 0.45)";
+const START_LABEL_TOP_OFFSET = 10;
+const START_LABEL_FRONT_FACE_OFFSET = 0;
+const START_LABEL_SCALE = 4;
+const MENU_BUTTON_SCALE = 1.0;
+const ROTATE_BUTTON_SCALE = 1.0;
+
+const FRONT_FRAME_COLOR = "#39ff14";
+const FRONT_FRAME_EDGE = "rgba(57, 255, 20, 0.95)";
+const FRONT_FRAME_GLOW = "rgba(57, 255, 20, 0.14)";
 
 interface SelectionIndicatorProps {
-  shape: SimulationNode;
+  shape: SimulationNode & {
+    structuralRoom?: StructuralRoomMetadata;
+  };
 }
 
-const FRONT_FACE_EPSILON = 0.02;
+const FACE_EPSILON = 0.12;
+const OVERLAY_Z = 0.2;
 
-const getCanonicalStructuralFace = (
-  face: string,
-): StructuralAnchorFace | null => {
-  if (face === "top") return "ceiling";
-  if (face === "bottom") return "floor";
-  if (
-    face === "front" ||
-    face === "back" ||
-    face === "left" ||
-    face === "right" ||
-    face === "floor" ||
-    face === "ceiling"
-  ) {
-    return face;
-  }
-  return null;
+type RoomFaceRecord = {
+  room: StructuralRoomMetadata;
+  face: StructuralFace;
+  record: StructuralCanonicalFace;
 };
 
-const getStructuralRoomFace = (shape: SimulationNode) => {
-  const structuralRoom = (shape as any).structuralRoom;
-  const dimensions = structuralRoom?.dimensions ?? (shape as any).dimensions;
-  const face = getCanonicalStructuralFace(
-    structuralRoom?.face ?? (shape as any).face,
+type OverlayFrame = {
+  points: [number, number, number][];
+  planePosition: [number, number, number];
+  planeRotation: [number, number, number];
+  planeSize: [number, number];
+  menuPosition: [number, number, number];
+  rotatePosition: [number, number, number];
+  startPosition: [number, number, number];
+  cornerMarkers: [number, number, number][];
+};
+
+const getRoomFace = (
+  shape: SimulationNode & { structuralRoom?: StructuralRoomMetadata },
+): RoomFaceRecord | null => {
+  const room = shape.structuralRoom;
+  if (!room) return null;
+
+  const face = room.canonicalFace;
+  const record = room.canonicalFaces[face];
+  if (!record) return null;
+
+  return { room, face, record };
+};
+
+const getFrontFaceOverlayFrame = (
+  room: StructuralRoomMetadata,
+): OverlayFrame => {
+  const halfWidth = room.dimensions.width / 2;
+  const z = 0;
+  const topY = room.dimensions.height;
+  const topMargin = 8;
+  const cornerX = halfWidth + 22;
+
+  return {
+    points: [
+      [-halfWidth, 0, z],
+      [halfWidth, 0, z],
+      [halfWidth, topY, z],
+      [-halfWidth, topY, z],
+      [-halfWidth, 0, z],
+    ],
+    planePosition: [0, topY / 2, z - FACE_EPSILON / 2],
+    planeRotation: [0, 0, 0],
+    planeSize: [room.dimensions.width, room.dimensions.height],
+    menuPosition: [cornerX - room.dimensions.width * 0.25, topY + topMargin, 0],
+    rotatePosition: [cornerX - room.dimensions.width * 0.25, -topMargin, 0],
+    startPosition: [0, topY + topMargin, START_LABEL_FRONT_FACE_OFFSET],
+    cornerMarkers: [],
+  };
+};
+
+const getFallbackOverlayFrame = (shape: SimulationNode): OverlayFrame => {
+  const halfWidth = shape.size[0] / 2;
+  const halfHeight = shape.size[1] / 2;
+  const z = 0;
+  const topMargin = 8;
+  const cornerX = halfWidth + 22;
+
+  return {
+    points: [
+      [-halfWidth, -halfHeight, z],
+      [halfWidth, -halfHeight, z],
+      [halfWidth, halfHeight, z],
+      [-halfWidth, halfHeight, z],
+      [-halfWidth, -halfHeight, z],
+    ],
+    planePosition: [0, 0, z - 0.05],
+    planeRotation: [0, 0, 0],
+    planeSize: [shape.size[0], shape.size[1]],
+    menuPosition: [cornerX - shape.size[0] * 0.25, halfHeight + topMargin, 0],
+    rotatePosition: [
+      cornerX - shape.size[0] * 0.25,
+      -halfHeight - topMargin,
+      0,
+    ],
+    startPosition: [0, halfHeight + topMargin, START_LABEL_FRONT_FACE_OFFSET],
+    cornerMarkers: [],
+  };
+};
+
+const SelectionControls = ({
+  menuPosition,
+  rotatePosition,
+  shapeId,
+}: {
+  menuPosition: [number, number, number];
+  rotatePosition: [number, number, number];
+  shapeId: string;
+}) => {
+  return (
+    <>
+      <Html
+        center
+        transform
+        scale={MENU_BUTTON_SCALE}
+        position={menuPosition}
+        zIndexRange={[10000, 10100]}
+        portal={{ current: document.body }}
+      >
+        <button className="pointer-events-none flex h-40 w-40 items-center justify-center rounded-full border border-white/30 bg-white text-black shadow-[0_0_28px_rgba(255,255,255,0.3)] backdrop-blur-md">
+          <div className="scale-[3.2]">
+            <RadialMenu shapeId={shapeId} />
+          </div>
+        </button>
+      </Html>
+
+      <Html
+        center
+        transform
+        scale={ROTATE_BUTTON_SCALE}
+        position={rotatePosition}
+        zIndexRange={[10000, 10100]}
+        portal={{ current: document.body }}
+      >
+        <button className="pointer-events-none flex h-40 w-40 items-center justify-center rounded-full border border-white/30 bg-white text-black shadow-[0_0_28px_rgba(255,255,255,0.3)] backdrop-blur-md">
+          <div className="scale-[6]">⟳</div>
+        </button>
+      </Html>
+    </>
   );
-
-  if (
-    dimensions &&
-    typeof dimensions.width === "number" &&
-    typeof dimensions.height === "number" &&
-    typeof dimensions.depth === "number" &&
-    face
-  ) {
-    return { dimensions, face };
-  }
-
-  return null;
 };
 
-const getStructuralFaceOffset = (
-  face: StructuralAnchorFace,
-  dimensions: { width: number; height: number; depth: number },
-) => {
-  const halfWidth = dimensions.width / 2;
-  const halfHeight = dimensions.height / 2;
-  const halfDepth = dimensions.depth / 2;
-
-  switch (face) {
-    case "front":
-      return halfDepth + FRONT_FACE_EPSILON;
-    case "back":
-      return -halfDepth - FRONT_FACE_EPSILON;
-    case "left":
-      return -halfWidth - FRONT_FACE_EPSILON;
-    case "right":
-      return halfWidth + FRONT_FACE_EPSILON;
-    case "ceiling":
-      return halfHeight + FRONT_FACE_EPSILON;
-    case "floor":
-      return -halfHeight - FRONT_FACE_EPSILON;
-  }
+const StartLabel = ({ position }: { position: [number, number, number] }) => {
+  return (
+    <Html
+      center
+      transform
+      scale={1}
+      position={position}
+      zIndexRange={[10000, 10100]}
+      portal={{ current: document.body }}
+    >
+      <div
+        className="pointer-events-none rounded-full px-8 py-3 text-[112px] font-semibold uppercase tracking-[0.35em]"
+        style={{
+          color: START_LABEL_COLOR,
+          textShadow: START_LABEL_SHADOW,
+        }}
+      >
+        start
+      </div>
+    </Html>
+  );
 };
 
-const getSelectionPlaneOffset = (shape: SimulationNode) => {
-  const structuralRoom = getStructuralRoomFace(shape);
-
-  if (structuralRoom) {
-    return getStructuralFaceOffset(
-      structuralRoom.face,
-      structuralRoom.dimensions,
-    );
-  }
-
-  const frontFaceOffset = (shape as any).frontFaceOffset;
-  if (typeof frontFaceOffset === "number") {
-    return frontFaceOffset;
-  }
-
-  const depth =
-    typeof (shape as any).depth === "number" ? (shape as any).depth : 0;
-  return depth > 0 ? depth / 2 + FRONT_FACE_EPSILON : FRONT_FACE_EPSILON;
-};
-
-export const SelectionIndicator: React.FC<SelectionIndicatorProps> = ({
+export const SelectionOverlay: React.FC<SelectionIndicatorProps> = ({
   shape,
 }) => {
   const setIsDragging = useSimulationStore((state) => state.setIsDragging);
   const setDragOffset = useSimulationStore((state) => state.setDragOffset);
   const pushToHistory = useSimulationStore((state) => state.pushToHistory);
 
-  const handlePointerDown = (e: any) => {
+  const roomFace = getRoomFace(shape);
+
+  const frame = useMemo(() => {
+    if (roomFace?.face === "front") {
+      return getFrontFaceOverlayFrame(roomFace.room);
+    }
+
+    return getFallbackOverlayFrame(shape);
+  }, [roomFace, shape]);
+
+  const adjacencyData = roomFace
+    ? {
+        roomId: roomFace.room.roomId,
+        canonicalFace: roomFace.face,
+        adjacentRoomIds: roomFace.record.adjacentRoomIds,
+        adjacencyGapIds: roomFace.record.adjacencyGapIds,
+        cutoutIds: roomFace.record.cutoutIds,
+      }
+    : undefined;
+
+  const handlePointerDown = (e: {
+    stopPropagation: () => void;
+    point: { x: number; y: number };
+  }) => {
     e.stopPropagation();
     pushToHistory();
     setIsDragging(true);
@@ -116,30 +221,59 @@ export const SelectionIndicator: React.FC<SelectionIndicatorProps> = ({
     ]);
   };
 
-  const w = shape.size[0] / 2;
-  const h = shape.size[1] / 2;
-  const z = getSelectionPlaneOffset(shape);
-  const rotation = (shape as any).rotation || 0;
-
-  const points = [
-    [-w, -h, z],
-    [w, -h, z],
-    [w, h, z],
-    [-w, h, z],
-    [-w, -h, z],
-  ].map(([x, y, pointZ]) => {
-    const cos = Math.cos(rotation);
-    const sin = Math.sin(rotation);
-    return [x * cos - y * sin, x * sin + y * cos, pointZ];
-  });
-
   return (
-    <group onPointerDown={handlePointerDown} rotation={[0, 0, rotation]}>
-      <Line points={points as any} color="#39ff14" lineWidth={3} />
-      <mesh position={[0, 0, z - 0.1]}>
-        <planeGeometry args={[shape.size[0], shape.size[1]]} />
-        <meshBasicMaterial color="#39ff14" transparent opacity={0.1} />
+    <group
+      onPointerDown={handlePointerDown}
+      userData={{
+        structuralSelection: adjacencyData,
+        selectionOverlay: true,
+      }}
+    >
+      <group renderOrder={10}>
+        <Line
+          points={frame.points}
+          color={FRONT_FRAME_COLOR}
+          lineWidth={4}
+          dashed={false}
+        />
+        <Line
+          points={frame.points}
+          color={FRONT_FRAME_EDGE}
+          lineWidth={1.5}
+          dashed={false}
+        />
+      </group>
+
+      <mesh
+        position={frame.planePosition}
+        rotation={frame.planeRotation}
+        userData={{ structuralSelection: adjacencyData }}
+        renderOrder={0}
+      >
+        <planeGeometry args={frame.planeSize} />
+        <meshBasicMaterial
+          color={FRONT_FRAME_GLOW}
+          transparent
+          opacity={0.08}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+        />
       </mesh>
+
+      <SelectionControls
+        menuPosition={frame.menuPosition}
+        rotatePosition={frame.rotatePosition}
+        shapeId={shape.id}
+      />
+      <StartLabel position={frame.startPosition} />
     </group>
   );
 };
+
+export const SelectionIndicator: React.FC<SelectionIndicatorProps> = ({
+  shape,
+}) => {
+  return <SelectionOverlay shape={shape} />;
+};
+
+export default SelectionIndicator;

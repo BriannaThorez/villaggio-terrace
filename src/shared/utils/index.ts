@@ -1,5 +1,5 @@
 export * from "./store";
-export * from "../../features/telemetry";
+export * from "./telemetry";
 export * from "./colors";
 export * from "./layout";
 export * from "./SpatialHash";

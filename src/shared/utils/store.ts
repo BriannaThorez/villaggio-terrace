@@ -35,6 +35,8 @@ export const GRID_SIZE = 10;
 export const GRID_SIZE_X = 10;
 export const GRID_SIZE_Y = 40;
 
+const FLOOR_Y_EPSILON = 1e-3;
+
 export const snapX = (x: number, width: number) => {
   const cells = Math.round(width / 10);
   if (cells % 2 !== 0) {
@@ -43,8 +45,19 @@ export const snapX = (x: number, width: number) => {
   return Math.round(x / 10) * 10;
 };
 
-export const snapY = (y: number, height: number) => {
-  return Math.round(y / 40) * 40;
+export const getFloorIndex = (y: number) =>
+  Math.max(
+    0,
+    Math.ceil((y - FLOOR_Y_EPSILON) / GRID_SIZE_Y) - 1,
+  );
+
+export const getFloorBaseY = (y: number) => getFloorIndex(y) * GRID_SIZE_Y;
+
+export const getPlacementCenterY = (y: number, height: number) =>
+  getFloorBaseY(y) + Math.max(0, height / 2);
+
+export const snapY = (y: number, _height?: number) => {
+  return getFloorBaseY(y);
 };
 
 export type PortType = "top" | "bottom" | "left" | "right";

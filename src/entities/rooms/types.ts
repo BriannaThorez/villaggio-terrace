@@ -60,6 +60,48 @@ export interface RoomOpening {
   metadata?: RoomRecord;
 }
 
+export interface RoomOpeningBounds {
+  min: RoomVec3;
+  max: RoomVec3;
+}
+
+export type RoomFramingBeamRole = "header" | "sill" | "jamb";
+
+export interface RoomFramingBeam {
+  id: string;
+  openingId: RoomOpeningId;
+  face: RoomFace;
+  role: RoomFramingBeamRole;
+  start: RoomVec3;
+  end: RoomVec3;
+  axis: RoomAxis;
+  normal: RoomVec3;
+}
+
+export interface RoomOpeningCutout {
+  openingId: RoomOpeningId;
+  face: RoomFace;
+  bounds: RoomOpeningBounds;
+  normal: RoomVec3;
+  depth: number;
+  framingBeamIds: string[];
+}
+
+export interface RoomFramingMetadata {
+  beams: RoomFramingBeam[];
+  cutouts: RoomOpeningCutout[];
+  validationIssues: RoomValidationIssue[];
+}
+
+export interface RoomValidationIssue {
+  code: string;
+  message: string;
+  openingId?: RoomOpeningId;
+  zoneId?: RoomZoneId;
+  face?: RoomFace;
+  severity?: "info" | "warning" | "error";
+}
+
 export interface RoomPlacementZone {
   id: RoomZoneId;
   face: RoomFace;

@@ -39,21 +39,20 @@ const box2FromSize = (width: number, height: number) =>
 const buildFaceCenter = (dimensions: RoomShellDimensions, face: RoomFace) => {
   const hw = dimensions.width / 2;
   const hh = dimensions.height / 2;
-  const hd = dimensions.depth / 2;
 
   switch (face) {
     case "front":
-      return vec3(0, 0, hd);
+      return vec3(0, 0, 0);
     case "back":
-      return vec3(0, 0, -hd);
+      return vec3(0, 0, -dimensions.depth);
     case "left":
-      return vec3(-hw, 0, 0);
+      return vec3(-hw, 0, -dimensions.depth / 2);
     case "right":
-      return vec3(hw, 0, 0);
+      return vec3(hw, 0, -dimensions.depth / 2);
     case "top":
-      return vec3(0, hh, 0);
+      return vec3(0, hh, -dimensions.depth / 2);
     case "bottom":
-      return vec3(0, -hh, 0);
+      return vec3(0, -hh, -dimensions.depth / 2);
   }
 };
 
@@ -79,21 +78,20 @@ const getFaceAxes = (face: RoomFace) => ROOM_FACE_AXES[face];
 const faceCenter = (dimensions: RoomShellDimensions, face: RoomFace) => {
   const hw = dimensions.width / 2;
   const hh = dimensions.height / 2;
-  const hd = dimensions.depth / 2;
 
   switch (face) {
     case "front":
-      return vec3(0, 0, hd);
+      return vec3(0, 0, 0);
     case "back":
-      return vec3(0, 0, -hd);
+      return vec3(0, 0, -dimensions.depth);
     case "left":
-      return vec3(-hw, 0, 0);
+      return vec3(-hw, 0, -dimensions.depth / 2);
     case "right":
-      return vec3(hw, 0, 0);
+      return vec3(hw, 0, -dimensions.depth / 2);
     case "top":
-      return vec3(0, hh, 0);
+      return vec3(0, hh, -dimensions.depth / 2);
     case "bottom":
-      return vec3(0, -hh, 0);
+      return vec3(0, -hh, -dimensions.depth / 2);
   }
 };
 
@@ -195,7 +193,14 @@ const openingToBounds = (
   const min = center.clone();
   const max = center.clone();
 
-  if (opening.face === "front" || opening.face === "back") {
+  if (opening.face === "front") {
+    min.x = offsetU - openWidth / 2;
+    max.x = offsetU + openWidth / 2;
+    min.y = offsetV - openHeight / 2;
+    max.y = offsetV + openHeight / 2;
+    min.z = center.z - cutDepth;
+    max.z = center.z + cutDepth;
+  } else if (opening.face === "back") {
     min.x = offsetU - openWidth / 2;
     max.x = offsetU + openWidth / 2;
     min.y = offsetV - openHeight / 2;
@@ -338,6 +343,11 @@ const buildThickShellFaces = (dimensions: RoomShellDimensions) => {
     ceilingThickness,
   } = dimensions;
 
+  const floorY = 0;
+  const ceilingY = height;
+  const centerY =
+    floorThickness + (height - floorThickness - ceilingThickness) / 2;
+
   const innerWidth = Math.max(EPSILON, width - wallThickness * 2);
   const innerDepth = Math.max(EPSILON, depth - wallThickness * 2);
   const innerHeight = Math.max(
@@ -349,11 +359,11 @@ const buildThickShellFaces = (dimensions: RoomShellDimensions) => {
   const outerHalfH = height / 2;
   const outerHalfD = depth / 2;
 
-  const floorCenterY = -outerHalfH + floorThickness / 2;
-  const ceilingCenterY = outerHalfH - ceilingThickness / 2;
+  const floorCenterY = floorY + floorThickness / 2;
+  const ceilingCenterY = ceilingY - ceilingThickness / 2;
   const wallCenterX = width / 2 - wallThickness / 2;
   const wallCenterZ = depth / 2 - wallThickness / 2;
-  const innerCenterY = floorCenterY + floorThickness + innerHeight / 2;
+  const innerCenterY = centerY;
   const revealInset = Math.max(MIN_CLEARANCE, DEFAULT_REVEAL_INSET);
 
   const outerShell = [
@@ -394,7 +404,7 @@ const buildThickShellFaces = (dimensions: RoomShellDimensions) => {
         height - floorThickness - ceilingThickness,
         wallThickness,
       ),
-      position: vec3(0, innerCenterY, outerHalfD - wallThickness / 2),
+      position: vec3(0, innerCenterY, -wallThickness / 2),
     },
     {
       geometry: buildBoxGeometry(
@@ -402,7 +412,7 @@ const buildThickShellFaces = (dimensions: RoomShellDimensions) => {
         height - floorThickness - ceilingThickness,
         wallThickness,
       ),
-      position: vec3(0, innerCenterY, -outerHalfD + wallThickness / 2),
+      position: vec3(0, innerCenterY, -depth + wallThickness / 2),
     },
   ];
 
@@ -442,11 +452,7 @@ const buildInnerGeometry = (dimensions: RoomShellDimensions) => {
     dimensions.depth - dimensions.wallThickness * 2,
   );
   const geometry = new THREE.BoxGeometry(innerWidth, innerHeight, innerDepth);
-  geometry.translate(
-    0,
-    dimensions.floorThickness + innerHeight / 2 - dimensions.height / 2,
-    0,
-  );
+  geometry.translate(0, dimensions.floorThickness + innerHeight / 2, 0);
   geometry.computeBoundingBox();
   geometry.computeBoundingSphere();
   return geometry;
@@ -475,9 +481,15 @@ const buildRevealGeometry = (
     const faceNormal = ROOM_FACE_AXES[face].normal;
     const center = buildFaceCenter(dimensions, face);
 
-    if (face === "front" || face === "back") {
-      geo.translate(u, v, center.z - (faceNormal[2] * revealDepth) / 2);
-      if (face === "back") geo.rotateY(Math.PI);
+    if (face === "front") {
+      geo.translate(u, v, 0 + (faceNormal[2] * revealDepth) / 2);
+    } else if (face === "back") {
+      geo.translate(
+        u,
+        v,
+        -dimensions.depth - (faceNormal[2] * revealDepth) / 2,
+      );
+      geo.rotateY(Math.PI);
     } else if (face === "left" || face === "right") {
       geo.rotateY(Math.PI / 2);
       geo.translate(center.x - (faceNormal[0] * revealDepth) / 2, v, u);
@@ -590,16 +602,16 @@ export const buildPlacementZones = (
             : [ow + margin * 2, oh + margin * 2, dimensions.wallThickness];
         const center: [number, number, number] =
           face === "front"
-            ? [u, v, dimensions.depth / 2 - wallInset]
+            ? [u, v, 0 + wallInset]
             : face === "back"
-              ? [u, v, -dimensions.depth / 2 + wallInset]
+              ? [u, v, -dimensions.depth + wallInset]
               : face === "left"
                 ? [-dimensions.width / 2 + wallInset, v, u]
                 : face === "right"
                   ? [dimensions.width / 2 - wallInset, v, u]
                   : face === "top"
-                    ? [u, dimensions.height / 2 - floorCeilingInset, v]
-                    : [u, -dimensions.height / 2 + floorCeilingInset, v];
+                    ? [u, dimensions.height - floorCeilingInset, v]
+                    : [u, floorCeilingInset, v];
         return {
           id: `${opening.id}-zone`,
           face,
@@ -619,12 +631,17 @@ export const buildRoomShellGeometry = (
   dimensions: RoomShellDimensions,
   openings: RoomOpeningDefinition[] = [],
 ): RoomShellGeometryResult => {
+  const centeredDepth = Math.max(EPSILON, dimensions.depth);
   const outerGeometry = buildBoxGeometry(
     dimensions.width,
     dimensions.height,
-    dimensions.depth,
+    centeredDepth,
   );
+  outerGeometry.translate(0, 0, -dimensions.depth);
+
   const innerGeometry = buildInnerGeometry(dimensions);
+  innerGeometry.translate(0, 0, -dimensions.depth);
+
   const revealGeometry = buildRevealGeometry(dimensions, openings);
   const shellGeometry = mergeGeometryList([
     outerGeometry,
@@ -632,13 +649,15 @@ export const buildRoomShellGeometry = (
     ...revealGeometry,
   ]);
 
+  const openingMasks = buildRoomOpeningMasks(dimensions, openings);
+
   if (!shellGeometry.getAttribute("position")) {
     const fallback = buildBoxGeometry(
       Math.max(EPSILON, dimensions.width),
       Math.max(EPSILON, dimensions.height),
       Math.max(EPSILON, dimensions.depth),
     );
-    fallback.translate(0, 0, 0);
+    fallback.translate(0, 0, -dimensions.depth);
     fallback.computeBoundingBox();
     fallback.computeBoundingSphere();
     return {
@@ -646,11 +665,12 @@ export const buildRoomShellGeometry = (
       innerGeometry,
       shellGeometry: fallback,
       revealGeometry,
-      openingMasks: buildRoomOpeningMasks(dimensions, openings),
+      openingMasks,
     };
   }
 
-  const openingMasks = buildRoomOpeningMasks(dimensions, openings);
+  shellGeometry.computeBoundingBox();
+  shellGeometry.computeBoundingSphere();
 
   return {
     outerGeometry,

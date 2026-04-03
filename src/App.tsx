@@ -17,7 +17,7 @@
 
 import { useEffect } from "react";
 import { SimulationCanvas } from "./widgets/SimulationCanvas";
-import { ModesToolbar } from "./widgets/ModesToolbar";
+import { MainToolbar } from "./widgets/MainToolbar";
 import { BuildToolbar } from "./widgets/BuildToolbar";
 import { ControlsHint } from "./widgets/ControlsHint";
 import { CameraReadout } from "./components/CameraReadout";
@@ -186,7 +186,7 @@ export default function App() {
   return (
     <div className="w-full h-screen relative">
       <SimulationCanvas />
-      <ModesToolbar />
+      <MainToolbar />
       <BuildToolbar />
       {mode === "studio" && <ControlsHint />}
       <CameraReadout />

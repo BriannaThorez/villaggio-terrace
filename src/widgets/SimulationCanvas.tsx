@@ -9,7 +9,11 @@ import themes from "../shared/themes/color_palettes.json";
 import { Bloom, Noise, Vignette } from "@react-three/postprocessing";
 import { SimulationNodes } from "../entities/SimulationNodes";
 import { SimulationLinks } from "../entities/SimulationLinks";
-import { useSimulationStore, snapX, snapY } from "../shared/utils/store";
+import {
+  useSimulationStore,
+  snapX,
+  getPlacementCenterY,
+} from "../shared/utils/store";
 import * as THREE from "three";
 import { useRef, useEffect, useMemo, useState } from "react";
 
@@ -66,7 +70,9 @@ const PlacementIndicator = () => {
 
       const snappedX = snapX(intersectPoint.x, size[0]);
       const snappedY =
-        activeTool === "lobby" ? 0 : snapY(intersectPoint.y, size[1]);
+        activeTool === "lobby"
+          ? 0
+          : getPlacementCenterY(intersectPoint.y, size[1]);
 
       groupRef.current.position.set(snappedX, snappedY, 0.1);
 
@@ -657,7 +663,10 @@ const CanvasScene = () => {
     }
 
     const snappedX = snapX(event.point.x, size[0]);
-    const snappedY = snapY(event.point.y, size[1]);
+    const isLobby = activeTool === "lobby";
+    const snappedY = isLobby
+      ? 0
+      : getPlacementCenterY(event.point.y, size[1]);
     const position: [number, number] = [snappedX, snappedY];
 
     const existing = useSimulationStore
@@ -805,7 +814,9 @@ const CanvasScene = () => {
 
       const snappedX = snapX(targetX, shape.size[0]);
       const snappedY =
-        shape.type === "lobby" ? 0 : snapY(targetY, shape.size[1]);
+        shape.type === "lobby"
+          ? 0
+          : getPlacementCenterY(targetY, shape.size[1]);
 
       updateShape(
         selectedId,

@@ -98,12 +98,11 @@ export const BuildToolbar = () => {
   }
 
   return (
-    <div className="absolute bottom-4 left-4 right-4 flex justify-center z-50">
-      <div className="w-full max-w-6xl bg-background/90 backdrop-blur-xl p-2 rounded-2xl border border-text/10 flex flex-wrap items-center justify-center gap-3 shadow-[0_20px_50px_rgba(0,0,0,0.4)]">
-        <div className="px-3 py-2 rounded-xl bg-text/5 border border-text/10 text-xs uppercase tracking-widest text-text/50">
-          Build Toolbar
+    <div className="absolute inset-x-0 bottom-4 flex justify-center z-50 pointer-events-none">
+      <div className="inline-flex flex-col items-center bg-background/90 backdrop-blur-xl px-3 py-2 rounded-2xl border border-text/10 shadow-[0_20px_50px_rgba(0,0,0,0.4)] gap-2 pointer-events-auto">
+        <div className="text-[7px] font-semibold text-text/60 tracking-[0.2em]">
+          Build
         </div>
-
         <div className="flex flex-wrap items-center justify-center gap-2">
           {tools.map((tool) => {
             const Icon = tool.icon;
@@ -117,22 +116,18 @@ export const BuildToolbar = () => {
               >
                 <button
                   onClick={() => setActiveTool(tool.id as any)}
-                  className={`p-3.5 rounded-xl transition-all duration-300 flex items-center justify-center ${
+                  className={`rounded-xl transition-all duration-300 flex items-center justify-center ${
                     activeTool === tool.id
                       ? "bg-primary text-background shadow-[0_0_15px_var(--primary)] scale-110"
                       : "text-text/40 hover:text-primary hover:bg-primary/5"
                   }`}
+                  style={{ padding: "0.44rem" }}
                 >
-                  <Icon size={24} strokeWidth={1.5} />
+                  <Icon size={28} strokeWidth={1.5} />
                 </button>
               </SmartTooltip>
             );
           })}
-        </div>
-
-        <div className="hidden md:flex items-center gap-2 text-[10px] uppercase tracking-widest text-text/30">
-          <Edit01Icon size={14} />
-          Construction Mode
         </div>
       </div>
     </div>

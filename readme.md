@@ -1,4 +1,4 @@
-# Laurianna Flow: Axiomatic, Axiological, and Teleological Intent
+# VillaggioTerrace: Axiomatic, Axiological, and Teleological Intent
 
 ## Axiomatic Intent (Fundamental Truths)
 The core premise of this project is that traditional DOM-based rendering is insufficient for complex, high-frequency visual data structures like flowcharts. To achieve industry-leading performance and visual polish, we must bypass the browser's layout engine and communicate directly with the GPU. The use of **WebGL2**, **Instanced Rendering**, and **Signed Distance Fields (SDFs)** is axiomatic; these technologies provide the only path to resolution-independent, 60fps visualization at scale.
@@ -10,4 +10,4 @@ We value **precision**, **performance**, and **aesthetic clarity**.
 - **Modularity:** We value the separation of concerns provided by Feature-Sliced Design (FSD), allowing the Studio and Viewer to exist as independent, robust modules.
 
 ## Teleological Intent (The Goal)
-The ultimate purpose of Laurianna Flow is to provide a standalone, modular flowchart engine that enables users to create and visualize complex logic with unprecedented responsiveness. By treating nodes and links as GPU-resident entities, we aim to bridge the gap between abstract logic and high-fidelity visualization, serving both as a powerful creation tool (Studio) and a high-performance consumption interface (Viewer).
+The ultimate purpose of VillaggioTerrace is to provide a standalone, modular flowchart engine that enables users to create and visualize complex logic with unprecedented responsiveness. By treating nodes and links as GPU-resident entities, we aim to bridge the gap between abstract logic and high-fidelity visualization, serving both as a powerful creation tool (Studio) and a high-performance consumption interface (Viewer).

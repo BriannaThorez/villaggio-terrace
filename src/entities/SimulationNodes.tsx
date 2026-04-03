@@ -4,8 +4,9 @@ import { ResidentialRoom } from "../features/rooms/residential/ResidentialRoom";
 import { SelectionIndicator } from "../components/SelectionIndicator";
 import { useFrame } from "@react-three/fiber";
 import { useSimulationStore, SimulationNode } from "../shared/utils/store";
-import { getMenuOffset } from "../shared/utils/layout";
+
 import { Text, Html } from "@react-three/drei";
+import type { StructuralFace } from "../features/rooms/structural/graph";
 import {
   ShapeSDFVertexShader,
   ShapeSDFFragmentShader,
@@ -15,16 +16,15 @@ import themes from "../shared/themes/color_palettes.json";
 import { RotateCw } from "lucide-react";
 import * as THREE from "three";
 import CustomShaderMaterial from "three-custom-shader-material";
+import {
+  attachStructuralMetadataToShapes,
+  buildCellBeamGraph,
+  type StructuralShape,
+} from "../features/rooms/structural/graph";
 
-const RotateHandle = ({
-  shapeId,
-  position,
-  rotation,
-}: {
-  shapeId: string;
-  position: [number, number];
-  rotation: number;
-}) => {
+type RenderShape = StructuralShape<SimulationNode>;
+
+const RotateHandle = ({ rotation }: { rotation: number }) => {
   const [hovered, setHovered] = useState(false);
 
   const handlePointerDown = (e: any) => {
@@ -42,7 +42,6 @@ const RotateHandle = ({
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
     >
-      {/* Visual handle - matches RadialMenu trigger style */}
       <Html
         center
         transform
@@ -52,22 +51,21 @@ const RotateHandle = ({
         pointerEvents="none"
       >
         <div
-          className={`pointer-events-none w-40 h-40 rounded-full bg-background border-8 text-text flex items-center justify-center transition-all duration-300 ${
+          className={`pointer-events-none w-40 h-40 rounded-full bg-white border-8 text-black flex items-center justify-center transition-all duration-300 ${
             hovered
-              ? "border-accent scale-110 shadow-[0_0_100px_rgba(var(--accent-rgb),0.8)]"
-              : "border-primary shadow-[0_0_80px_rgba(var(--primary-rgb),0.4)]"
+              ? "border-gray-300 scale-110 shadow-[0_0_100px_rgba(255,255,255,0.8)]"
+              : "border-gray-100 shadow-[0_0_80px_rgba(255,255,255,0.4)]"
           }`}
         >
           <div className="scale-[4]">
             <RotateCw
               size={22}
-              className={hovered ? "text-accent" : "text-primary"}
+              className={hovered ? "text-black" : "text-black"}
             />
           </div>
         </div>
       </Html>
 
-      {/* Precise hit area */}
       <circleGeometry args={[4, 32]} />
       <meshBasicMaterial transparent opacity={0} />
     </mesh>
@@ -225,10 +223,24 @@ export const SimulationNodes = () => {
   const selectedId = useSimulationStore((state) => state.selectedId);
   const setSelectedId = useSimulationStore((state) => state.setSelectedId);
   const activeTool = useSimulationStore((state) => state.activeTool);
+  const isSelectionMode =
+    activeTool === "select" ||
+    activeTool === "link" ||
+    activeTool === "vertex" ||
+    activeTool === "text";
   const updateShape = useSimulationStore((state) => state.updateShape);
   const editingId = useSimulationStore((state) => state.editingId);
   const setEditingId = useSimulationStore((state) => state.setEditingId);
   const linkingFrom = useSimulationStore((state) => state.linkingFrom);
+  const structuralGraph = useMemo(() => buildCellBeamGraph(shapes), [shapes]);
+  const renderedShapes = useMemo<RenderShape[]>(
+    () => attachStructuralMetadataToShapes(shapes, structuralGraph),
+    [shapes, structuralGraph],
+  );
+  const renderedShapeById = useMemo(
+    () => new Map(renderedShapes.map((shape) => [shape.id, shape])),
+    [renderedShapes],
+  );
 
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const portMeshRef = useRef<THREE.InstancedMesh>(null);
@@ -246,32 +258,32 @@ export const SimulationNodes = () => {
 
   // Instanced Attributes
   const colorArray = useMemo(
-    () => new Float32Array(shapes.length * 3),
-    [shapes.length],
+    () => new Float32Array(renderedShapes.length * 3),
+    [renderedShapes.length],
   );
   const shapeTypeArray = useMemo(
-    () => new Float32Array(shapes.length),
-    [shapes.length],
+    () => new Float32Array(renderedShapes.length),
+    [renderedShapes.length],
   );
   const isSelectedArray = useMemo(
-    () => new Float32Array(shapes.length),
-    [shapes.length],
+    () => new Float32Array(renderedShapes.length),
+    [renderedShapes.length],
   );
   const sizeArray = useMemo(
-    () => new Float32Array(shapes.length * 2),
-    [shapes.length],
+    () => new Float32Array(renderedShapes.length * 2),
+    [renderedShapes.length],
   );
   const opacityArray = useMemo(
-    () => new Float32Array(shapes.length),
-    [shapes.length],
+    () => new Float32Array(renderedShapes.length),
+    [renderedShapes.length],
   );
   const materialArray = useMemo(
-    () => new Float32Array(shapes.length),
-    [shapes.length],
+    () => new Float32Array(renderedShapes.length),
+    [renderedShapes.length],
   );
   const portColorArray = useMemo(
-    () => new Float32Array(shapes.length * 4 * 3),
-    [shapes.length],
+    () => new Float32Array(renderedShapes.length * 4 * 3),
+    [renderedShapes.length],
   );
 
   const getShapeType = (type: string) => {
@@ -312,7 +324,7 @@ export const SimulationNodes = () => {
   useEffect(() => {
     if (!meshRef.current) return;
 
-    shapes.forEach((shape, i) => {
+    renderedShapes.forEach((shape, i) => {
       tempPosition.current.set(shape.position[0], shape.position[1], 0);
       tempEuler.current.set(0, 0, shape.rotation || 0);
       tempRotation.current.setFromEuler(tempEuler.current);
@@ -369,7 +381,7 @@ export const SimulationNodes = () => {
     if (meshRef.current.geometry.attributes.aMaterial)
       meshRef.current.geometry.attributes.aMaterial.needsUpdate = true;
   }, [
-    shapes,
+    renderedShapes,
     themeName,
     selectedId,
     colorArray,
@@ -383,8 +395,12 @@ export const SimulationNodes = () => {
   const handleNodePointerDown = (e: any, id: string) => {
     if (e.button === 2) return; // Ignore right click
 
-    const shape = shapes.find((s) => s.id === id);
+    const shape = renderedShapeById.get(id);
     if (!shape) return;
+
+    // Movement interactions are intentionally disabled for now.
+    // Preserve this handler so room/node movement can be re-enabled later without changing ownership or selection flow.
+    if (e.button === 1) return;
 
     // For residential rooms, we don't need the UV check if the event came from the room component itself
     if (shape.type !== "residential" && !isInsideShape(e.uv, shape)) return;
@@ -392,7 +408,7 @@ export const SimulationNodes = () => {
     e.stopPropagation();
 
     if (editingId && editingId !== id) {
-      const editingShape = shapes.find((s) => s.id === editingId);
+      const editingShape = renderedShapeById.get(editingId);
       if (
         editingShape &&
         (!editingShape.text || editingShape.text.trim() === "")
@@ -406,7 +422,12 @@ export const SimulationNodes = () => {
   };
 
   const handleNodeDoubleClick = (e: any, id: string) => {
-    const shape = shapes.find((s) => s.id === id);
+    if (!isSelectionMode) return;
+
+    // Movement interactions are intentionally disabled for now.
+    // Keep this path in place for future edit/move behavior restoration.
+
+    const shape = renderedShapeById.get(id);
     if (!shape) return;
 
     if (shape.type !== "residential" && !isInsideShape(e.uv, shape)) return;
@@ -422,16 +443,19 @@ export const SimulationNodes = () => {
     vertexIndex: number,
     newPos: [number, number],
   ) => {
-    const shape = shapes.find((s) => s.id === shapeId);
+    const shape = renderedShapeById.get(shapeId);
     if (!shape) return;
 
     const newVertices = [...shape.vertices];
-    // Convert world space to local space
+    // Movement interactions are intentionally disabled for now.
+    // Retain this update path so future node manipulation can be restored without reworking the model.
     newVertices[vertexIndex] = [
       newPos[0] - shape.position[0],
       newPos[1] - shape.position[1],
     ];
 
+    // Movement interactions are intentionally disabled for now.
+    // Keep this update path in place so future move/edit behavior can be restored without reworking the node model.
     updateShape(shapeId, { vertices: newVertices }, true);
   };
 
@@ -451,36 +475,37 @@ export const SimulationNodes = () => {
   // Precompute lobby positions for adjacent wall removal
   const lobbyPositions = useMemo(() => {
     const set = new Set<string>();
-    shapes.forEach((s) => {
+    renderedShapes.forEach((s) => {
       if (s.type === "lobby") {
         // Use a small epsilon to handle floating point inaccuracies
         set.add(`${Math.round(s.position[0])},${Math.round(s.position[1])}`);
       }
     });
     return set;
-  }, [shapes]);
+  }, [renderedShapes]);
 
   return (
     <group>
       {/* Phase 1: High-Performance Instanced SDFs */}
       <instancedMesh
-        key={shapes.length} // Recreate if count changes for simplicity, though dynamic update is possible
+        key={renderedShapes.length} // Recreate if count changes for simplicity, though dynamic update is possible
         ref={meshRef}
-        args={[null as any, null as any, shapes.length]}
+        args={[null as any, null as any, renderedShapes.length]}
         frustumCulled={false}
         onPointerDown={(e) => {
           if (e.instanceId !== undefined) {
-            handleNodePointerDown(e, shapes[e.instanceId].id);
+            handleNodePointerDown(e, renderedShapes[e.instanceId].id);
           }
         }}
         onDoubleClick={(e) => {
           if (e.instanceId !== undefined) {
-            handleNodeDoubleClick(e, shapes[e.instanceId].id);
+            handleNodeDoubleClick(e, renderedShapes[e.instanceId].id);
           }
         }}
         onClick={(e) => {
+          if (!isSelectionMode) return;
           if (e.instanceId !== undefined) {
-            const shape = shapes[e.instanceId];
+            const shape = renderedShapes[e.instanceId];
             if (!isInsideShape(e.uv, shape)) return;
             e.stopPropagation();
             setSelectedId(shape.id);
@@ -530,38 +555,31 @@ export const SimulationNodes = () => {
       </instancedMesh>
 
       {/* Individual Overlays (Text, Menu, Ports) */}
-      {shapes.map((shape) => {
-        const menuOffset = getMenuOffset(shape, shapes);
+      {renderedShapes.map((shape) => {
+        const structuralFace = shape.structuralRoom?.canonicalFace as
+          | StructuralFace
+          | undefined;
+        const selectionRotation =
+          structuralFace === "back"
+            ? Math.PI
+            : structuralFace === "left"
+              ? Math.PI / 2
+              : structuralFace === "right"
+                ? -Math.PI / 2
+                : structuralFace === "ceiling"
+                  ? Math.PI / 2
+                  : structuralFace === "floor"
+                    ? -Math.PI / 2
+                    : shape.rotation || 0;
 
         return (
           <group
             key={shape.id}
             position={[shape.position[0], shape.position[1], 0]}
-            rotation={[0, 0, shape.rotation || 0]}
+            rotation={[0, 0, selectionRotation]}
           >
             {selectedId === shape.id && !editingId && (
-              <>
-                <SelectionIndicator shape={shape} />
-                <Html
-                  center
-                  transform
-                  scale={1}
-                  position={[menuOffset.x, menuOffset.y, 0.2]}
-                  zIndexRange={[10000, 10100]}
-                  portal={{ current: document.body }}
-                >
-                  <RadialMenu shapeId={shape.id} />
-                </Html>
-
-                {/* Rotate Handle - Opposite the Radial Menu */}
-                <group position={[-menuOffset.x, -menuOffset.y, 0.2]}>
-                  <RotateHandle
-                    shapeId={shape.id}
-                    position={shape.position}
-                    rotation={shape.rotation || 0}
-                  />
-                </group>
-              </>
+              <SelectionIndicator shape={shape} />
             )}
 
             {/* Text Rendering */}
@@ -578,6 +596,7 @@ export const SimulationNodes = () => {
                 anchorY="middle"
                 visible={true}
                 onClick={(e) => {
+                  if (!isSelectionMode) return;
                   e.stopPropagation();
                   setSelectedId(shape.id);
                 }}
@@ -601,6 +620,8 @@ export const SimulationNodes = () => {
                       Math.abs(shape.size[0] - width) > 0.1 ||
                       Math.abs(shape.size[1] - height) > 0.1
                     ) {
+                      // Movement interactions are intentionally disabled for now.
+                      // This resize path is preserved for future node manipulation workflows.
                       updateShape(shape.id, { size: [width, height] });
                     }
                   }
@@ -609,6 +630,10 @@ export const SimulationNodes = () => {
                 {shape.text || ""}
                 {editingId === shape.id && cursorVisible ? "_" : ""}
               </Text>
+            )}
+
+            {selectedId === shape.id && !editingId && (
+              <SelectionIndicator shape={shape} />
             )}
 
             {/* Room Rendering */}
@@ -632,56 +657,45 @@ export const SimulationNodes = () => {
                   hasRightWall = !lobbyPositions.has(`${x + w},${y}`);
                 }
 
+                const leftFace = shape.structuralRoom?.canonicalFaces.left;
+                const rightFace = shape.structuralRoom?.canonicalFaces.right;
+                if (leftFace?.adjacentRoomIds.length) {
+                  hasLeftWall = true;
+                }
+                if (rightFace?.adjacentRoomIds.length) {
+                  hasRightWall = true;
+                }
+
                 return (
-                  <group position={[0, 0, 0]}>
-                    <ResidentialRoom
-                      position={[0, 0, 0]}
-                      rotation={0}
-                      size={shape.size}
-                      color={shape.color || (themes as any)[themeName].primary}
-                      hasLeftWall={hasLeftWall}
-                      hasRightWall={hasRightWall}
-                      onPointerDown={(e) => {
-                        e.stopPropagation();
-                        handleNodePointerDown(e, shape.id);
-                      }}
-                      onDoubleClick={(e) => {
-                        e.stopPropagation();
-                        handleNodeDoubleClick(e, shape.id);
-                      }}
-                    />
-                  </group>
+                  <ResidentialRoom
+                    position={[shape.position[0], shape.position[1], 0]}
+                    rotation={0}
+                    size={shape.size}
+                    color={shape.color || (themes as any)[themeName].primary}
+                    material={shape.material}
+                    hasLeftWall={hasLeftWall}
+                    hasRightWall={hasRightWall}
+                    openings={shape.openings}
+                    structuralSettings={shape.structuralSettings}
+                    structuralRoom={shape.structuralRoom}
+                    frontFaceVisibility="transparent"
+                    onPointerDown={(e) => {
+                      if (!isSelectionMode) return;
+                      e.stopPropagation();
+                      // Movement interactions are intentionally disabled for now.
+                      // Keep this selection binding so move behavior can be re-enabled later.
+                      handleNodePointerDown(e, shape.id);
+                    }}
+                    onDoubleClick={(e) => {
+                      if (!isSelectionMode) return;
+                      e.stopPropagation();
+                      // Movement interactions are intentionally disabled for now.
+                      // This hook remains so future node move/edit interactions can be restored.
+                      handleNodeDoubleClick(e, shape.id);
+                    }}
+                  />
                 );
               })()}
-
-            {/* Ports for linking */}
-            {(selectedId === shape.id ||
-              activeTool === "link" ||
-              !!linkingFrom) &&
-              shape.type !== "text" && (
-                <>
-                  <Port
-                    position={[0, shape.size[1] / 2]}
-                    type="top"
-                    shapeId={shape.id}
-                  />
-                  <Port
-                    position={[0, -shape.size[1] / 2]}
-                    type="bottom"
-                    shapeId={shape.id}
-                  />
-                  <Port
-                    position={[-shape.size[0] / 2, 0]}
-                    type="left"
-                    shapeId={shape.id}
-                  />
-                  <Port
-                    position={[shape.size[0] / 2, 0]}
-                    type="right"
-                    shapeId={shape.id}
-                  />
-                </>
-              )}
 
             {activeTool === "vertex" &&
               selectedId === shape.id &&

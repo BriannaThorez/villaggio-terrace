@@ -3,11 +3,77 @@ import { useSimulationStore, PortType } from "../shared/utils/store";
 import { Line } from "@react-three/drei";
 import * as THREE from "three";
 import themes from "../shared/themes/color_palettes.json";
+import type {
+  StructuralFace,
+  StructuralRoomMetadata,
+} from "../features/rooms/structural/graph";
+
+const getStructuralPortPosition = (
+  shape: any,
+  port?: PortType,
+): [number, number, number] | null => {
+  const room: StructuralRoomMetadata | undefined = shape.structuralRoom;
+  if (!room || !port) return null;
+
+  const halfWidth = room.dimensions.width / 2;
+  const halfHeight = room.dimensions.height / 2;
+  const halfDepth = room.dimensions.depth / 2;
+  const groundedX = shape.position[0];
+  const groundedY = shape.position[1];
+
+  switch (room.canonicalFace) {
+    case "front":
+      return [
+        groundedX +
+          (port === "left" ? -halfWidth : port === "right" ? halfWidth : 0),
+        groundedY + halfHeight,
+        halfDepth,
+      ];
+    case "back":
+      return [
+        groundedX +
+          (port === "left" ? -halfWidth : port === "right" ? halfWidth : 0),
+        groundedY + halfHeight,
+        -halfDepth,
+      ];
+    case "left":
+      return [
+        groundedX - halfWidth,
+        groundedY + halfHeight,
+        port === "top" ? -halfDepth : port === "bottom" ? halfDepth : 0,
+      ];
+    case "right":
+      return [
+        groundedX + halfWidth,
+        groundedY + halfHeight,
+        port === "top" ? -halfDepth : port === "bottom" ? halfDepth : 0,
+      ];
+    case "ceiling":
+      return [
+        groundedX +
+          (port === "top" ? -halfWidth : port === "bottom" ? halfWidth : 0),
+        groundedY + room.dimensions.height,
+        port === "left" ? -halfDepth : port === "right" ? halfDepth : 0,
+      ];
+    case "floor":
+      return [
+        groundedX +
+          (port === "top" ? -halfWidth : port === "bottom" ? halfWidth : 0),
+        groundedY,
+        port === "left" ? -halfDepth : port === "right" ? halfDepth : 0,
+      ];
+    default:
+      return null;
+  }
+};
 
 const getPortPosition = (
   shape: any,
   port?: PortType,
 ): [number, number, number] => {
+  const structuralPosition = getStructuralPortPosition(shape, port);
+  if (structuralPosition) return structuralPosition;
+
   const [x, y] = shape.position;
   if (!port) return [x, y, 0];
 
@@ -50,9 +116,12 @@ const getBezierPoints = (
   endRotation: number = 0,
 ) => {
   const getOffset = (port?: PortType, rotation: number = 0) => {
-    if (!port) return [0, 0];
+    if (!port) return [0, 0, 0] as const;
+
     let ox = 0;
     let oy = 0;
+    let oz = 0;
+
     switch (port) {
       case "top":
         oy = 10;
@@ -67,9 +136,10 @@ const getBezierPoints = (
         ox = 10;
         break;
     }
+
     const cos = Math.cos(rotation);
     const sin = Math.sin(rotation);
-    return [ox * cos - oy * sin, ox * sin + oy * cos];
+    return [ox * cos - oy * sin, ox * sin + oy * cos, oz] as const;
   };
 
   const startOffset = getOffset(startPort, startRotation);
@@ -77,8 +147,16 @@ const getBezierPoints = (
 
   const curve = new THREE.CubicBezierCurve3(
     new THREE.Vector3(...start),
-    new THREE.Vector3(start[0] + startOffset[0], start[1] + startOffset[1], 0),
-    new THREE.Vector3(end[0] + endOffset[0], end[1] + endOffset[1], 0),
+    new THREE.Vector3(
+      start[0] + startOffset[0],
+      start[1] + startOffset[1],
+      start[2] + startOffset[2],
+    ),
+    new THREE.Vector3(
+      end[0] + endOffset[0],
+      end[1] + endOffset[1],
+      end[2] + endOffset[2],
+    ),
     new THREE.Vector3(...end),
   );
   return curve.getPoints(50);

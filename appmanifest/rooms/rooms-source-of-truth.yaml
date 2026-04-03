@@ -5,6 +5,10 @@ intents:
       A building is not a collection of static 3D meshes; it is a continuous mathematical field.
       A "Room" is axiomatically defined as the boolean intersection of spatial constraints (floors, ceilings, walls).
       Structure (beams/pillars) dictates the boundaries, and the "Skin" (drywall, glass, concrete) is a procedural membrane stretched over or between these boundaries.
+      addendum: |
+        Cells already define room footprints on the grid; they are the canonical spatial atoms that constrain every architectural decision.
+        Beams span between cell corners (top/bottom/vertical) and constitute the primary load-bearing frame that connects adjacent rooms, ensuring shared walls collapse into a single structural element.
+        Framing beams are the finer detailing (door jambs, header/sill framing) that carve negative space for openings—these beams signal to the skin where drywall or glass must stop so there are no accidental bridges across doors or windows.
   axiological:
     title: "Axiological Intent (The Value System)"
     description: |
@@ -15,3 +19,6 @@ intents:
     description: |
       To build a dynamic, living simulation where the architecture organically adapts to the player's management decisions.
       Elevators carve boolean subtraction shafts through floors; structural stress dynamically thickens load-bearing pillars; and the entire tower renders as a single, perfectly batched, infinitely scalable mathematical shader.
+
+relatedTruths:
+  placement: "appmanifest/rooms/placement-source-of-truth.yaml"
