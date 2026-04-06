@@ -40,79 +40,45 @@ export const GroundIndicatorPlane: React.FC<GroundIndicatorPlaneProps> = ({
   const textureSet = useMemo(
     () =>
       createGrassIndicatorTextureSet({
-        size: 512,
+        size: 1024,
         seed,
-        repeat: Math.max(1, Math.round(Math.max(width, depth) / 24)),
-        variant,
-        baseColor: "#355f2d",
-        bladeColor: color,
-        accentColor: "#a8cf72",
+        repeat: Math.max(1, Math.round(Math.max(width, depth) / 32)),
+        variant: "soft",
+        baseColor: "#1a2b16", // Deep, velvety forest green
+        bladeColor: "#223d1d", // Subtle highlights
+        accentColor: "#2a3d20", // Muted undertones
       }),
-    [color, depth, seed, variant, width],
+    [depth, seed, width],
   );
 
   const material = useMemo(() => {
     const mat = new THREE.MeshPhysicalMaterial({
-      color,
-      roughness: 0.8,
-      metalness: 0.0,
-      transparent: true,
-      opacity,
+      color: "#ffffff",
+      roughness: 1.0, // Absolute matte
+      metalness: 0.0, // Non-metallic velvet
+      transparent: false,
+      opacity: 1.0,
       depthWrite: true,
-      side: THREE.FrontSide, // Optimized for top-down visibility
+      side: THREE.FrontSide,
       map: textureSet.diffuse,
       normalMap: textureSet.normal,
       bumpMap: textureSet.bump,
-      bumpScale: 0.05,
-      normalScale: new THREE.Vector2(0.1, 0.1),
-      envMapIntensity: 0.4,
+      bumpScale: 0.15, // Muted bumps for velvet feel
+      normalScale: new THREE.Vector2(0.8, 0.8), // Smoother transition
+      envMapIntensity: 0.0, // Reject environment reflections
     });
-
     mat.toneMapped = true;
     return mat;
-  }, [color, opacity, textureSet.bump, textureSet.diffuse, textureSet.normal]);
-
-  const meshRef = useRef<THREE.Mesh | null>(null);
-
-  useEffect(() => {
-    sharedGroundIndicatorCount += 1;
-    sharedGroundIndicatorMesh = meshRef.current;
-
-    return () => {
-      sharedGroundIndicatorCount = Math.max(0, sharedGroundIndicatorCount - 1);
-      if (sharedGroundIndicatorCount === 0) {
-        sharedGroundIndicatorMesh = null;
-      }
-      material.dispose();
-      textureSet.dispose();
-    };
-  }, [material, textureSet]);
+  }, [textureSet.bump, textureSet.diffuse, textureSet.normal]);
 
   return (
     <mesh
-      ref={meshRef}
-      position={groundedPosition}
+      position={[0, -thickness / 2, 0]}
       receiveShadow
-      renderOrder={renderOrder}
-      userData={{
-        groundIndicator: true,
-        procedural: "grass",
-        thickness,
-        singleton: true,
-        sceneOwned: true,
-        worldGroundY: 0,
-      }}
-      visible={
-        sharedGroundIndicatorMesh === null ||
-        sharedGroundIndicatorMesh === meshRef.current
-      }
+      renderOrder={-2} // Behind grid but above background
     >
-      <group position={[0, -thickness / 2, 0]}>
-        <cylinderGeometry
-          args={[width / 2, width / 2, thickness, 48, 1, false]}
-        />
-        <primitive object={material} attach="material" />
-      </group>
+      <boxGeometry args={[width, thickness, depth]} />
+      <primitive object={material} attach="material" />
     </mesh>
   );
 };

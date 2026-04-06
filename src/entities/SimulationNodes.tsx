@@ -478,12 +478,11 @@ export const SimulationNodes = () => {
     }
   }, [editingId]);
 
-  // Precompute lobby positions for adjacent wall removal
-  const lobbyPositions = useMemo(() => {
+  // Precompute positions of blendable structures (Lobby, Floor) for adjacent wall removal
+  const blendablePositions = useMemo(() => {
     const set = new Set<string>();
     renderedShapes.forEach((s) => {
-      if (s.type === "lobby") {
-        // Use a small epsilon to handle floating point inaccuracies
+      if (s.type === "lobby" || s.type === "floor") {
         set.add(`${Math.round(s.position[0])},${Math.round(s.position[1])}`);
       }
     });
@@ -498,6 +497,8 @@ export const SimulationNodes = () => {
         ref={meshRef}
         args={[null as any, null as any, renderedShapes.length]}
         frustumCulled={false}
+        castShadow
+        receiveShadow
         onPointerDown={(e) => {
           if (e.instanceId !== undefined) {
             handleNodePointerDown(e, renderedShapes[e.instanceId].id);
@@ -655,12 +656,13 @@ export const SimulationNodes = () => {
                 let hasLeftWall = true;
                 let hasRightWall = true;
 
-                if (shape.type === "lobby") {
+                const blendableTypes = ["lobby", "floor"];
+                if (blendableTypes.includes(shape.type)) {
                   const x = Math.round(shape.position[0]);
                   const y = Math.round(shape.position[1]);
                   const w = shape.size[0];
-                  hasLeftWall = !lobbyPositions.has(`${x - w},${y}`);
-                  hasRightWall = !lobbyPositions.has(`${x + w},${y}`);
+                  hasLeftWall = !blendablePositions.has(`${x - w},${y}`);
+                  hasRightWall = !blendablePositions.has(`${x + w},${y}`);
                 }
 
                 const leftFace = shape.structuralRoom?.canonicalFaces.left;

@@ -353,10 +353,10 @@ export class WorkerPoolCoordinator {
       if (envelope.kind === WORKER_MESSAGE_KIND.Ready) {
         const readyEnvelope = envelope as WorkerReadyEnvelope;
         record.lastReadyAt = Date.now();
-        record.supportedRoles = readyEnvelope.ready.roles as WorkerRole[];
+        record.supportedRoles = readyEnvelope.roles as WorkerRole[];
         record.capabilities = {
           ...record.capabilities,
-          supportedKinds: readyEnvelope.ready.capabilities as any,
+          supportedKinds: readyEnvelope.capabilities as any,
         };
         record.healthy = true;
         this.dispatch();

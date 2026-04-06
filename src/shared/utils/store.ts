@@ -33,7 +33,8 @@ export type SimulationNodeType =
   | "office"
   | "utility"
   | "lobby"
-  | "elevator";
+  | "elevator"
+  | "floor";
 
 // The visual grid unit is 4 StructuralCells wide by 1 StructuralCell high.
 // Since a StructuralCell is 1w x 4h (in StructuralAtoms), the visual grid unit is 4w x 4h in StructuralAtoms.
@@ -112,7 +113,6 @@ export interface SimulationState {
   | "utility"
   | "lobby"
   | "elevator";
-  mode: "studio" | "viewer";
   selectedId: string | null;
   editingId: string | null;
   isDragging: boolean;
@@ -145,7 +145,6 @@ export interface SimulationState {
   placeModule: (x: number, y: number, moduleId: string) => void;
   removeModule: (x: number, y: number) => void;
   setActiveTool: (tool: SimulationState["activeTool"]) => void;
-  setMode: (mode: SimulationState["mode"]) => void;
   setSelectedId: (id: string | null) => void;
   setEditingId: (id: string | null) => void;
   setIsDragging: (isDragging: boolean) => void;
@@ -208,6 +207,18 @@ export interface SimulationState {
   // HUD Visibility
   showControls: boolean;
   setShowControls: (val: boolean) => void;
+  showWeather: boolean;
+  setShowWeather: (val: boolean) => void;
+  showPlacementGrid: boolean;
+  setShowPlacementGrid: (val: boolean) => void;
+  showMinimap: boolean;
+  setShowMinimap: (val: boolean) => void;
+  showWeatherPanel: boolean;
+  setShowWeatherPanel: (val: boolean) => void;
+  sunTime: number;
+  setSunTime: (val: number) => void;
+  sunIntensity: number;
+  setSunIntensity: (val: number) => void;
 }
 
 export const getGridKey = (x: number, y: number) => `${x},${y}`;
@@ -295,7 +306,6 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     resources: { power: 50, water: 50, internet: 50 },
     towerGrid: new Map(),
     activeTool: "select",
-    mode: "studio",
     selectedId: null,
     editingId: null,
     isDragging: false,
@@ -308,6 +318,12 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     shouldResetCamera: false,
     uiPositions: savedUIPositions,
     showControls: localStorage.getItem("villaggio_show_controls") === "true",
+    showWeather: localStorage.getItem("villaggio_show_weather") === "true", // Default to false
+    showPlacementGrid: localStorage.getItem("villaggio_show_placement_grid") === "true",
+    showMinimap: localStorage.getItem("villaggio_show_minimap") !== "false", // Default to true
+    showWeatherPanel: localStorage.getItem("villaggio_show_weather_panel") === "true",
+    sunTime: parseFloat(localStorage.getItem("villaggio_sun_time") || "0.55"),
+    sunIntensity: parseFloat(localStorage.getItem("villaggio_sun_intensity") || "10.0"),
 
     checkPlacement: (x, y, w, h, ignoreId) => {
       const state = get();
@@ -348,11 +364,56 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     addShape: (shape, force = false, skipHistory = false) => {
       const state = get();
 
+      // Modular Merging Logic (Industry Leading Foundation)
+      const mergeableTypes: SimulationNodeType[] = ["lobby", "floor"];
+      if (mergeableTypes.includes(shape.type)) {
+        const snappedX = shape.position[0];
+        const snappedY = shape.position[1];
+        const halfWidth = shape.size[0] / 2;
+
+        // Check for ALL adjacent rooms of same type on same floor
+        const adjacentNeighbors = state.shapes.filter(s =>
+          s.type === shape.type &&
+          Math.abs(s.position[1] - snappedY) < 1 && // Same floor
+          (
+            Math.abs(s.position[0] + s.size[0] / 2 - (snappedX - halfWidth)) < 1 || // Neighbor is to the left
+            Math.abs(s.position[0] - s.size[0] / 2 - (snappedX + halfWidth)) < 1    // Neighbor is to the right
+          )
+        );
+
+        if (adjacentNeighbors.length > 0) {
+          // Merge all neighbors and the new shape into the first neighbor
+          const prime = adjacentNeighbors[0];
+          const others = adjacentNeighbors.slice(1);
+
+          let minX = Math.min(prime.position[0] - prime.size[0] / 2, snappedX - halfWidth);
+          let maxX = Math.max(prime.position[0] + prime.size[0] / 2, snappedX + halfWidth);
+
+          others.forEach(o => {
+            minX = Math.min(minX, o.position[0] - o.size[0] / 2);
+            maxX = Math.max(maxX, o.position[0] + o.size[0] / 2);
+            state.deleteShape(o.id); // Remove merged neighbors
+          });
+
+          const newWidth = maxX - minX;
+          const newCenterX = minX + newWidth / 2;
+
+          state.updateShape(prime.id, {
+            position: [newCenterX, snappedY],
+            size: [newWidth, prime.size[1]]
+          }, skipHistory);
+
+          set({ selectedId: prime.id });
+          return;
+        }
+      }
+
       // Prevent exact placement duplicate or box intersection
       if (!force && !state.checkPlacement(shape.position[0], shape.position[1], shape.size[0], shape.size[1], shape.id)) {
         return; // Placements must be strictly non-overlapping
       }
 
+      // ... rest of the existing addShape ...
       if (!skipHistory) {
         pushToHistory();
       }
@@ -369,9 +430,12 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
             h: shape.size[1]
           }]
         },
-        sceneRevision: 0, // In a real app, track this
+        sceneRevision: 0,
         clientRevision: 0,
       });
+
+      // Synchronize local spatial hash for authoritative main-thread collision checks
+      globalHash.insert(shape.id, shape.position[0], shape.position[1], shape.size[0], shape.size[1]);
 
       set((state) => ({
         shapes: [...state.shapes, {
@@ -511,7 +575,6 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       });
     },
     setActiveTool: (tool) => set({ activeTool: tool }),
-    setMode: (mode) => set({ mode }),
     setSelectedId: (id) => {
       set({ selectedId: id });
     },
@@ -628,6 +691,30 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     setShowControls: (val) => {
       localStorage.setItem("villaggio_show_controls", String(val));
       set({ showControls: val });
+    },
+    setShowWeather: (val) => {
+      localStorage.setItem("villaggio_show_weather", String(val));
+      set({ showWeather: val });
+    },
+    setShowPlacementGrid: (val) => {
+      localStorage.setItem("villaggio_show_placement_grid", String(val));
+      set({ showPlacementGrid: val });
+    },
+    setShowMinimap: (val) => {
+      localStorage.setItem("villaggio_show_minimap", String(val));
+      set({ showMinimap: val });
+    },
+    setShowWeatherPanel: (val) => {
+      localStorage.setItem("villaggio_show_weather_panel", String(val));
+      set({ showWeatherPanel: val });
+    },
+    setSunTime: (val) => {
+      localStorage.setItem("villaggio_sun_time", String(val));
+      set({ sunTime: val });
+    },
+    setSunIntensity: (val) => {
+      localStorage.setItem("villaggio_sun_intensity", String(val));
+      set({ sunIntensity: val });
     },
   };
 });

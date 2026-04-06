@@ -11,6 +11,10 @@ import { Bloom, Noise, Vignette, N8AO } from "@react-three/postprocessing";
 import { HolographicFloors } from "../features/environment/HolographicFloors";
 import { GroundIndicatorPlane } from "../features/rooms/structural/components/GroundIndicatorPlane";
 import { SimulationNodes } from "../entities/SimulationNodes";
+import { InternetConnectivity } from "../features/rooms/visuals/InternetConnectivity";
+import { SolarSystem } from "../features/lighting/ui/SolarSystem";
+import { RainField, RainMist } from "../features/weather/ui/WeatherEffects";
+import { WeatherPanel } from "../features/weather/ui/WeatherPanel";
 import { SimulationLinks } from "../entities/SimulationLinks";
 import {
   useSimulationStore,
@@ -20,14 +24,7 @@ import {
 import * as THREE from "three";
 import { useRef, useEffect, useMemo, useState } from "react";
 
-const RAIN_COUNT = 1400;
-const RAIN_AREA = 1200;
-const RAIN_HEIGHT = 420;
-const RAIN_FALL_SPEED = 420;
-const RAIN_WIND_SPEED = 95;
-const RAIN_MIST_COUNT = 180;
-const RAIN_MIST_SPEED = 16;
-const RAIN_MIST_RADIUS = 22;
+// RAIN_COUNT constants moved to modular features/weather.
 
 const PlacementIndicator = () => {
   const activeTool = useSimulationStore((state) => state.activeTool);
@@ -133,12 +130,13 @@ const PlacementIndicator = () => {
           opacity={0.3}
         />
       </mesh>
-      <mesh position={[0, nodeSize[1] / 2, 0]} rotation={[0, 0, Math.PI / 4]}>
+      <mesh position={[0, nodeSize[1] / 2, 0]} rotation={[0, 0, Math.PI / 4]} castShadow receiveShadow>
         <ringGeometry args={[nodeSize[0] / 2 - 1, nodeSize[0] / 2, 4]} />
         <meshBasicMaterial ref={materialRef2} color={currentTheme.accent} />
       </mesh>
 
-      <mesh position={[0, nodeSize[1] / 2, -20]}>
+      {/* 3D Ghost Mesh */}
+      <mesh position={[0, nodeSize[1] / 2, -20]} castShadow receiveShadow>
         <boxGeometry args={[nodeSize[0], nodeSize[1], 40]} />
         <meshBasicMaterial
           ref={materialRef3}
@@ -161,132 +159,7 @@ const PlacementIndicator = () => {
   );
 };
 
-const RainField = ({ isDark }: { isDark: boolean }) => {
-  const pointsRef = useRef<THREE.Points>(null);
-  const positions = useMemo(() => {
-    const array = new Float32Array(RAIN_COUNT * 3);
-    for (let i = 0; i < RAIN_COUNT; i += 1) {
-      array[i * 3] = (Math.random() - 0.5) * RAIN_AREA;
-      array[i * 3 + 1] = (Math.random() - 0.2) * RAIN_HEIGHT; // Shifted slightly down to cover ground
-      array[i * 3 + 2] = (Math.random() - 0.5) * RAIN_AREA;
-    }
-    return array;
-  }, []);
-
-  const offsets = useMemo(
-    () => Array.from({ length: RAIN_COUNT }, () => Math.random() * RAIN_HEIGHT),
-    [],
-  );
-
-  useFrame((state, delta) => {
-    const points = pointsRef.current;
-    if (!points) return;
-
-    const positionsAttr = points.geometry.getAttribute("position");
-    const array = positionsAttr.array as Float32Array;
-    const cam = state.camera.position;
-
-    for (let i = 0; i < RAIN_COUNT; i += 1) {
-      const base = i * 3;
-      let y = array[base + 1] - RAIN_FALL_SPEED * delta;
-      if (y < -40) {
-        y = RAIN_HEIGHT + Math.random() * 100;
-        array[base] = cam.x + (Math.random() - 0.5) * RAIN_AREA;
-        array[base + 2] = cam.z + (Math.random() - 0.5) * RAIN_AREA; // Corrected: Use cam.z, not cam.y
-      }
-
-      array[base + 1] = y;
-      array[base] +=
-        (Math.sin(offsets[i] + state.clock.elapsedTime * 0.6) *
-          RAIN_WIND_SPEED *
-          delta) /
-        60;
-      array[base + 2] +=
-        (Math.cos(offsets[i] + state.clock.elapsedTime * 0.45) *
-          RAIN_WIND_SPEED *
-          delta) /
-        120;
-    }
-
-    positionsAttr.needsUpdate = true;
-  });
-
-  return (
-    <points ref={pointsRef} position={[0, 0, 0]}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-      </bufferGeometry>
-      <pointsMaterial
-        color={isDark ? "#cfe8ff" : "#e8f2ff"}
-        size={1.4}
-        sizeAttenuation
-        transparent
-        opacity={0.38}
-        depthWrite={false}
-      />
-    </points>
-  );
-};
-
-const RainMist = ({ isDark }: { isDark: boolean }) => {
-  const pointsRef = useRef<THREE.Points>(null);
-
-  const positions = useMemo(() => {
-    const array = new Float32Array(RAIN_MIST_COUNT * 3);
-    for (let i = 0; i < RAIN_MIST_COUNT; i += 1) {
-      array[i * 3] = (Math.random() - 0.5) * 900;
-      array[i * 3 + 1] = Math.random() * 140;
-      array[i * 3 + 2] = (Math.random() - 0.5) * 900;
-    }
-    return array;
-  }, []);
-
-  const seeds = useMemo(
-    () =>
-      Array.from(
-        { length: RAIN_MIST_COUNT },
-        () => Math.random() * Math.PI * 2,
-      ),
-    [],
-  );
-
-  useFrame((state, delta) => {
-    const points = pointsRef.current;
-    if (!points) return;
-
-    const attr = points.geometry.getAttribute("position");
-    const array = attr.array as Float32Array;
-    const t = state.clock.elapsedTime;
-
-    for (let i = 0; i < RAIN_MIST_COUNT; i += 1) {
-      const base = i * 3;
-      const s = seeds[i];
-      array[base + 1] =
-        26 + Math.sin(t * 0.4 + s) * 7 + Math.cos(t * 0.2 + s) * 3;
-      array[base] += Math.sin(t * 0.08 + s) * RAIN_MIST_SPEED * delta;
-      array[base + 2] += Math.cos(t * 0.06 + s) * RAIN_MIST_SPEED * delta;
-    }
-
-    attr.needsUpdate = true;
-  });
-
-  return (
-    <points ref={pointsRef} position={[0, 0, 0]}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-      </bufferGeometry>
-      <pointsMaterial
-        color={isDark ? "#dfeeff" : "#f4fbff"}
-        size={RAIN_MIST_RADIUS}
-        sizeAttenuation
-        transparent
-        opacity={0.03}
-        depthWrite={false}
-        blending={THREE.AdditiveBlending}
-      />
-    </points>
-  );
-};
+// RainField and RainMist moved to modular features/weather.
 
 const CanvasScene = () => {
   const { camera, controls, raycaster, pointer, scene, size } = useThree();
@@ -303,7 +176,6 @@ const CanvasScene = () => {
   const addShape = useSimulationStore((state) => state.addShape);
   const setActiveTool = useSimulationStore((state) => state.setActiveTool);
   const activeTool = useSimulationStore((state) => state.activeTool);
-  const mode = useSimulationStore((state) => state.mode);
   const updateShape = useSimulationStore((state) => state.updateShape);
   const selectedId = useSimulationStore((state) => state.selectedId);
   const setSelectedId = useSimulationStore((state) => state.setSelectedId);
@@ -430,10 +302,7 @@ const CanvasScene = () => {
       cam.updateProjectionMatrix();
     }
 
-    if (sphereRef.current) {
-      sphereRef.current.position.x = cam.position.x;
-      sphereRef.current.position.y = cam.position.y;
-    }
+
   });
 
   const placeAtPoint = (point: THREE.Vector3, skipHistory = true) => {
@@ -512,7 +381,6 @@ const CanvasScene = () => {
 
   const handleClick = (event: any) => {
     if (
-      mode === "viewer" ||
       wasLinkingRef.current ||
       wasDraggingRef.current ||
       wasPanningRef.current
@@ -568,6 +436,7 @@ const CanvasScene = () => {
       "utility",
       "lobby",
       "elevator",
+      "floor",
     ];
     const isRoom = roomTypes.includes(activeTool);
 
@@ -598,7 +467,8 @@ const CanvasScene = () => {
     } else if (
       activeTool === "lobby" ||
       activeTool === "elevator" ||
-      activeTool === "utility"
+      activeTool === "utility" ||
+      activeTool === "floor"
     ) {
       nodeSize = [10, 40];
       vertices = [
@@ -720,8 +590,6 @@ const CanvasScene = () => {
   ]);
 
   const handlePointerMove = (e: any) => {
-    if (mode === "viewer") return;
-
     let currentIsDragging = isDragging;
     let currentIsPanning = isPanning;
     let currentIsRotating = isRotating;
@@ -829,6 +697,24 @@ const CanvasScene = () => {
     }
   };
 
+  const gridRef = useRef<any>(null);
+  const groundPlane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), []);
+  const raycastResult = useMemo(() => new THREE.Vector3(), []);
+
+  useFrame((state) => {
+    if (gridRef.current) {
+      // Find the screen center in world space on the ground plane (y=0)
+      state.raycaster.setFromCamera(new THREE.Vector2(0, 0), state.camera);
+      const intersect = state.raycaster.ray.intersectPlane(groundPlane, raycastResult);
+
+      if (intersect) {
+        // Snap the grid center to 10-unit increments to prevent line-shifting
+        gridRef.current.position.x = Math.round(intersect.x / 10) * 10;
+        gridRef.current.position.z = Math.round(intersect.z / 10) * 10;
+      }
+    }
+  });
+
   const handlePointerDown = (e: any) => {
     wasPanningRef.current = false;
     wasDraggingRef.current = false;
@@ -841,7 +727,7 @@ const CanvasScene = () => {
 
     if (e.nativeEvent.target.tagName !== "CANVAS") return;
 
-    if (mode === "viewer" || activeTool !== "select") return;
+    if (activeTool !== "select") return;
     if (selectedId) setSelectedId(null);
   };
 
@@ -868,8 +754,8 @@ const CanvasScene = () => {
       setSelectedId(null); // RIGHT CLICK DESELECT
     }
 
-    if (e.button === 0 && wasStaticClick) {
-      setSelectedId(null); // LEFT CLICK DESELECT
+    if (e.button === 0 && wasStaticClick && activeTool === "select") {
+      setSelectedId(null); // LEFT CLICK DESELECT ONLY IN SELECT MODE
     }
 
     if (linkingFrom) {
@@ -895,35 +781,21 @@ const CanvasScene = () => {
     setLinkingTo(null);
   };
 
+  const showWeather = useSimulationStore((state) => state.showWeather);
+
   return (
     <>
-      <color attach="background" args={["#1b1e23"]} />
-      <fog attach="fog" args={["#1b1e23", 50, 600]} />
-      <ambientLight
-        intensity={0.03} // Subtle gloom fill
-        color="#ffffff"
-      />
-      <directionalLight
-        position={[-150, 200, 100]}
-        intensity={0.65} // Slashed from 2.2 to simulate overcast "Seattle" sun
-        color="#a5b4fc" // Slight blue tint for rainy atmosphere
-        castShadow
-        shadow-mapSize={[4096, 4096]}
-        shadow-camera-left={-250}
-        shadow-camera-right={250}
-        shadow-camera-top={250}
-        shadow-camera-bottom={-250}
-        shadow-camera-far={1000}
-        shadow-bias={-0.0015} // Increased for "Seattle" stability (prevents wall flickering)
-      />
-      <hemisphereLight
-        args={[
-          "#71717a", // Cool grey sky
-          "#18181b", // Charcoal ground
-          0.18,      // Slightly higher fill for overcast diffusion
-        ]}
-      />
-      <Environment preset={isDark ? "night" : "city"} background={false}>
+      <color attach="background" args={[isDark ? "#0d1117" : "#cbd5e1"]} />
+      <fog attach="fog" args={[isDark ? "#0d1117" : "#cbd5e1", showWeather ? 100 : 500, showWeather ? 1000 : 4000]} />
+
+      {/* Modular Atmospheric Simulation */}
+      <SolarSystem />
+
+      <Environment
+        preset={isDark ? "night" : "city"}
+        background={false}
+        environmentIntensity={showWeather ? 0.45 : (isDark ? 0.35 : 0.45)} // Lifted to restore PBR material reflections
+      >
         {isDark && (
           <group rotation={[0, 0, 0]}>
             <Lightformer intensity={3.5} rotation={[Math.PI / 2, 0, 0]} position={[0, 20, -10]} scale={[20, 20, 1]} color="#22d3ee" />
@@ -981,27 +853,30 @@ const CanvasScene = () => {
 
       <PlacementIndicator />
       <SimulationNodes />
+      <InternetConnectivity />
       <SimulationLinks />
       <GroundIndicatorPlane
-        position={[0, -0.05, 0]}
+        position={[0, 0, 0]}
         thickness={5}
         color="#2e7d32"
         opacity={1.0}
-        renderOrder={-20}
+        renderOrder={-1}
       />
 
       <Grid
-        position={[0, 0, 0]}
-        infiniteGrid
-        fadeDistance={500}
-        fadeStrength={5}
+        ref={gridRef}
+        position={[0, 1.0, 0]} // Raised by 1 unit to prevent Z-fighting
+        args={[2000, 2000]}
         cellSize={10}
+        cellThickness={1.0}
+        cellColor={isDark ? "rgba(216, 231, 242, 0.2)" : "rgba(237, 244, 249, 0.2)"}
         sectionSize={40}
-        sectionColor={isDark ? "#8fb2c8" : "#c7d6e2"}
-        sectionThickness={1.3}
-        cellColor={isDark ? "#d8e7f2" : "#edf4f9"}
-        cellThickness={0.8}
-        rotation={[0, 0, 0]}
+        sectionThickness={1.5}
+        sectionColor={isDark ? "rgba(143, 178, 200, 0.2)" : "rgba(199, 214, 226, 0.2)"}
+        fadeDistance={280}
+        fadeStrength={1.5}
+        followCamera={false} // Manually following via useFrame for better control
+        infiniteGrid={true}
       />
 
       <HolographicFloors />
@@ -1010,24 +885,20 @@ const CanvasScene = () => {
         position={[0, 0, -150]}
         onPointerUp={handlePointerUp}
         onPointerDown={handlePointerDown}
+        onClick={handleClick}
       >
         <planeGeometry args={[4000, 4000]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
-      <mesh ref={sphereRef} position={[0, 0, 0]}>
-        <sphereGeometry args={[800, 64, 64]} />
-        <meshBasicMaterial
-          color={isDark ? "#6f8396" : "#d4e0ea"}
-          side={THREE.BackSide}
-          transparent
-          opacity={isDark ? 0.34 : 0.22}
-          fog={false}
-        />
-      </mesh>
 
-      <RainField isDark={isDark} />
-      <RainMist isDark={isDark} />
+
+      {showWeather && (
+        <>
+          <RainField isDark={isDark} />
+          <RainMist isDark={isDark} />
+        </>
+      )}
 
       <ContactShadows
         position={[0, -0.01, 0]}
@@ -1041,16 +912,16 @@ const CanvasScene = () => {
       />
 
       <N8AO
-        aoRadius={15}
-        intensity={isDark ? 2.8 : 1.8}
-        color={isDark ? "#0d1a1f" : "#1a252c"}
+        aoRadius={8} // Increased from 5 to cover larger interior volumes
+        intensity={isDark ? 3.0 : 3.0} // Increased to 3.0 per user request
+        color={isDark ? "#05080a" : "#0d1316"} // Deep dark to swallow true corners
         quality="high"
       />
       <Bloom
         mipmapBlur
-        luminanceThreshold={1.3} // Increased from ~0.8 to suppress "grit fireflies"
-        luminanceSmoothing={0.7} // Smoother falloff for foggy highlights
-        intensity={isDark ? 0.25 : 0.15} // Subtler intensity for the rainy vibe
+        luminanceThreshold={2.5} // Raised back to 2.5 to prevent wall-glow 'bleeding'
+        luminanceSmoothing={0.5}
+        intensity={isDark ? 0.2 : 0.1}
       />
       <Noise opacity={0.002} premultiply />
       <Vignette eskil={false} offset={0.1} darkness={isDark ? 0.78 : 0.22} />
@@ -1060,21 +931,23 @@ const CanvasScene = () => {
 
 export const SimulationCanvas = () => {
   const cameraState = useSimulationStore((state) => state.cameraState);
+  const showWeather = useSimulationStore((state) => state.showWeather);
+
   return (
     <Canvas
       orthographic
-      shadows
+      shadows="soft"
       camera={{
         zoom: cameraState.zoom,
         position: cameraState.position as [number, number, number],
-        far: 2000,
-        near: -2000
+        far: 5000,
+        near: -5000
       }}
       gl={{
         antialias: true,
         toneMapping: THREE.ACESFilmicToneMapping,
-        toneMappingExposure: 0.8, // Slightly darker for depth
-        outputColorSpace: THREE.SRGBColorSpace
+        toneMappingExposure: showWeather ? 0.4 : 0.7, // Dynamic exposure for weather mood
+        outputColorSpace: THREE.SRGBColorSpace,
       }}
     >
       <CanvasScene />

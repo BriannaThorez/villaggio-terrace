@@ -4,12 +4,16 @@ import { parseMaterial } from "../../../engine/MaterialParser";
 import { buildRoomShellGeometry } from "../structural/geometry";
 import { RoomSkin } from "../structural/skin/RoomSkin";
 import { RoomMeshCSG } from "../visuals/RoomMeshCSG";
+import { useSimulationStore } from "../../../shared/utils/store";
+import { useInteriorSubgrid } from "../../interiorPlacement/hooks/useInteriorSubgrid";
+import { PlacementHologram } from "../../interiorPlacement/ui/PlacementHologram";
 import type { StructuralRoomMetadata } from "../structural/graph";
 import {
   DEFAULT_ROOM_SHELL_DIMENSIONS,
   type RoomOpeningDefinition,
   type RoomStructuralSettings,
 } from "../structural/types";
+import { computeSnappedWorldOffset } from "../../interiorPlacement/domain/CoordinateEngine";
 
 interface ResidentialRoomProps {
   position: [number, number, number];
@@ -33,11 +37,6 @@ const sharedTrimMaterial = new THREE.LineBasicMaterial({
   color: "#333333",
   transparent: true,
   opacity: 0.5,
-});
-const sharedCellLineMaterial = new THREE.LineBasicMaterial({
-  color: "#ffffff",
-  transparent: true,
-  opacity: 0.3,
 });
 
 const sharedGeometries = {
@@ -88,40 +87,31 @@ export const ResidentialRoom: React.FC<ResidentialRoomProps> = ({
       roughness: 0.8,
       metalness: 0.1,
     });
-    mat.side = THREE.DoubleSide;
+    mat.side = THREE.FrontSide;
+    mat.shadowSide = THREE.BackSide;
     return [mat, mat, mat, mat, mat, mat];
   }, [color]);
 
-  const cellLinesGeo = useMemo(() => {
-    const numLines = Math.floor(width / 10) - 1;
-    if (numLines <= 0) return null;
+  const showPlacementGrid = useSimulationStore((state) => state.showPlacementGrid);
+  const selectedId = useSimulationStore((state) => state.selectedId);
+  const isSelected = structuralRoom ? (structuralRoom.roomId === selectedId) : false;
+  const isGridVisible = isSelected && showPlacementGrid; // Overlay visible exclusively when both debugging is enabled and the unit is active.
 
-    const floorY = 0;
-    const ceilingY = height;
-    const points: THREE.Vector3[] = [];
-    for (let i = 0; i < numLines; i++) {
-      const x = -width / 2 + (i + 1) * 10;
-      points.push(new THREE.Vector3(x, floorY, -depth / 2 + 0.1));
-      points.push(new THREE.Vector3(x, ceilingY, -depth / 2 + 0.1));
-      points.push(new THREE.Vector3(x, ceilingY - 0.1, -depth / 2));
-      points.push(new THREE.Vector3(x, ceilingY - 0.1, depth / 2));
-      points.push(new THREE.Vector3(x, floorY + 0.1, -depth / 2));
-      points.push(new THREE.Vector3(x, floorY + 0.1, depth / 2));
-    }
-    return new THREE.BufferGeometry().setFromPoints(points);
-  }, [width, height, depth]);
+  const placementGrid = useInteriorSubgrid(
+    structuralRoom?.roomId ?? "temp-room",
+    width,
+    depth,
+    0,
+    "tenth"
+  );
 
   useEffect(() => {
     return () => {
       if (roomGeometryResult.shellGeometry !== roomGeometry) {
         roomGeometryResult.shellGeometry.dispose();
       }
-
-      if (cellLinesGeo) {
-        cellLinesGeo.dispose();
-      }
     };
-  }, [roomGeometry, roomGeometryResult.shellGeometry, cellLinesGeo]);
+  }, [roomGeometry, roomGeometryResult.shellGeometry]);
 
   return (
     <group
@@ -139,6 +129,8 @@ export const ResidentialRoom: React.FC<ResidentialRoomProps> = ({
         height={height}
         depth={depth}
         material={materials[0]}
+        hasLeftWall={hasLeftWall}
+        hasRightWall={hasRightWall}
       />
 
       {structuralRoom && (
@@ -153,12 +145,34 @@ export const ResidentialRoom: React.FC<ResidentialRoomProps> = ({
           }}
         />
       )}
-      {cellLinesGeo && (
-        <lineSegments
-          geometry={cellLinesGeo}
-          material={sharedCellLineMaterial}
-        />
-      )}
+      <group position={[0, 2.22, -depth / 2]}>
+        <PlacementHologram grid={placementGrid} visible={isGridVisible} />
+
+        {/* 
+          Diagnostic Desk: Snapped to the Placement Engine group.
+          This ensures coordinate parity between the blue guide and the object.
+          Target: Second Cell (index 1) but Second Atom from the front (index 8).
+        */}
+        <mesh
+          position={(() => {
+            const offset = computeSnappedWorldOffset(
+              placementGrid,
+              1, // Second Cell (X Index 1)
+              3, // Front-most Cell (Z Index 3)
+              5, // Centered in Cell X (Atom index 5)
+              8, // Second Atom from the front (index 8)
+              { width: 10, depth: 10 } // Constraint: size of the debug box
+            );
+            // offset[1] is baseFloorY. Since we are in the grid group, we only need local height.
+            return [offset[0], 2.5, offset[2]];
+          })()}
+          castShadow
+          receiveShadow
+        >
+          <boxGeometry args={[10, 5, 10]} />
+          <meshStandardMaterial color="#FF5F1F" roughness={0.8} />
+        </mesh>
+      </group>
     </group>
   );
 };

@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from "react";
 import { useSimulationStore } from "../shared/utils/store";
 import { SmartTooltip } from "../shared/components/SmartTooltip";
 import { Map } from "lucide-react";
+import { motion } from "framer-motion";
 
 export const Minimap: React.FC = () => {
   const shapes = useSimulationStore((state) => state.shapes);
@@ -16,6 +17,17 @@ export const Minimap: React.FC = () => {
   const [localZoom, setLocalZoom] = useState(0.375);
   const [localCenter, setLocalCenter] = useState<[number, number]>([0, 0]);
   const lastMousePos = useRef<[number, number]>([0, 0]);
+
+  const uiPositions = useSimulationStore((state) => state.uiPositions);
+  const setUIPosition = useSimulationStore((state) => state.setUIPosition);
+  const pos = uiPositions["minimap"] || { x: 0, y: 0 };
+
+  const handleDragEnd = (_: any, info: any) => {
+    setUIPosition("minimap", {
+      x: pos.x + info.offset.x,
+      y: pos.y + info.offset.y,
+    });
+  };
 
   // Initial auto-center on shapes
   useMemo(() => {
@@ -121,16 +133,21 @@ export const Minimap: React.FC = () => {
   };
 
   return (
-    <div
+    <motion.div
+      drag
+      dragMomentum={false}
+      onDragEnd={handleDragEnd}
+      animate={{ x: pos.x, y: pos.y }}
       id="minimap-container"
-      className="w-48 h-48 bg-background/95 backdrop-blur-xl border border-text/10 rounded-xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.4)] pointer-events-auto group transition-all duration-300 hover:border-primary/40"
+      className="absolute bottom-20 right-4 z-[90] w-48 h-48 bg-background/95 backdrop-blur-xl border border-text/10 rounded-xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.4)] pointer-events-auto cursor-grab active:cursor-grabbing group transition-all duration-300 hover:border-primary/40"
       onWheel={handleWheel}
       onContextMenu={(e) => e.preventDefault()}
     >
       <svg
         ref={svgRef}
         viewBox={`${viewBox.minX} ${viewBox.minY} ${viewBox.width} ${viewBox.height}`}
-        className="w-full h-full cursor-crosshair"
+        className="w-full h-full cursor-crosshair active:cursor-grabbing"
+        onPointerDown={(e) => e.stopPropagation()} // Overrides the outer motion.div to prevent panel drag during panning
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={() => {
@@ -274,6 +291,6 @@ export const Minimap: React.FC = () => {
       <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-accent/40" />
       <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-accent/40" />
       <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-accent/40" />
-    </div>
+    </motion.div>
   );
 };

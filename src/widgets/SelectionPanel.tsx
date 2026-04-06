@@ -27,7 +27,6 @@ export const SelectionPanel = () => {
     const selectedId = useSimulationStore((state) => state.selectedId);
     const shapes = useSimulationStore((state) => state.shapes);
     const updateShape = useSimulationStore((state) => state.updateShape);
-    const mode = useSimulationStore((state) => state.mode);
     const uiPositions = useSimulationStore((state) => state.uiPositions);
     const setUIPosition = useSimulationStore((state) => state.setUIPosition);
 
@@ -41,7 +40,7 @@ export const SelectionPanel = () => {
         }
     }, [shape?.id, shape?.name]);
 
-    if (!shape || mode !== "studio") return null;
+    if (!shape) return null;
 
     const Icon = (typeIconMap as any)[shape.type] || InformationCircleIcon;
 

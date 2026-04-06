@@ -6,6 +6,8 @@ import { BuildToolbar } from "./widgets/BuildToolbar";
 import { ControlsHint } from "./widgets/ControlsHint";
 import { CameraReadout } from "./components/CameraReadout";
 import { SelectionPanel } from "./widgets/SelectionPanel";
+import { Minimap } from "./widgets/Minimap";
+import { WeatherPanel } from "./features/weather/ui/WeatherPanel";
 import { useSimulationStore } from "./shared/utils";
 import themes from "./shared/themes/color_palettes.json";
 
@@ -19,10 +21,10 @@ export default function App() {
   const setSelectedId = useSimulationStore((state) => state.setSelectedId);
   const selectedId = useSimulationStore((state) => state.selectedId);
   const showControls = useSimulationStore((state) => state.showControls);
-  const mode = useSimulationStore((state) => state.mode);
   const themeName = useSimulationStore((state) => state.themeName);
   const shapes = useSimulationStore((state) => state.shapes);
   const updateShape = useSimulationStore((state) => state.updateShape);
+  const showMinimap = useSimulationStore((state) => state.showMinimap);
   const editingShape = shapes.find((s) => s.id === editingId);
 
   useEffect(() => {
@@ -171,12 +173,14 @@ export default function App() {
   ]);
 
   return (
-    <div className="w-full h-screen relative">
+    <div className="w-full h-screen relative overflow-hidden bg-background">
       <SimulationCanvas />
       <MainToolbar />
       <BuildToolbar />
-      {mode === "studio" && showControls && <ControlsHint />}
+      {showControls && <ControlsHint />}
       {selectedId && <SelectionPanel />}
+      {showMinimap && <Minimap />}
+      <WeatherPanel />
       <CameraReadout />
       {/* Hidden textarea for text editing */}
       {editingId && (

@@ -135,11 +135,11 @@ const SelectionControls = ({
         zIndexRange={[10000, 10100]}
         portal={{ current: document.body }}
       >
-        <button className="pointer-events-none flex h-40 w-40 items-center justify-center rounded-full border border-white/30 bg-white text-black shadow-[0_0_28px_rgba(255,255,255,0.3)] backdrop-blur-md">
+        <div className="pointer-events-none flex h-40 w-40 items-center justify-center rounded-full border border-white/30 bg-white text-black shadow-[0_0_28px_rgba(255,255,255,0.3)] backdrop-blur-md">
           <div className="scale-[3.2]">
             <RadialMenu shapeId={shapeId} />
           </div>
-        </button>
+        </div>
       </Html>
 
       <Html
@@ -150,9 +150,9 @@ const SelectionControls = ({
         zIndexRange={[10000, 10100]}
         portal={{ current: document.body }}
       >
-        <button className="pointer-events-none flex h-40 w-40 items-center justify-center rounded-full border border-white/30 bg-white text-black shadow-[0_0_28px_rgba(255,255,255,0.3)] backdrop-blur-md">
+        <div className="pointer-events-none flex h-40 w-40 items-center justify-center rounded-full border border-white/30 bg-white text-black shadow-[0_0_28px_rgba(255,255,255,0.3)] backdrop-blur-md">
           <div className="scale-[6]">⟳</div>
-        </button>
+        </div>
       </Html>
     </>
   );

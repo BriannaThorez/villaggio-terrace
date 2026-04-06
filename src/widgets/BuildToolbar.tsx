@@ -12,6 +12,7 @@ import {
   Building03Icon,
   Edit01Icon,
   CheckmarkCircle01Icon,
+  Layers01Icon as LayersIcon,
 } from "hugeicons-react";
 import { SmartTooltip } from "../shared/components/SmartTooltip";
 import { useMemo } from "react";
@@ -24,12 +25,12 @@ type BuildToolId =
   | "office"
   | "utility"
   | "elevator"
-  | "stairs";
+  | "stairs"
+  | "floor";
 
 export const BuildToolbar = () => {
   const setActiveTool = useSimulationStore((state) => state.setActiveTool);
   const activeTool = useSimulationStore((state) => state.activeTool);
-  const mode = useSimulationStore((state) => state.mode);
 
   const tools = useMemo(
     () => [
@@ -89,13 +90,16 @@ export const BuildToolbar = () => {
         description: "Place stair core modules.",
         shortcut: "8",
       },
+      {
+        id: "floor" as BuildToolId,
+        icon: LayersIcon,
+        label: "Floor",
+        description: "Place structural floor plates.",
+        shortcut: "9",
+      },
     ],
     [],
   );
-
-  if (mode !== "studio") {
-    return null;
-  }
 
   return (
     <div className="absolute inset-x-0 bottom-4 flex justify-center z-50 pointer-events-none">
@@ -116,11 +120,10 @@ export const BuildToolbar = () => {
               >
                 <button
                   onClick={() => setActiveTool(tool.id as any)}
-                  className={`rounded-xl transition-all duration-300 flex items-center justify-center ${
-                    activeTool === tool.id
-                      ? "bg-primary text-background shadow-[0_0_15px_var(--primary)] scale-110"
-                      : "text-text/40 hover:text-primary hover:bg-primary/5"
-                  }`}
+                  className={`rounded-xl transition-all duration-300 flex items-center justify-center ${activeTool === tool.id
+                    ? "bg-primary text-background shadow-[0_0_15px_var(--primary)] scale-110"
+                    : "text-text/40 hover:text-primary hover:bg-primary/5"
+                    }`}
                   style={{ padding: "0.44rem" }}
                 >
                   <Icon size={28} strokeWidth={1.5} />

@@ -12,8 +12,9 @@ import {
   Download01Icon,
   ArrowTurnBackwardIcon,
   ArrowTurnForwardIcon,
-  KeyboardIcon,
+  KeyboardIcon
 } from "hugeicons-react";
+import { Droplet, Map } from "lucide-react";
 import { SmartTooltip } from "../shared/components/SmartTooltip";
 import { generateSVG } from "../shared/utils/svgExport";
 import React, { useState, createElement } from "react";
@@ -46,8 +47,6 @@ const resourceBadgeStyle = {
 };
 
 export const MainToolbar = () => {
-  const mode = useSimulationStore((state) => state.mode);
-  const setMode = useSimulationStore((state) => state.setMode);
   const themeName = useSimulationStore((state) => state.themeName);
   const setThemeName = useSimulationStore((state) => state.setThemeName);
   const resources = useSimulationStore((state) => state.resources);
@@ -58,9 +57,15 @@ export const MainToolbar = () => {
 
   const showControls = useSimulationStore((state) => state.showControls);
   const setShowControls = useSimulationStore((state) => state.setShowControls);
+  const showWeather = useSimulationStore((state) => state.showWeather);
+  const setShowWeather = useSimulationStore((state) => state.setShowWeather);
+  const showPlacementGrid = useSimulationStore((state) => state.showPlacementGrid);
+  const setShowPlacementGrid = useSimulationStore((state) => state.setShowPlacementGrid);
 
-  const isStudioMode = mode === "studio";
-  const isViewerMode = mode === "viewer";
+  const showMinimap = useSimulationStore((state) => state.showMinimap);
+  const setShowMinimap = useSimulationStore((state) => state.setShowMinimap);
+  const showWeatherPanel = useSimulationStore((state) => state.showWeatherPanel);
+  const setShowWeatherPanel = useSimulationStore((state) => state.setShowWeatherPanel);
 
   const handleExport = () => {
     const state = useSimulationStore.getState();
@@ -79,10 +84,6 @@ export const MainToolbar = () => {
     a.click();
     URL.revokeObjectURL(url);
   };
-
-  if (!isStudioMode) {
-    return null;
-  }
 
   const iconButton = (
     onClick: () => void,
@@ -145,6 +146,51 @@ export const MainToolbar = () => {
             </div>
             {showControls && <CheckmarkCircle01Icon size={14} className="text-primary" />}
           </button>
+
+          <button
+            onClick={() => setShowWeatherPanel(!showWeatherPanel)}
+            className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${showWeatherPanel
+              ? "bg-primary/20 text-text"
+              : "text-text/60 hover:text-text hover:bg-primary/5"
+              }`}
+            style={{ padding: `${GUI_SPACING_REM}rem ${GUI_SPACING_REM * 2}rem` }}
+          >
+            <div className="flex items-center gap-2">
+              <FlashIcon size={14} />
+              <span>Atmosphere Controls</span>
+            </div>
+            {showWeatherPanel && <CheckmarkCircle01Icon size={14} className="text-primary" />}
+          </button>
+
+          <button
+            onClick={() => setShowPlacementGrid(!showPlacementGrid)}
+            className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${showPlacementGrid
+              ? "bg-primary/20 text-emerald-400"
+              : "text-text/60 hover:text-text hover:bg-primary/5"
+              }`}
+            style={{ padding: `${GUI_SPACING_REM}rem ${GUI_SPACING_REM * 2}rem` }}
+          >
+            <div className="flex items-center gap-2">
+              <ViewIcon size={14} />
+              <span>Object Placement Debug</span>
+            </div>
+            {showPlacementGrid && <CheckmarkCircle01Icon size={14} className="text-emerald-400" />}
+          </button>
+
+          <button
+            onClick={() => setShowMinimap(!showMinimap)}
+            className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${showMinimap
+              ? "bg-primary/20 text-text"
+              : "text-text/60 hover:text-text hover:bg-primary/5"
+              }`}
+            style={{ padding: `${GUI_SPACING_REM}rem ${GUI_SPACING_REM * 2}rem` }}
+          >
+            <div className="flex items-center gap-2">
+              <Map size={14} />
+              <span>Diagnostic Minimap</span>
+            </div>
+            {showMinimap && <CheckmarkCircle01Icon size={14} className="text-primary" />}
+          </button>
         </div>
       )}
     </div>
@@ -159,7 +205,12 @@ export const MainToolbar = () => {
     <SmartTooltip content={label}>
       <div className="flex items-center text-sm font-medium text-text/80" style={resourceBadgeStyle}>
         {value}
-        <Icon size={GUI_ICON_SIZE} strokeWidth={GUI_ICON_STROKE} className={iconColor} />
+        <Icon
+          size={GUI_ICON_SIZE}
+          strokeWidth={GUI_ICON_STROKE}
+          className={!iconColor.startsWith('#') ? iconColor : ''}
+          style={iconColor.startsWith('#') ? { color: iconColor } : {}}
+        />
       </div>
     </SmartTooltip>
   );
@@ -175,26 +226,17 @@ export const MainToolbar = () => {
       >
         {menuButton}
         <div style={separatorStyle} />
-        {resourceBadge("Power", FlashIcon, resources.power, "text-yellow-400")}
-        {resourceBadge("Water", Settings01Icon, resources.water, "text-blue-400")}
-        {resourceBadge("Internet", Wifi01Icon, resources.internet, "text-green-400")}
+
+        {/* Resource Indicators Group with 50% spacing adjustment and equal alignment */}
+        <div className="flex items-center" style={{ gap: `${GUI_SPACING_REM * 0.25}rem` }}>
+          {resourceBadge("Power", FlashIcon, resources.power, "text-yellow-400")}
+          {resourceBadge("Water", Droplet, resources.water, "text-blue-400")}
+          {resourceBadge("Internet", Wifi01Icon, resources.internet, "#FF5F1F")}
+        </div>
+
         <div style={separatorStyle} />
-        {iconButton(
-          () => setMode("studio"),
-          Edit01Icon,
-          "Studio Mode",
-          "Full creative control. Create, edit, and link nodes.",
-          isStudioMode,
-        )}
         {iconButton(undo, ArrowTurnBackwardIcon, "Undo", "Revert the last action.")}
         {iconButton(redo, ArrowTurnForwardIcon, "Redo", "Restore the last undone action.")}
-        {iconButton(
-          () => setMode("viewer"),
-          ViewIcon,
-          "Viewer Mode",
-          "Clean presentation mode. All editing tools are hidden.",
-          isViewerMode,
-        )}
         <div style={separatorStyle} />
         <div className="relative">
           <SmartTooltip
@@ -218,7 +260,7 @@ export const MainToolbar = () => {
             <div
               onMouseLeave={() => setShowThemeMenu(false)}
               className="absolute bottom-full mb-2 left-0 bg-background/90 backdrop-blur-2xl border border-primary/10 rounded-xl shadow-2xl flex flex-col gap-1 z-[100]"
-              style={{ padding: `${GUI_SPACING_REM}rem`, minWidth: "160px" }}
+              style={{ padding: `${GUI_SPACING_REM}rem`, minWidth: "180px" }}
             >
               <div className="px-2 py-1 border-b border-primary/5 mb-1">
                 <span className="text-[8px] font-mono text-text/40 uppercase tracking-widest">
@@ -262,6 +304,16 @@ export const MainToolbar = () => {
             </div>
           )}
         </div>
+
+        {iconButton(
+          () => setShowMinimap(!showMinimap),
+          Map,
+          "Toggle Minimap",
+          "Show or hide the diagnostic terrain overview.",
+          showMinimap
+        )}
+
+        <div style={separatorStyle} />
         {iconButton(
           handleExport,
           Download01Icon,
