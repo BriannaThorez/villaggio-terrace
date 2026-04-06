@@ -34,6 +34,26 @@ export class SpatialHash {
     }
   }
 
+  remove(id: string, x: number, y: number, width: number, height: number) {
+    const startX = x - width / 2;
+    const startY = y - height / 2;
+    const endX = x + width / 2;
+    const endY = y + height / 2;
+
+    for (let ix = startX; ix <= endX + this.cellSize; ix += this.cellSize) {
+      for (let iy = startY; iy <= endY + this.cellSize; iy += this.cellSize) {
+        const hash = this.getHash(Math.min(ix, endX), Math.min(iy, endY));
+        const cell = this.grid.get(hash);
+        if (cell) {
+          cell.delete(id);
+          if (cell.size === 0) {
+            this.grid.delete(hash);
+          }
+        }
+      }
+    }
+  }
+
   query(x: number, y: number, width: number, height: number): Set<string> {
     const result = new Set<string>();
     const startX = x - width / 2;

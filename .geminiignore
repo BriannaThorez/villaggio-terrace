@@ -1,0 +1,10 @@
+# Gemini Research Ignore File
+# Prevents the agent from analyzing or traversing these directories.
+
+snapshots/
+node_modules/
+dist/
+.git/
+temp/
+/tmp/
+*.log

@@ -1,19 +1,3 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- *
- * AXIOMATIC INTENT:
- * High-performance flowchart visualization requires bypassing the DOM and leveraging GPU-centric
- * architectures (WebGL2/SDFs) for resolution-independent rendering at 60fps.
- *
- * AXIOLOGICAL INTENT:
- * We value precision, performance, and aesthetic clarity. The "Neon-Glow" style is chosen
- * for functional clarity and professional "mission control" feel.
- *
- * TELEOLOGICAL INTENT:
- * To provide a standalone, modular flowchart studio and viewer that bridges abstract logic
- * and high-fidelity visualization with unprecedented responsiveness.
- */
 
 import { useEffect } from "react";
 import { SimulationCanvas } from "./widgets/SimulationCanvas";

@@ -2,6 +2,15 @@ import {
   registerWorkerTask,
   type WorkerTaskContext,
 } from "./runtime";
+import { SpatialHash } from "../shared/utils/SpatialHash";
+import {
+  SIMULATION_TASK_TYPE,
+  type CheckPlacementPayload,
+  type CheckPlacementResult,
+  type SyncSpatialHashPayload,
+} from "../shared/worker/protocol";
+
+const workerHash = new SpatialHash(100);
 
 export type WorkerTaskPayloadMap = {
   "worker/health-check": {
@@ -15,6 +24,8 @@ export type WorkerTaskPayloadMap = {
   "worker/echo": {
     value: unknown;
   };
+  [SIMULATION_TASK_TYPE.CheckPlacement]: CheckPlacementPayload;
+  [SIMULATION_TASK_TYPE.SyncSpatialHash]: SyncSpatialHashPayload;
 };
 
 export type WorkerTaskResultMap = {
@@ -34,6 +45,8 @@ export type WorkerTaskResultMap = {
     value: unknown;
     requestId: string;
   };
+  [SIMULATION_TASK_TYPE.CheckPlacement]: CheckPlacementResult;
+  [SIMULATION_TASK_TYPE.SyncSpatialHash]: { success: boolean };
 };
 
 const normalizeRevisionPair = (
@@ -82,17 +95,37 @@ export const registerFoundationWorkerTasks = () => {
 
   registerWorkerTask<WorkerTaskPayloadMap["worker/echo"], WorkerTaskResultMap["worker/echo"]>(
     "worker/echo",
-    (payload, context) => {
-      if (context.signal.aborted) {
-        throw new Error("Worker task was cancelled before echo completion");
-      }
+    (payload, context) => ({ value: payload.value, requestId: context.requestId }),
+  );
+};
 
-      return {
-        value: payload.value,
-        requestId: context.requestId,
-      };
+export const registerLayoutTasks = () => {
+  registerWorkerTask<CheckPlacementPayload, CheckPlacementResult>(
+    SIMULATION_TASK_TYPE.CheckPlacement,
+    (payload) => {
+      const candidates = workerHash.query(payload.x, payload.y, payload.w, payload.h);
+      const colliders = Array.from(candidates).filter(id => id !== payload.ignoreId);
+      return { isValid: colliders.length === 0, collidingId: colliders[0] };
     },
   );
+
+  registerWorkerTask<SyncSpatialHashPayload, { success: boolean }>(
+    SIMULATION_TASK_TYPE.SyncSpatialHash,
+    (payload) => {
+      if (payload.clear) workerHash.clear();
+      if (payload.removes) payload.removes.forEach((r) => workerHash.remove(r.id, r.x, r.y, r.w, r.h));
+      if (payload.inserts) payload.inserts.forEach((i) => workerHash.insert(i.id, i.x, i.y, i.w, i.h));
+      return { success: true };
+    },
+  );
+};
+
+export const registerRoutingTasks = () => {
+  // Placeholder for future pathfinding and link resolving tasks
+};
+
+export const registerAnalysisTasks = () => {
+  // Placeholder for metrics and validation tasks
 };
 
 registerFoundationWorkerTasks();

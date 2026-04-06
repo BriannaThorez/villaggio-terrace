@@ -10,4 +10,5 @@ telemetry/
 !.env.example
 commit-and-push.sh
 # custom
+snapshots/
 examples/

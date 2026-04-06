@@ -1,4 +1,10 @@
 import { create } from "zustand";
+import { SpatialHash } from "./SpatialHash";
+import { getWorkerPool } from "../../worker/client";
+import { SIMULATION_TASK_TYPE } from "../worker/protocol";
+
+const globalHash = new SpatialHash(100);
+globalHash.insert("default-node", 0, 0, 40, 40);
 
 /**
  * Simulation building blocks.
@@ -294,8 +300,13 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       const cx1 = x;
       const cy1 = y;
 
-      for (const s2 of state.shapes) {
-        if (s2.id === ignoreId) continue;
+      const candidates = globalHash.query(x, y, w, h);
+
+      for (const s2Id of candidates) {
+        if (s2Id === ignoreId) continue;
+        const s2 = state.shapes.find(s => s.id === s2Id);
+        if (!s2) continue;
+
         const aabb2 = getAABB(s2);
         const cx2 = s2.position[0] + aabb2.cx;
         const cy2 = s2.position[1] + aabb2.cy;
@@ -308,6 +319,16 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
         }
       }
       return true; // Valid placement
+    },
+    checkPlacementAuthoritative: async (x: number, y: number, w: number, h: number, ignoreId?: string) => {
+      const workerPool = getWorkerPool();
+      const result = await workerPool.submit<CheckPlacementPayload, CheckPlacementResult>({
+        taskType: SIMULATION_TASK_TYPE.CheckPlacement,
+        payload: { x, y, w, h, ignoreId },
+        sceneRevision: 0,
+        clientRevision: 0,
+      });
+      return result.isValid;
     },
 
     addShape: (shape, force = false, skipHistory = false) => {
@@ -322,6 +343,22 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
         pushToHistory();
       }
 
+      const workerPool = getWorkerPool();
+      workerPool.submit({
+        taskType: SIMULATION_TASK_TYPE.SyncSpatialHash,
+        payload: {
+          inserts: [{
+            id: shape.id,
+            x: shape.position[0],
+            y: shape.position[1],
+            w: shape.size[0],
+            h: shape.size[1]
+          }]
+        },
+        sceneRevision: 0, // In a real app, track this
+        clientRevision: 0,
+      });
+
       set((state) => ({ shapes: [...state.shapes, shape] }));
     },
     updateShape: (id, updates, skipHistory = false) => {
@@ -333,6 +370,32 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           shapes: state.shapes.map((s) => {
             if (s.id === id) {
               const newShape = { ...s, ...updates };
+              globalHash.remove(id, s.position[0], s.position[1], s.size[0], s.size[1]);
+              globalHash.insert(id, newShape.position[0], newShape.position[1], newShape.size[0] || s.size[0], newShape.size[1] || s.size[1]);
+
+              const workerPool = getWorkerPool();
+              workerPool.submit({
+                taskType: SIMULATION_TASK_TYPE.SyncSpatialHash,
+                payload: {
+                  removes: [{
+                    id,
+                    x: s.position[0],
+                    y: s.position[1],
+                    w: s.size[0],
+                    h: s.size[1]
+                  }],
+                  inserts: [{
+                    id,
+                    x: newShape.position[0],
+                    y: newShape.position[1],
+                    w: newShape.size[0] || s.size[0],
+                    h: newShape.size[1] || s.size[1]
+                  }]
+                },
+                sceneRevision: 0,
+                clientRevision: 0,
+              });
+
               if (
                 updates.size &&
                 (!s.size ||
@@ -357,6 +420,26 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     deleteShape: (id) => {
       pushToHistory();
       set((state) => {
+        const shape = state.shapes.find(s => s.id === id);
+        if (shape) {
+          globalHash.remove(id, shape.position[0], shape.position[1], shape.size[0], shape.size[1]);
+
+          const workerPool = getWorkerPool();
+          workerPool.submit({
+            taskType: SIMULATION_TASK_TYPE.SyncSpatialHash,
+            payload: {
+              removes: [{
+                id,
+                x: shape.position[0],
+                y: shape.position[1],
+                w: shape.size[0],
+                h: shape.size[1]
+              }]
+            },
+            sceneRevision: 0,
+            clientRevision: 0,
+          });
+        }
         const nextShapes = state.shapes.filter((s) => s.id !== id);
         const nextLinks = state.links.filter(
           (l) => l.from !== id && l.to !== id,

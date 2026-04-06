@@ -852,7 +852,7 @@ const CanvasScene = () => {
       const dx = e.clientX - pointerDownPos.current[0];
       const dy = e.clientY - pointerDownPos.current[1];
       const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist > 3) {
+      if (dist > 6) {
       } else {
         wasStaticClick = true;
         wasPanningRef.current = false;
@@ -863,6 +863,10 @@ const CanvasScene = () => {
 
     if (e.button === 2 && wasStaticClick) {
       setActiveTool("select");
+    }
+
+    if (e.button === 0 && wasStaticClick) {
+      handleClick(null);
     }
 
     if (linkingFrom) {
@@ -976,7 +980,6 @@ const CanvasScene = () => {
         rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
         castShadow={false}
-        onClick={handleClick}
         onPointerDown={(e) => e.stopPropagation()}
       >
         <planeGeometry args={[10000, 10000]} />

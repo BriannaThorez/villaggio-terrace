@@ -137,7 +137,7 @@ const DEFAULT_MAX_CONCURRENT_TASKS = 1;
 
 const globalScope: DedicatedWorkerGlobalScope | undefined =
   typeof self !== "undefined" &&
-  typeof (self as DedicatedWorkerGlobalScope).postMessage === "function"
+    typeof (self as DedicatedWorkerGlobalScope).postMessage === "function"
     ? (self as DedicatedWorkerGlobalScope)
     : undefined;
 
@@ -295,13 +295,13 @@ const emitError = (
   const normalized =
     error instanceof Error
       ? {
-          message: error.message,
-          name: error.name,
-          stack: error.stack,
-        }
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+      }
       : {
-          message: typeof error === "string" ? error : "Worker task failed",
-        };
+        message: typeof error === "string" ? error : "Worker task failed",
+      };
 
   postEnvelope(
     createWorkerTaskErrorEnvelope(task.requestId, task.taskType, normalized, {
@@ -532,6 +532,16 @@ export const getWorkerRuntimeState = () => ({
 });
 
 export const initWorkerRuntime = (options: WorkerRuntimeOptions = {}) => {
+  // Detect role from URL if available
+  if (globalScope && globalScope.location.search) {
+    const params = new URLSearchParams(globalScope.location.search);
+    const urlRole = params.get("role") as WorkerRole;
+    if (urlRole) {
+      options.role = urlRole;
+      options.supportedRoles = [urlRole];
+    }
+  }
+
   configureWorkerRuntime(options);
 
   if (!globalScope) {

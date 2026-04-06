@@ -1,11 +1,13 @@
 import { initWorkerRuntime } from "./runtime";
-import { registerFoundationWorkerTasks } from "./workerTasks";
-
-registerFoundationWorkerTasks();
+import {
+  registerFoundationWorkerTasks,
+  registerLayoutTasks,
+  registerRoutingTasks,
+  registerAnalysisTasks,
+} from "./workerTasks";
+import { getWorkerRuntimeState } from "./runtime";
 
 initWorkerRuntime({
-  role: "default",
-  supportedRoles: ["default", "layout", "routing", "analysis", "export"],
   capabilities: [
     "cooperative-cancellation",
     "stale-result-rejection",
@@ -14,3 +16,19 @@ initWorkerRuntime({
   ],
   maxConcurrentTasks: 2,
 });
+
+const { role } = getWorkerRuntimeState();
+
+registerFoundationWorkerTasks();
+
+if (role === "layout" || role === "default") {
+  registerLayoutTasks();
+}
+
+if (role === "routing" || role === "default") {
+  registerRoutingTasks();
+}
+
+if (role === "analysis" || role === "default") {
+  registerAnalysisTasks();
+}

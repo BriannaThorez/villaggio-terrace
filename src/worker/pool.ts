@@ -120,7 +120,7 @@ interface PendingTaskRecord<TResult = unknown> {
 }
 
 export interface WorkerPoolOptions {
-  workerFactory: () => Worker;
+  workerFactory: (role: WorkerRole) => Worker;
   workerCount?: number;
   roles?: WorkerRole[];
   maxQueueSize?: number;
@@ -324,7 +324,7 @@ export class WorkerPoolCoordinator {
   }
 
   private spawnWorker(role: WorkerRole) {
-    const worker = this.workerFactory();
+    const worker = this.workerFactory(role);
 
     const record: WorkerPoolWorkerRecord = {
       worker,
@@ -353,29 +353,10 @@ export class WorkerPoolCoordinator {
       if (envelope.kind === WORKER_MESSAGE_KIND.Ready) {
         const readyEnvelope = envelope as WorkerReadyEnvelope;
         record.lastReadyAt = Date.now();
-        record.supportedRoles = [record.role];
+        record.supportedRoles = readyEnvelope.ready.roles as WorkerRole[];
         record.capabilities = {
-          protocol: WORKER_PROTOCOL_NAME,
-          version: WORKER_PROTOCOL_VERSION,
-          supportsCancellation: true,
-          supportsFallback: true,
-          supportsTypedResults: true,
-          supportedKinds: [
-            WORKER_MESSAGE_KIND.Request,
-            WORKER_MESSAGE_KIND.Result,
-            WORKER_MESSAGE_KIND.Cancel,
-            WORKER_MESSAGE_KIND.Fallback,
-            WORKER_MESSAGE_KIND.Ready,
-            WORKER_MESSAGE_KIND.Ping,
-            WORKER_MESSAGE_KIND.Pong,
-            WORKER_MESSAGE_KIND.Shutdown,
-            WORKER_MESSAGE_KIND.Error,
-            WORKER_MESSAGE_KIND.Cancelled,
-            WORKER_MESSAGE_KIND.Stale,
-            WORKER_MESSAGE_KIND.Task,
-          ],
-          minCompatibleVersion: 1,
-          maxCompatibleVersion: WORKER_PROTOCOL_VERSION,
+          ...record.capabilities,
+          supportedKinds: readyEnvelope.ready.capabilities as any,
         };
         record.healthy = true;
         this.dispatch();

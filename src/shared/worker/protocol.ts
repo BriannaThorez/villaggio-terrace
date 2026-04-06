@@ -248,19 +248,80 @@ export interface WorkerTaskCancelledEnvelope extends WorkerEnvelopeBase {
   };
 }
 
+export interface WorkerTaskStale {
+  requestId: string;
+  taskType: string;
+  status: "stale";
+  sceneRevision: number;
+  clientRevision: number;
+  role?: string;
+  staleAtMs: number;
+  reason: "revision_mismatch" | "superseded" | "late_arrival";
+}
+
+/**
+ * SIMULATION TASK TYPES
+ */
+export const SIMULATION_TASK_TYPE = {
+  CheckPlacement: "simulation/check-placement",
+  ResolveOverlaps: "simulation/resolve-overlaps",
+  SyncSpatialHash: "simulation/sync-spatial-hash",
+} as const;
+
+export type SimulationTaskType =
+  (typeof SIMULATION_TASK_TYPE)[keyof typeof SIMULATION_TASK_TYPE];
+
+export interface CheckPlacementPayload {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  ignoreId?: string;
+}
+
+export interface CheckPlacementResult {
+  isValid: boolean;
+  reason?: string;
+  collidingId?: string;
+}
+
+export interface SyncSpatialHashPayload {
+  clear?: boolean;
+  inserts?: Array<{
+    id: string;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+  }>;
+  removes?: Array<{
+    id: string;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+  }>;
+}
+
+export interface ResolveOverlapsPayload {
+  shapes: Array<{
+    id: string;
+    position: [number, number];
+    size: [number, number];
+  }>;
+}
+
+export interface ResolveOverlapsResult {
+  patches: Array<{
+    id: string;
+    position: [number, number];
+  }>;
+}
+
 export interface WorkerTaskStaleEnvelope extends WorkerEnvelopeBase {
   kind: typeof WORKER_MESSAGE_KIND.Stale;
   channel: "worker-to-pool";
-  stale: {
-    requestId: WorkerRequestId;
-    taskType: string;
-    status: "stale";
-    sceneRevision: number;
-    clientRevision: number;
-    role?: string;
-    staleAtMs: number;
-    reason: "revision_mismatch" | "superseded" | "late_arrival";
-  };
+  stale: WorkerTaskStale;
 }
 
 export type WorkerEnvelope<
