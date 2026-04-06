@@ -117,7 +117,10 @@ const buildDiffuseTexture = (
 
       const patch = Math.sin((nx * 8 + seed * 0.013) * Math.PI * 2) * 0.03;
       const patch2 = Math.cos((ny * 11 - seed * 0.017) * Math.PI * 2) * 0.03;
-      const grain = (random() - 0.5) * 0.08 * profile.contrast;
+
+      // REDUCED NOISE: Slashing per-pixel random grain for a smoother "soft" grass look
+      const grain = (random() - 0.5) * 0.02 * profile.contrast;
+
       const bladeHint =
         Math.max(
           0,
@@ -133,7 +136,8 @@ const buildDiffuseTexture = (
       const baseMix = base.clone().lerp(blade, clamp01(bladeHint));
       const finalMix = baseMix.lerp(accent, clamp01(accentHint * 0.55));
 
-      const shade = clamp01(0.88 + (random() - 0.5) * 0.08 + t * 0.08);
+      // REDUCED SHADE NOISE: Smoothing the jitter in luminosity
+      const shade = clamp01(0.92 + (random() - 0.5) * 0.02 + t * 0.05);
       writePixel(
         imageData,
         x,
@@ -147,6 +151,12 @@ const buildDiffuseTexture = (
   }
 
   context.putImageData(imageData, 0, 0);
+
+  // Softening Pass: Blend the pixels to achieve the "Soft Plaster/Grass" vibe
+  context.globalCompositeOperation = "overlay";
+  context.filter = "blur(0.8px)";
+  context.drawImage(context.canvas, 0, 0);
+
   return canvas;
 };
 
@@ -169,8 +179,8 @@ const buildHeightValue = (
   );
   return clamp01(
     0.5 +
-      (ripple + ripple2 + clump * 0.18 * profile.height + tuft * 0.12) *
-        profile.contrast,
+    (ripple + ripple2 + clump * 0.18 * profile.height + tuft * 0.12) *
+    profile.contrast,
   );
 };
 

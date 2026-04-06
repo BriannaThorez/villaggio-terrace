@@ -5,6 +5,7 @@ import { MainToolbar } from "./widgets/MainToolbar";
 import { BuildToolbar } from "./widgets/BuildToolbar";
 import { ControlsHint } from "./widgets/ControlsHint";
 import { CameraReadout } from "./components/CameraReadout";
+import { SelectionPanel } from "./widgets/SelectionPanel";
 import { useSimulationStore } from "./shared/utils";
 import themes from "./shared/themes/color_palettes.json";
 
@@ -16,6 +17,8 @@ export default function App() {
   const editingId = useSimulationStore((state) => state.editingId);
   const setEditingId = useSimulationStore((state) => state.setEditingId);
   const setSelectedId = useSimulationStore((state) => state.setSelectedId);
+  const selectedId = useSimulationStore((state) => state.selectedId);
+  const showControls = useSimulationStore((state) => state.showControls);
   const mode = useSimulationStore((state) => state.mode);
   const themeName = useSimulationStore((state) => state.themeName);
   const shapes = useSimulationStore((state) => state.shapes);
@@ -172,7 +175,8 @@ export default function App() {
       <SimulationCanvas />
       <MainToolbar />
       <BuildToolbar />
-      {mode === "studio" && <ControlsHint />}
+      {mode === "studio" && showControls && <ControlsHint />}
+      {selectedId && <SelectionPanel />}
       <CameraReadout />
       {/* Hidden textarea for text editing */}
       {editingId && (

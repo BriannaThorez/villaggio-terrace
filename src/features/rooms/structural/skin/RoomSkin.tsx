@@ -175,48 +175,7 @@ export const RoomSkin: React.FC<RoomSkinProps> = ({
         },
       }}
     >
-      {visibleFaces.map((face) => {
-        const isFrontFace = face === "front";
-        const materialForFace =
-          isFrontFace && frontFaceVisibility !== "solid"
-            ? frontFaceMaterial
-            : drywallPanelMaterial;
-
-        if (isFrontFace && frontFaceVisibility === "hidden") {
-          return null;
-        }
-
-        return (
-          <mesh
-            key={face}
-            position={facePosition(room, face)}
-            rotation={faceRotation(face)}
-            material={materialForFace}
-            userData={{
-              structural: {
-                roomId: room.roomId,
-                face,
-                panelId: `${room.roomId}:${face}:shell-face`,
-                adjacentRoomIds: room.canonicalFaces[face].adjacentRoomIds,
-                cutoutIds: room.canonicalFaces[face].cutoutIds,
-                adjacencyGapIds: room.canonicalFaces[face].adjacencyGapIds,
-              },
-            }}
-          >
-            <planeGeometry
-              args={[
-                face === "left" || face === "right"
-                  ? room.dimensions.depth
-                  : room.dimensions.width,
-                face === "ceiling" || face === "floor"
-                  ? room.dimensions.depth
-                  : room.dimensions.height,
-              ]}
-            />
-          </mesh>
-        );
-      })}
-
+      {/* Redundant face planes removed in favor of unified CSG approach in ResidentialRoom. */}
       {cutoutOutlines.map(({ cutout, points }) => (
         <Line
           key={cutout.id}

@@ -158,7 +158,15 @@ const SelectionControls = ({
   );
 };
 
-const StartLabel = ({ position }: { position: [number, number, number] }) => {
+const StartLabel = ({
+  name,
+  type,
+  position,
+}: {
+  name?: string;
+  type: string;
+  position: [number, number, number];
+}) => {
   return (
     <Html
       center
@@ -169,13 +177,13 @@ const StartLabel = ({ position }: { position: [number, number, number] }) => {
       portal={{ current: document.body }}
     >
       <div
-        className="pointer-events-none rounded-full px-8 py-3 text-[112px] font-semibold uppercase tracking-[0.35em]"
+        className="pointer-events-none rounded-full px-8 py-3 text-[112px] font-semibold uppercase tracking-[0.35em] whitespace-nowrap"
         style={{
           color: START_LABEL_COLOR,
           textShadow: START_LABEL_SHADOW,
         }}
       >
-        start
+        {name || type}
       </div>
     </Html>
   );
@@ -244,28 +252,39 @@ export const SelectionOverlay: React.FC<SelectionIndicatorProps> = ({
         />
       </group>
 
-      <mesh
-        position={frame.planePosition}
-        rotation={frame.planeRotation}
-        userData={{ structuralSelection: adjacencyData }}
-        renderOrder={0}
-      >
-        <planeGeometry args={frame.planeSize} />
-        <meshBasicMaterial
-          color={FRONT_FRAME_GLOW}
-          transparent
-          opacity={0.08}
-          side={THREE.DoubleSide}
-          depthWrite={false}
-        />
-      </mesh>
+      {/* 
+        STRUCTURAL RENDERING FIX: 
+        We remove the 'glow' plane over the front face of rooms to prevent 
+        the 'weird dark plane' artifact and ensure the CSG interior is 100% clear.
+      */}
+      {!roomFace && (
+        <mesh
+          position={frame.planePosition}
+          rotation={frame.planeRotation}
+          userData={{ structuralSelection: adjacencyData }}
+          renderOrder={0}
+        >
+          <planeGeometry args={frame.planeSize} />
+          <meshBasicMaterial
+            color={FRONT_FRAME_GLOW}
+            transparent
+            opacity={0.08}
+            side={THREE.DoubleSide}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
 
       <SelectionControls
         menuPosition={frame.menuPosition}
         rotatePosition={frame.rotatePosition}
         shapeId={shape.id}
       />
-      <StartLabel position={frame.startPosition} />
+      <StartLabel
+        name={shape.name}
+        type={shape.type}
+        position={frame.startPosition}
+      />
     </group>
   );
 };

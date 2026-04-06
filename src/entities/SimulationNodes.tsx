@@ -52,8 +52,8 @@ const RotateHandle = ({ rotation }: { rotation: number }) => {
       >
         <div
           className={`pointer-events-none w-40 h-40 rounded-full bg-white border-8 text-black flex items-center justify-center transition-all duration-300 ${hovered
-              ? "border-gray-300 scale-110 shadow-[0_0_100px_rgba(255,255,255,0.8)]"
-              : "border-gray-100 shadow-[0_0_80px_rgba(255,255,255,0.4)]"
+            ? "border-gray-300 scale-110 shadow-[0_0_100px_rgba(255,255,255,0.8)]"
+            : "border-gray-100 shadow-[0_0_80px_rgba(255,255,255,0.4)]"
             }`}
         >
           <div className="scale-[4]">
@@ -328,8 +328,23 @@ export const SimulationNodes = () => {
       tempEuler.current.set(0, 0, shape.rotation || 0);
       tempRotation.current.setFromEuler(tempEuler.current);
 
-      // Set scale to match shape size + padding
-      tempScale.current.set(shape.size[0] + 12, shape.size[1] + 12, 1);
+      // STRUCTURAL RENDERING FIX: 
+      // For rooms, we nullify the SDF background scale to prevent Z-fighting 
+      // with the 3D CSG shell opening at Z=0.
+      const isRoom = [
+        "residential",
+        "commercial",
+        "office",
+        "utility",
+        "lobby",
+        "elevator",
+      ].includes(shape.type);
+
+      if (isRoom) {
+        tempScale.current.set(0, 0, 0);
+      } else {
+        tempScale.current.set(shape.size[0] + 12, shape.size[1] + 12, 1);
+      }
 
       tempMatrix.current.compose(
         tempPosition.current,
@@ -352,14 +367,6 @@ export const SimulationNodes = () => {
       isSelectedArray[i] = selectedId === shape.id ? 1.0 : 0.0;
       sizeArray[i * 2] = shape.size[0] + 12;
       sizeArray[i * 2 + 1] = shape.size[1] + 12;
-      const isRoom = [
-        "residential",
-        "commercial",
-        "office",
-        "utility",
-        "lobby",
-        "elevator",
-      ].includes(shape.type);
       opacityArray[i] = shape.type === "text" || isRoom ? 0.0 : 1.0;
       materialArray[i] = shape.material === "glass" ? 1.0 : 0.0;
     });
@@ -674,8 +681,8 @@ export const SimulationNodes = () => {
                     material={shape.material}
                     hasLeftWall={hasLeftWall}
                     hasRightWall={hasRightWall}
-                    openings={shape.openings}
-                    structuralSettings={shape.structuralSettings}
+                    openings={shape.structuralRoom?.openings.map(o => o.definition)}
+                    structuralSettings={(shape as any).structuralSettings}
                     structuralRoom={shape.structuralRoom}
                     frontFaceVisibility="transparent"
                     onPointerDown={(e) => {

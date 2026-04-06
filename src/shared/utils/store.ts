@@ -83,6 +83,7 @@ export interface SimulationNode {
   size: [number, number];
   vertices: [number, number][]; // Relative to position
   text?: string;
+  name?: string;
   color?: string; // Legacy/Override
   themeColors?: Record<string, string>; // themeName -> hexColor
   material?: "plastic" | "glass";
@@ -199,6 +200,14 @@ export interface SimulationState {
   // Tooltip deconfliction
   activeTooltipId: string | null;
   setActiveTooltipId: (id: string | null) => void;
+
+  // UI Positions
+  uiPositions: Record<string, { x: number; y: number }>;
+  setUIPosition: (id: string, pos: { x: number; y: number }) => void;
+
+  // HUD Visibility
+  showControls: boolean;
+  setShowControls: (val: boolean) => void;
 }
 
 export const getGridKey = (x: number, y: number) => `${x},${y}`;
@@ -256,6 +265,8 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
   const history: HistoryState[] = [];
   const redoStack: HistoryState[] = [];
 
+  const savedUIPositions = JSON.parse(localStorage.getItem("villaggio_ui_positions") || "{}");
+
   const pushToHistory = () => {
     const { shapes, links } = get();
     history.push(JSON.parse(JSON.stringify({ shapes, links })));
@@ -277,6 +288,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           [-20, 20],
         ],
         text: "Start",
+        name: "Gateway Suite",
       },
     ],
     links: [],
@@ -294,6 +306,8 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     linkingFrom: null,
     linkingTo: null,
     shouldResetCamera: false,
+    uiPositions: savedUIPositions,
+    showControls: localStorage.getItem("villaggio_show_controls") === "true",
 
     checkPlacement: (x, y, w, h, ignoreId) => {
       const state = get();
@@ -359,7 +373,12 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
         clientRevision: 0,
       });
 
-      set((state) => ({ shapes: [...state.shapes, shape] }));
+      set((state) => ({
+        shapes: [...state.shapes, {
+          ...shape,
+          name: shape.name || (shape.type.charAt(0).toUpperCase() + shape.type.slice(1))
+        }]
+      }));
     },
     updateShape: (id, updates, skipHistory = false) => {
       if (!skipHistory) {
@@ -589,6 +608,26 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
 
     // Tooltip deconfliction
     activeTooltipId: null,
-    setActiveTooltipId: (activeTooltipId) => set({ activeTooltipId }),
+    setActiveTooltipId: (id) => set({ activeTooltipId: id }),
+    uiPositions: (() => {
+      try {
+        return JSON.parse(localStorage.getItem("villaggio_ui_positions") || "{}");
+      } catch {
+        return {};
+      }
+    })(),
+    setUIPosition: (id, pos) => {
+      set((state) => {
+        const next = { ...state.uiPositions, [id]: pos };
+        localStorage.setItem("villaggio_ui_positions", JSON.stringify(next));
+        return { uiPositions: next };
+      });
+    },
+
+    // HUD Visibility
+    setShowControls: (val) => {
+      localStorage.setItem("villaggio_show_controls", String(val));
+      set({ showControls: val });
+    },
   };
 });

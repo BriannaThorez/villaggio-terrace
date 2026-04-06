@@ -52,21 +52,25 @@ export const parseMaterial = (
     color: new THREE.Color(config.albedo),
     roughness: config.roughness,
     metalness: config.metalness,
-    normalScale: new THREE.Vector2(
-      config.normalMapIntensity || 1,
-      config.normalMapIntensity || 1,
-    ),
-    // PBR defaults for physical plausibility
-    clearcoat: 0.1,
-    clearcoatRoughness: 0.1,
+    // ARCHITECTURAL REFINEMENT: Re-enabling subtle micro-texture
+    // Balancing "Solid" aesthetic with "Drywall" physical depth
+    clearcoat: 0.3, // Reduced from 0.6 for a less "glossy" rainy look
+    clearcoatRoughness: 0.2, // Rougher clearcoat for diffuse light
+    envMapIntensity: 0.45, // SLASHED from 1.2 to match "Seattle" overcast gloom
+    roughness: 0.65, // Increased slightly to dampen grit flickering
+    metalness: 0.0
   });
 
   const textureSet = getDrywallTextureSet();
 
-  material.bumpMap = textureSet.bumpMap;
-  material.bumpScale = config.normalMapIntensity || 1;
-
+  // PROPER NORMAL MAPPING: Lighting now creates the "spots"
+  // Using the new RGB Normal Map at standard scale [1.0, 1.0]
   material.normalMap = textureSet.normalMap;
+  material.normalScale = new THREE.Vector2(0.6, 0.6);
+
+  // Using BumpMap only for micro-depth occlusion
+  material.bumpMap = textureSet.bumpMap;
+  material.bumpScale = 0.005;
 
   material.needsUpdate = true;
 

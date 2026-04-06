@@ -12,6 +12,7 @@ import {
   Download01Icon,
   ArrowTurnBackwardIcon,
   ArrowTurnForwardIcon,
+  KeyboardIcon,
 } from "hugeicons-react";
 import { SmartTooltip } from "../shared/components/SmartTooltip";
 import { generateSVG } from "../shared/utils/svgExport";
@@ -53,6 +54,11 @@ export const MainToolbar = () => {
   const undo = useSimulationStore((state) => state.undo);
   const redo = useSimulationStore((state) => state.redo);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
+  const [showMainMenu, setShowMainMenu] = useState(false);
+
+  const showControls = useSimulationStore((state) => state.showControls);
+  const setShowControls = useSimulationStore((state) => state.setShowControls);
+
   const isStudioMode = mode === "studio";
   const isViewerMode = mode === "viewer";
 
@@ -88,9 +94,8 @@ export const MainToolbar = () => {
     <SmartTooltip content={tooltip} description={description} position="top">
       <button
         onClick={onClick}
-        className={`${toolbarButtonClass} ${
-          isActive ? activeButtonClasses : idleButtonClasses
-        }`}
+        className={`${toolbarButtonClass} ${isActive ? activeButtonClasses : idleButtonClasses
+          }`}
         style={toolbarButtonStyle}
       >
         {createElement(icon, {
@@ -102,14 +107,47 @@ export const MainToolbar = () => {
   );
 
   const menuButton = (
-    <SmartTooltip content="Open menu">
-      <button
-        className={`${toolbarButtonClass} text-text/60 hover:bg-primary/10 hover:text-primary`}
-        style={toolbarButtonStyle}
-      >
-        <Menu01Icon size={GUI_ICON_SIZE} />
-      </button>
-    </SmartTooltip>
+    <div className="relative">
+      <SmartTooltip content="Open Menu">
+        <button
+          onClick={() => setShowMainMenu(!showMainMenu)}
+          className={`${toolbarButtonClass} ${showMainMenu ? "bg-primary/20 text-primary" : "text-text/60 hover:bg-primary/10 hover:text-primary"
+            }`}
+          style={toolbarButtonStyle}
+        >
+          <Menu01Icon size={GUI_ICON_SIZE} />
+        </button>
+      </SmartTooltip>
+
+      {showMainMenu && (
+        <div
+          onMouseLeave={() => setShowMainMenu(false)}
+          className="absolute top-full mt-2 left-0 bg-background/90 backdrop-blur-2xl border border-primary/10 rounded-xl shadow-2xl flex flex-col gap-1 z-[100]"
+          style={{ padding: `${GUI_SPACING_REM}rem`, minWidth: "180px" }}
+        >
+          <div className="px-2 py-1 border-b border-primary/5 mb-1">
+            <span className="text-[8px] font-mono text-text/40 uppercase tracking-widest">
+              Settings & HUD
+            </span>
+          </div>
+
+          <button
+            onClick={() => setShowControls(!showControls)}
+            className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${showControls
+                ? "bg-primary/20 text-text"
+                : "text-text/60 hover:text-text hover:bg-primary/5"
+              }`}
+            style={{ padding: `${GUI_SPACING_REM}rem ${GUI_SPACING_REM * 2}rem` }}
+          >
+            <div className="flex items-center gap-2">
+              <KeyboardIcon size={14} />
+              <span>Show Control Hints</span>
+            </div>
+            {showControls && <CheckmarkCircle01Icon size={14} className="text-primary" />}
+          </button>
+        </div>
+      )}
+    </div>
   );
 
   const resourceBadge = (
@@ -166,11 +204,10 @@ export const MainToolbar = () => {
           >
             <button
               onClick={() => setShowThemeMenu(!showThemeMenu)}
-              className={`${toolbarButtonClass} ${
-                showThemeMenu
+              className={`${toolbarButtonClass} ${showThemeMenu
                   ? "bg-primary/10 text-primary"
                   : "text-text/40 hover:text-primary hover:bg-primary/5"
-              }`}
+                }`}
               style={toolbarButtonStyle}
             >
               <Settings01Icon size={GUI_ICON_SIZE} strokeWidth={GUI_ICON_STROKE} />
@@ -195,11 +232,10 @@ export const MainToolbar = () => {
                     setThemeName(name);
                     setShowThemeMenu(false);
                   }}
-                  className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${
-                    themeName === name
+                  className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${themeName === name
                       ? "bg-primary/20 text-primary"
                       : "text-text/60 hover:text-text hover:bg-primary/5"
-                  }`}
+                    }`}
                   style={{ padding: `${GUI_SPACING_REM}rem ${GUI_SPACING_REM * 2}rem` }}
                 >
                   <div className="flex items-center gap-3">

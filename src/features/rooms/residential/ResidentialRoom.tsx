@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { parseMaterial } from "../../../engine/MaterialParser";
 import { buildRoomShellGeometry } from "../structural/geometry";
 import { RoomSkin } from "../structural/skin/RoomSkin";
+import { RoomMeshCSG } from "../visuals/RoomMeshCSG";
 import type { StructuralRoomMetadata } from "../structural/graph";
 import {
   DEFAULT_ROOM_SHELL_DIMENSIONS,
@@ -129,7 +130,18 @@ export const ResidentialRoom: React.FC<ResidentialRoomProps> = ({
       onPointerDown={onPointerDown}
       onDoubleClick={onDoubleClick}
     >
-      {structuralRoom ? (
+      {/* 
+        Industry-leading Single-Mesh CSG Rendering.
+        The Base CSG replaces overlapping primitive boundaries for a seamless interior.
+      */}
+      <RoomMeshCSG
+        width={width}
+        height={height}
+        depth={depth}
+        material={materials[0]}
+      />
+
+      {structuralRoom && (
         <RoomSkin
           room={structuralRoom}
           color={color}
@@ -140,19 +152,6 @@ export const ResidentialRoom: React.FC<ResidentialRoomProps> = ({
             right: hasRightWall,
           }}
         />
-      ) : (
-        <mesh geometry={roomGeometry}>
-          <meshStandardMaterial
-            color={
-              roomGeometryResult.shellGeometry === roomGeometry
-                ? "#22c55e"
-                : color
-            }
-            roughness={0.8}
-            metalness={0.1}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
       )}
       {cellLinesGeo && (
         <lineSegments

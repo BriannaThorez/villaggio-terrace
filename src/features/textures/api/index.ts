@@ -143,6 +143,11 @@ const drawDrywallNoise = (
   intensity: number,
 ) => {
   const random = createSeededRandom(seed);
+  // STIPPLED NOISE: Creating architectural "bumps" without "cammo" blobs
+  // 1. Clear a fresh background
+  context.fillStyle = "#808080"; // Neutral grey for bump/normal baseline
+  context.fillRect(0, 0, size, size);
+
   const image = context.createImageData(size, size);
   const data = image.data;
 
@@ -150,24 +155,93 @@ const drawDrywallNoise = (
     for (let x = 0; x < size; x++) {
       const index = (y * size + x) * 4;
 
-      const baseNoise = (random() - 0.5) * 2;
-      const grain = (random() - 0.5) * 0.25;
-      const streak = Math.sin((x / size) * Math.PI * scale * 2) * 0.03;
-      const pore = Math.cos((y / size) * Math.PI * scale * 3) * 0.02;
+      // SMOOTH SANDSTONE: Reducing density and contrast
+      const r = random();
+      let value = 128; // Mid-grey
 
-      const value =
-        0.5 + (baseNoise * 0.08 + grain * 0.05 + streak + pore) * intensity;
-      const clamped = Math.max(0, Math.min(1, value));
-      const channel = Math.round(clamped * 255);
+      if (r > 0.94) {
+        value = 140 + random() * 30; // Fewer & softer highlights
+      } else if (r < 0.02) {
+        value = 90 - random() * 20; // Fewer & shallower indents
+      }
 
-      data[index] = channel;
-      data[index + 1] = channel;
-      data[index + 2] = channel;
+      data[index] = value;
+      data[index + 1] = value;
+      data[index + 2] = value;
       data[index + 3] = 255;
     }
   }
 
   context.putImageData(image, 0, 0);
+
+  // 2. Sandstone Smoothing Pass: Higher blur for a soft, matte finish
+  // 1.0px is the "sweet spot" for fine sandstone grain
+  context.filter = "blur(1.0px)";
+  context.globalAlpha = 0.5;
+  context.drawImage(context.canvas, 0, 0);
+  context.globalAlpha = 1.0;
+  context.filter = "none";
+
+};
+
+const drawDrywallNormals = (
+  context: CanvasRenderingContext2D,
+  size: number,
+  seed: number,
+  scale: number,
+  intensity: number,
+) => {
+  // A proper Normal Map requires calculating the gradient of the height data
+  // We recreate the same "dots" but calculate their slopes
+  const random = createSeededRandom(seed);
+  const image = context.createImageData(size, size);
+  const data = image.data;
+
+  // Temporary buffer for height calculation
+  const heights = new Float32Array(size * size);
+  for (let i = 0; i < size * size; i++) {
+    const r = random();
+    heights[i] = 128;
+    // MATCHING SMOOTH SANDSTONE DENSITY
+    if (r > 0.94) heights[i] = 140 + random() * 30;
+    else if (r < 0.02) heights[i] = 90 - random() * 20;
+  }
+
+  const heightAt = (x: number, y: number) => {
+    const px = (x + size) % size;
+    const py = (y + size) % size;
+    return heights[py * size + px];
+  };
+
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const idx = (y * size + x) * 4;
+
+      // Central Difference Gradient
+      const dx = (heightAt(x + 1, y) - heightAt(x - 1, y)) / 255.0;
+      const dy = (heightAt(x, y + 1) - heightAt(x, y - 1)) / 255.0;
+
+      // SOFT SANDSTONE NORMALS: Slashing strength for architectural elegance
+      const strength = 8.0 * intensity; // Slashed from 18.0
+      const nx = -dx * strength;
+      const ny = -dy * strength;
+      const nz = 1.0;
+
+      const len = Math.sqrt(nx * nx + ny * ny + nz * nz);
+
+      // Encode Tangent Space Normal into RGB [0-255]
+      data[idx] = Math.round(((nx / len) * 0.5 + 0.5) * 255);
+      data[idx + 1] = Math.round(((ny / len) * 0.5 + 0.5) * 255);
+      data[idx + 2] = Math.round(((nz / len) * 0.5 + 0.5) * 255);
+      data[idx + 3] = 255;
+    }
+  }
+
+  context.putImageData(image, 0, 0);
+
+  // Sandstone Smoothing: Matting the normals
+  context.filter = "blur(1.1px)";
+  context.drawImage(context.canvas, 0, 0);
 };
 
 const canvasToTexture = (
@@ -353,7 +427,12 @@ export const createDrywallTextureBundle = (
   const colorSpace = params.colorSpace ?? THREE.NoColorSpace;
 
   const bumpCanvas = createTextureCanvas(size, seed, scale, intensity);
-  const normalCanvas = createTextureCanvas(size, seed + 1, scale, intensity);
+  const normalCanvas = document.createElement("canvas");
+  normalCanvas.width = size;
+  normalCanvas.height = size;
+  const normalContext = normalCanvas.getContext("2d")!;
+
+  drawDrywallNormals(normalContext, size, seed, scale, intensity);
 
   const bumpMap = canvasToTexture(bumpCanvas, THREE.NoColorSpace);
   const normalMap = canvasToTexture(normalCanvas, THREE.NoColorSpace);

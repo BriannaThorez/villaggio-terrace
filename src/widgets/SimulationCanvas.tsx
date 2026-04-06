@@ -7,7 +7,9 @@ import {
   Lightformer,
 } from "@react-three/drei";
 import themes from "../shared/themes/color_palettes.json";
-import { Bloom, Noise, Vignette } from "@react-three/postprocessing";
+import { Bloom, Noise, Vignette, N8AO } from "@react-three/postprocessing";
+import { HolographicFloors } from "../features/environment/HolographicFloors";
+import { GroundIndicatorPlane } from "../features/rooms/structural/components/GroundIndicatorPlane";
 import { SimulationNodes } from "../entities/SimulationNodes";
 import { SimulationLinks } from "../entities/SimulationLinks";
 import {
@@ -165,7 +167,7 @@ const RainField = ({ isDark }: { isDark: boolean }) => {
     const array = new Float32Array(RAIN_COUNT * 3);
     for (let i = 0; i < RAIN_COUNT; i += 1) {
       array[i * 3] = (Math.random() - 0.5) * RAIN_AREA;
-      array[i * 3 + 1] = Math.random() * RAIN_HEIGHT;
+      array[i * 3 + 1] = (Math.random() - 0.2) * RAIN_HEIGHT; // Shifted slightly down to cover ground
       array[i * 3 + 2] = (Math.random() - 0.5) * RAIN_AREA;
     }
     return array;
@@ -190,7 +192,7 @@ const RainField = ({ isDark }: { isDark: boolean }) => {
       if (y < -40) {
         y = RAIN_HEIGHT + Math.random() * 100;
         array[base] = cam.x + (Math.random() - 0.5) * RAIN_AREA;
-        array[base + 2] = cam.y + (Math.random() - 0.5) * RAIN_AREA;
+        array[base + 2] = cam.z + (Math.random() - 0.5) * RAIN_AREA; // Corrected: Use cam.z, not cam.y
       }
 
       array[base + 1] = y;
@@ -863,10 +865,11 @@ const CanvasScene = () => {
 
     if (e.button === 2 && wasStaticClick) {
       setActiveTool("select");
+      setSelectedId(null); // RIGHT CLICK DESELECT
     }
 
     if (e.button === 0 && wasStaticClick) {
-      handleClick(null);
+      setSelectedId(null); // LEFT CLICK DESELECT
     }
 
     if (linkingFrom) {
@@ -894,26 +897,30 @@ const CanvasScene = () => {
 
   return (
     <>
-      <color attach="background" args={["#9bb2c8"]} />
-      <fog attach="fog" args={["#a9bfd2", 140, 920]} />
+      <color attach="background" args={["#1b1e23"]} />
+      <fog attach="fog" args={["#1b1e23", 50, 600]} />
       <ambientLight
-        intensity={isDark ? 0.48 : 0.66}
-        color={isDark ? "#c8d4df" : "#d7e2ea"}
+        intensity={0.03} // Subtle gloom fill
+        color="#ffffff"
       />
       <directionalLight
-        position={[-80, 120, 70]}
-        intensity={isDark ? 1.6 : 1.3}
-        color="#d9e6ef"
+        position={[-150, 200, 100]}
+        intensity={0.65} // Slashed from 2.2 to simulate overcast "Seattle" sun
+        color="#a5b4fc" // Slight blue tint for rainy atmosphere
         castShadow
         shadow-mapSize={[4096, 4096]}
-        shadow-bias={-0.00008}
-        shadow-normalBias={0.03}
+        shadow-camera-left={-250}
+        shadow-camera-right={250}
+        shadow-camera-top={250}
+        shadow-camera-bottom={-250}
+        shadow-camera-far={1000}
+        shadow-bias={-0.0015} // Increased for "Seattle" stability (prevents wall flickering)
       />
       <hemisphereLight
         args={[
-          isDark ? "#b7cad8" : "#e8f0f6",
-          isDark ? "#112028" : "#9fc0a8",
-          0.55,
+          "#71717a", // Cool grey sky
+          "#18181b", // Charcoal ground
+          0.18,      // Slightly higher fill for overcast diffusion
         ]}
       />
       <Environment preset={isDark ? "night" : "city"} background={false}>
@@ -975,27 +982,13 @@ const CanvasScene = () => {
       <PlacementIndicator />
       <SimulationNodes />
       <SimulationLinks />
-      <mesh
-        position={[0, -0.1, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        receiveShadow
-        castShadow={false}
-        onPointerDown={(e) => e.stopPropagation()}
-      >
-        <planeGeometry args={[10000, 10000]} />
-        <meshPhysicalMaterial
-          color="#2e7d32"
-          transparent
-          opacity={0.28}
-          roughness={0.06}
-          metalness={0.0}
-          transmission={0.82}
-          thickness={1.6}
-          ior={1.47}
-          clearcoat={1.0}
-          clearcoatRoughness={0.08}
-        />
-      </mesh>
+      <GroundIndicatorPlane
+        position={[0, -0.05, 0]}
+        thickness={5}
+        color="#2e7d32"
+        opacity={1.0}
+        renderOrder={-20}
+      />
 
       <Grid
         position={[0, 0, 0]}
@@ -1011,8 +1004,18 @@ const CanvasScene = () => {
         rotation={[0, 0, 0]}
       />
 
+      <HolographicFloors />
 
-      <mesh ref={sphereRef} position={[0, 0, -500]}>
+      <mesh
+        position={[0, 0, -150]}
+        onPointerUp={handlePointerUp}
+        onPointerDown={handlePointerDown}
+      >
+        <planeGeometry args={[4000, 4000]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+
+      <mesh ref={sphereRef} position={[0, 0, 0]}>
         <sphereGeometry args={[800, 64, 64]} />
         <meshBasicMaterial
           color={isDark ? "#6f8396" : "#d4e0ea"}
@@ -1027,22 +1030,29 @@ const CanvasScene = () => {
       <RainMist isDark={isDark} />
 
       <ContactShadows
-        position={[0, -0.05, 0]}
-        opacity={0.32}
-        scale={180}
-        blur={2.6}
+        position={[0, -0.01, 0]}
+        opacity={0.65}
+        scale={240}
+        blur={2.2}
         far={70}
-        resolution={1024}
-        color={isDark ? "#0d1a1f" : "#2b3a42"}
+        resolution={2048}
+        color={isDark ? "#0d1a1f" : "#1a242a"}
         frames={1}
       />
 
-      <Bloom
-        luminanceThreshold={isDark ? 1.0 : 1.5}
-        luminanceSmoothing={0.5}
-        intensity={isDark ? 0.35 : 0.18}
+      <N8AO
+        aoRadius={15}
+        intensity={isDark ? 2.8 : 1.8}
+        color={isDark ? "#0d1a1f" : "#1a252c"}
+        quality="high"
       />
-      <Noise opacity={isDark ? 0.035 : 0.02} premultiply />
+      <Bloom
+        mipmapBlur
+        luminanceThreshold={1.3} // Increased from ~0.8 to suppress "grit fireflies"
+        luminanceSmoothing={0.7} // Smoother falloff for foggy highlights
+        intensity={isDark ? 0.25 : 0.15} // Subtler intensity for the rainy vibe
+      />
+      <Noise opacity={0.002} premultiply />
       <Vignette eskil={false} offset={0.1} darkness={isDark ? 0.78 : 0.22} />
     </>
   );
@@ -1060,7 +1070,12 @@ export const SimulationCanvas = () => {
         far: 2000,
         near: -2000
       }}
-      gl={{ antialias: true }}
+      gl={{
+        antialias: true,
+        toneMapping: THREE.ACESFilmicToneMapping,
+        toneMappingExposure: 0.8, // Slightly darker for depth
+        outputColorSpace: THREE.SRGBColorSpace
+      }}
     >
       <CanvasScene />
     </Canvas>

@@ -5,6 +5,7 @@ import {
   MouseScroll01Icon,
   Delete02Icon,
 } from "hugeicons-react";
+import { motion } from "framer-motion";
 import { useSimulationStore } from "../shared/utils/store";
 
 const GUI_SPACING_REM = 0.375;
@@ -53,12 +54,25 @@ const keyControls = [
 ];
 
 export const ControlsHint = () => {
-  useSimulationStore((state) => state.activeTool);
+  const uiPositions = useSimulationStore((state) => state.uiPositions);
+  const setUIPosition = useSimulationStore((state) => state.setUIPosition);
+  const pos = uiPositions["controls-hint"] || { x: 0, y: 0 };
+
+  const handleDragEnd = (_: any, info: any) => {
+    setUIPosition("controls-hint", {
+      x: pos.x + info.offset.x,
+      y: pos.y + info.offset.y,
+    });
+  };
 
   return (
-    <div
-      className="absolute top-4 right-4 bg-background/90 backdrop-blur-2xl border border-text/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.4)] w-56 pointer-events-none select-none z-50"
-      style={{ padding: `${GUI_SPACING_REM}rem` }}
+    <motion.div
+      drag
+      dragMomentum={false}
+      onDragEnd={handleDragEnd}
+      animate={{ x: pos.x, y: pos.y }}
+      className="absolute top-4 right-4 bg-background/90 backdrop-blur-2xl border border-text/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.4)] w-60 select-none z-50 overflow-hidden cursor-grab active:cursor-grabbing pointer-events-auto"
+      style={{ padding: `0.3rem` }}
     >
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
@@ -91,7 +105,7 @@ export const ControlsHint = () => {
           </span>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

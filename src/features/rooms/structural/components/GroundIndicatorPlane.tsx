@@ -52,19 +52,20 @@ export const GroundIndicatorPlane: React.FC<GroundIndicatorPlaneProps> = ({
   );
 
   const material = useMemo(() => {
-    const mat = new THREE.MeshStandardMaterial({
+    const mat = new THREE.MeshPhysicalMaterial({
       color,
-      roughness: 1,
-      metalness: 0,
+      roughness: 0.8,
+      metalness: 0.0,
       transparent: true,
       opacity,
-      depthWrite: false,
-      side: THREE.DoubleSide,
+      depthWrite: true,
+      side: THREE.FrontSide, // Optimized for top-down visibility
       map: textureSet.diffuse,
       normalMap: textureSet.normal,
       bumpMap: textureSet.bump,
-      bumpScale: 0.08,
-      normalScale: new THREE.Vector2(0.18, 0.18),
+      bumpScale: 0.05,
+      normalScale: new THREE.Vector2(0.1, 0.1),
+      envMapIntensity: 0.4,
     });
 
     mat.toneMapped = true;
@@ -91,6 +92,7 @@ export const GroundIndicatorPlane: React.FC<GroundIndicatorPlaneProps> = ({
     <mesh
       ref={meshRef}
       position={groundedPosition}
+      receiveShadow
       renderOrder={renderOrder}
       userData={{
         groundIndicator: true,
@@ -105,10 +107,12 @@ export const GroundIndicatorPlane: React.FC<GroundIndicatorPlaneProps> = ({
         sharedGroundIndicatorMesh === meshRef.current
       }
     >
-      <cylinderGeometry
-        args={[width / 2, width / 2, thickness, 48, 1, false]}
-      />
-      <primitive object={material} attach="material" />
+      <group position={[0, -thickness / 2, 0]}>
+        <cylinderGeometry
+          args={[width / 2, width / 2, thickness, 48, 1, false]}
+        />
+        <primitive object={material} attach="material" />
+      </group>
     </mesh>
   );
 };
