@@ -134,8 +134,8 @@ export const MainToolbar = () => {
           <button
             onClick={() => setShowControls(!showControls)}
             className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${showControls
-                ? "bg-primary/20 text-text"
-                : "text-text/60 hover:text-text hover:bg-primary/5"
+              ? "bg-primary/20 text-text"
+              : "text-text/60 hover:text-text hover:bg-primary/5"
               }`}
             style={{ padding: `${GUI_SPACING_REM}rem ${GUI_SPACING_REM * 2}rem` }}
           >
@@ -165,7 +165,7 @@ export const MainToolbar = () => {
   );
 
   return (
-    <div className="absolute top-4 left-4 z-50">
+    <div className="absolute top-4 left-4 z-[60]">
       <div
         className="inline-flex items-center rounded-2xl border border-text/10 bg-background/90 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.4)]"
         style={{
@@ -205,8 +205,8 @@ export const MainToolbar = () => {
             <button
               onClick={() => setShowThemeMenu(!showThemeMenu)}
               className={`${toolbarButtonClass} ${showThemeMenu
-                  ? "bg-primary/10 text-primary"
-                  : "text-text/40 hover:text-primary hover:bg-primary/5"
+                ? "bg-primary/10 text-primary"
+                : "text-text/40 hover:text-primary hover:bg-primary/5"
                 }`}
               style={toolbarButtonStyle}
             >
@@ -233,8 +233,8 @@ export const MainToolbar = () => {
                     setShowThemeMenu(false);
                   }}
                   className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${themeName === name
-                      ? "bg-primary/20 text-primary"
-                      : "text-text/60 hover:text-text hover:bg-primary/5"
+                    ? "bg-primary/20 text-primary"
+                    : "text-text/60 hover:text-text hover:bg-primary/5"
                     }`}
                   style={{ padding: `${GUI_SPACING_REM}rem ${GUI_SPACING_REM * 2}rem` }}
                 >
