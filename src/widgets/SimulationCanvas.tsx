@@ -9,9 +9,9 @@ import {
 import themes from "../shared/themes/color_palettes.json";
 import { Bloom, Noise, Vignette, N8AO } from "@react-three/postprocessing";
 import { HolographicFloors } from "../features/environment/HolographicFloors";
-import { GroundIndicatorPlane } from "../features/rooms/structural/components/GroundIndicatorPlane";
+import { GroundIndicatorPlane } from "../features/environment/components/GroundIndicatorPlane";
 import { SimulationNodes } from "../entities/SimulationNodes";
-import { InternetConnectivity } from "../features/rooms/visuals/InternetConnectivity";
+import { InternetConnectivity } from "../features/roomPlacement/visuals/InternetConnectivity";
 import { SolarSystem } from "../features/lighting/ui/SolarSystem";
 import { RainField, RainMist } from "../features/weather/ui/WeatherEffects";
 import { WeatherPanel } from "../features/weather/ui/WeatherPanel";
@@ -64,7 +64,8 @@ const PlacementIndicator = () => {
       else if (
         tool === "lobby" ||
         tool === "elevator" ||
-        tool === "utility"
+        tool === "utility" ||
+        tool === "structure"
       ) {
         clashSize = [10, 40];
       } else if (tool === "text") clashSize = [20, 5];
@@ -83,7 +84,7 @@ const PlacementIndicator = () => {
 
       const isValid = useSimulationStore
         .getState()
-        .checkPlacement(snappedX, snappedY, clashSize[0], clashSize[1]);
+        .checkPlacement(snappedX, snappedY, clashSize[0], clashSize[1], activeTool);
 
       const color = !isValid ? "#ff4444" : currentTheme.accent;
 
@@ -114,7 +115,8 @@ const PlacementIndicator = () => {
   else if (
     activeTool === "lobby" ||
     activeTool === "elevator" ||
-    activeTool === "utility"
+    activeTool === "utility" ||
+    activeTool === "structure"
   ) {
     nodeSize = [10, 40];
   } else if (activeTool === "text") nodeSize = [20, 5];
@@ -436,7 +438,7 @@ const CanvasScene = () => {
       "utility",
       "lobby",
       "elevator",
-      "floor",
+      "structure",
     ];
     const isRoom = roomTypes.includes(activeTool);
 
@@ -468,7 +470,7 @@ const CanvasScene = () => {
       activeTool === "lobby" ||
       activeTool === "elevator" ||
       activeTool === "utility" ||
-      activeTool === "floor"
+      activeTool === "structure"
     ) {
       nodeSize = [10, 40];
       vertices = [
@@ -538,7 +540,7 @@ const CanvasScene = () => {
     // Block overlapping clicks
     const isValid = useSimulationStore
       .getState()
-      .checkPlacement(snappedX, snappedY, nodeSize[0], nodeSize[1]);
+      .checkPlacement(snappedX, snappedY, nodeSize[0], nodeSize[1], activeTool);
     if (!isValid) return;
 
     // Block rapid multiple placements (dealt with after uniqueness check)

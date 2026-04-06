@@ -9,6 +9,7 @@ import {
   type CheckPlacementResult,
   type SyncSpatialHashPayload,
 } from "../shared/worker/protocol";
+import { validatePlacement } from "../features/roomPlacement/constraints/placementRules";
 
 const workerHash = new SpatialHash(100);
 
@@ -102,9 +103,12 @@ export const registerFoundationWorkerTasks = () => {
 export const registerLayoutTasks = () => {
   registerWorkerTask<CheckPlacementPayload, CheckPlacementResult>(
     SIMULATION_TASK_TYPE.CheckPlacement,
-    (payload) => {
+    (payload, context) => {
+      // The worker focuses on fast spatial collision detection.
+      // High-fidelity structural checks (overhang/slab support) run on the main thread.
       const candidates = workerHash.query(payload.x, payload.y, payload.w, payload.h);
       const colliders = Array.from(candidates).filter(id => id !== payload.ignoreId);
+
       return { isValid: colliders.length === 0, collidingId: colliders[0] };
     },
   );

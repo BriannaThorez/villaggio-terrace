@@ -1,1 +1,1 @@
-export * from "../../../../features/rooms/structural/graph";
+export * from "../../../../features/roomPlacement/structural/graph";

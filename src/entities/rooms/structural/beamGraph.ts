@@ -21,4 +21,4 @@ export {
   type StructuralRoomAdjacency,
   type StructuralRoomMetadata,
   STRUCTURAL_METADATA_CONTRACT_VERSION,
-} from "../../../features/rooms/structural/graph";
+} from "../../../features/roomPlacement/structural/graph";

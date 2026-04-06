@@ -12,6 +12,33 @@ interface RoomMeshCSGProps {
     hasRightWall?: boolean;
 }
 
+const scaleBoxUVs = (geo: THREE.BoxGeometry) => {
+    const pos = geo.attributes.position;
+    const uv = geo.attributes.uv;
+    const norm = geo.attributes.normal;
+    const uvScale = 0.1; // 1 texture repeat every 10 units
+
+    for (let i = 0; i < uv.count; i++) {
+        const nx = Math.abs(norm.getX(i));
+        const ny = Math.abs(norm.getY(i));
+        // nz is dominant if others aren't
+
+        const x = pos.getX(i);
+        const y = pos.getY(i);
+        const z = pos.getZ(i);
+
+        if (nx > 0.5) {
+            uv.setXY(i, z * uvScale, y * uvScale);
+        } else if (ny > 0.5) {
+            uv.setXY(i, x * uvScale, z * uvScale);
+        } else {
+            uv.setXY(i, x * uvScale, y * uvScale);
+        }
+    }
+    uv.needsUpdate = true;
+    return geo;
+};
+
 export const RoomMeshCSG: React.FC<RoomMeshCSGProps> = ({
     width,
     height,
@@ -23,7 +50,7 @@ export const RoomMeshCSG: React.FC<RoomMeshCSGProps> = ({
 }) => {
     // Pre-calculate distinct geometries to guarantee the CSG boolean parser recognizes them 
     // and accurately processes their UV definitions for bump/normal textures.
-    const baseBox = useMemo(() => new THREE.BoxGeometry(width, height, depth), [width, height, depth]);
+    const baseBox = useMemo(() => scaleBoxUVs(new THREE.BoxGeometry(width, height, depth)), [width, height, depth]);
 
     // SEAMLESS BLENDING CALCULATION:
     // We adjust the subtraction volume to extend beyond the base bounds if walls are omitted.
@@ -42,11 +69,11 @@ export const RoomMeshCSG: React.FC<RoomMeshCSGProps> = ({
     }, [hasLeftWall, hasRightWall, wallThickness]);
 
     const subBox = useMemo(() =>
-        new THREE.BoxGeometry(
+        scaleBoxUVs(new THREE.BoxGeometry(
             effectiveSubWidth,
             height - wallThickness * 3, // Thicker structural floor slab
             depth
-        ),
+        )),
         [effectiveSubWidth, height, depth, wallThickness]
     );
 

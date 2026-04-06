@@ -5,8 +5,8 @@ import { useSimulationStore, type SimulationNode } from "../shared/utils/store";
 import type {
   StructuralCanonicalFace,
   StructuralFace,
-  StructuralRoomMetadata,
-} from "../features/rooms/structural/graph";
+} from "../features/roomPlacement/structural/graph";
+import { StructuralRoomMetadata } from "../features/roomPlacement/structural/graph";
 import { RadialMenu } from "./RadialMenu";
 
 const START_LABEL_COLOR = "#ffffff";

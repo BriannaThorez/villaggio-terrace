@@ -1,12 +1,13 @@
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import { useThree } from "@react-three/fiber";
-import { ResidentialRoom } from "../features/rooms/residential/ResidentialRoom";
+import { ResidentialRoom } from "../features/roomPlacement/residential/base/ResidentialRoom";
+import { RoomMeshCSG } from "../features/roomPlacement/visuals/RoomMeshCSG";
 import { SelectionIndicator } from "../components/SelectionIndicator";
 import { useFrame } from "@react-three/fiber";
 import { useSimulationStore, SimulationNode } from "../shared/utils/store";
 
 import { Text, Html } from "@react-three/drei";
-import type { StructuralFace } from "../features/rooms/structural/graph";
+import type { StructuralFace } from "../features/roomPlacement/structural/graph";
 import {
   ShapeSDFVertexShader,
   ShapeSDFFragmentShader,
@@ -20,7 +21,8 @@ import {
   attachStructuralMetadataToShapes,
   buildCellBeamGraph,
   type StructuralShape,
-} from "../features/rooms/structural/graph";
+} from "../features/roomPlacement/structural/graph";
+import { parseMaterial } from "../engine/MaterialParser";
 
 type RenderShape = StructuralShape<SimulationNode>;
 
@@ -136,6 +138,7 @@ const isInsideShape = (
       "utility",
       "lobby",
       "elevator",
+      "structure",
     ].includes(shape.type)
   ) {
     const qx = Math.abs(px) - sx * 0.5;
@@ -338,6 +341,7 @@ export const SimulationNodes = () => {
         "utility",
         "lobby",
         "elevator",
+        "structure",
       ].includes(shape.type);
 
       if (isRoom) {
@@ -409,7 +413,7 @@ export const SimulationNodes = () => {
     if (e.button === 1) return;
 
     // For residential rooms, we don't need the UV check if the event came from the room component itself
-    if (shape.type !== "residential" && !isInsideShape(e.uv, shape)) return;
+    if (shape.type !== "residential" && shape.type !== "structure" && !isInsideShape(e.uv, shape)) return;
 
     e.stopPropagation();
 
@@ -424,6 +428,7 @@ export const SimulationNodes = () => {
       setEditingId(null);
     }
 
+    if (activeTool !== "select") return;
     setSelectedId(id);
   };
 
@@ -436,9 +441,10 @@ export const SimulationNodes = () => {
     const shape = renderedShapeById.get(id);
     if (!shape) return;
 
-    if (shape.type !== "residential" && !isInsideShape(e.uv, shape)) return;
+    if (shape.type !== "residential" && shape.type !== "structure" && !isInsideShape(e.uv, shape)) return;
 
     e.stopPropagation();
+    if (activeTool !== "select") return;
     if (shape.type === "text") {
       setEditingId(id);
     }
@@ -482,7 +488,8 @@ export const SimulationNodes = () => {
   const blendablePositions = useMemo(() => {
     const set = new Set<string>();
     renderedShapes.forEach((s) => {
-      if (s.type === "lobby" || s.type === "floor") {
+      const allRoomTypes = ["residential", "commercial", "office", "utility", "lobby", "elevator", "structure"];
+      if (allRoomTypes.includes(s.type)) {
         set.add(`${Math.round(s.position[0])},${Math.round(s.position[1])}`);
       }
     });
@@ -653,30 +660,41 @@ export const SimulationNodes = () => {
               "elevator",
             ].includes(shape.type) &&
               (() => {
+                const allBlendableTypes = ["lobby", "structure"];
+
                 let hasLeftWall = true;
                 let hasRightWall = true;
 
-                const blendableTypes = ["lobby", "floor"];
-                if (blendableTypes.includes(shape.type)) {
+                if (allBlendableTypes.includes(shape.type)) {
                   const x = Math.round(shape.position[0]);
                   const y = Math.round(shape.position[1]);
-                  const w = shape.size[0];
-                  hasLeftWall = !blendablePositions.has(`${x - w},${y}`);
-                  hasRightWall = !blendablePositions.has(`${x + w},${y}`);
+                  const w = shape.size[0] / 2;
+
+                  // Check various neighbor center offsets (5 for 10w, 20 for 40w, etc)
+                  const leftNeighborCenters = [x - w - 5, x - w - 20, x - w - 40];
+                  const rightNeighborCenters = [x + w + 5, x + w + 20, x + w + 40];
+
+                  if (leftNeighborCenters.some(c => blendablePositions.has(`${Math.round(c)},${y}`))) {
+                    hasLeftWall = false;
+                  }
+                  if (rightNeighborCenters.some(c => blendablePositions.has(`${Math.round(c)},${y}`))) {
+                    hasRightWall = false;
+                  }
                 }
 
-                const leftFace = shape.structuralRoom?.canonicalFaces.left;
-                const rightFace = shape.structuralRoom?.canonicalFaces.right;
-                if (leftFace?.adjacentRoomIds.length) {
-                  hasLeftWall = true;
-                }
-                if (rightFace?.adjacentRoomIds.length) {
-                  hasRightWall = true;
+                // Explicit graph override (Industry Leading Accuracy)
+                if (["lobby", "structure"].includes(shape.type)) {
+                  if (shape.structuralRoom?.canonicalFaces.left.adjacentRoomIds.length) {
+                    hasLeftWall = false;
+                  }
+                  if (shape.structuralRoom?.canonicalFaces.right.adjacentRoomIds.length) {
+                    hasRightWall = false;
+                  }
                 }
 
                 return (
                   <ResidentialRoom
-                    position={[shape.position[0], shape.position[1], 0]}
+                    position={[0, 0, 0]}
                     rotation={0}
                     size={shape.size}
                     color={shape.color || (themes as any)[themeName].primary}
@@ -704,6 +722,76 @@ export const SimulationNodes = () => {
                   />
                 );
               })()}
+
+            {/* Background Scaffold Rendering via Unified CSG */}
+            {shape.type === "structure" && (() => {
+              const myLeft = shape.position[0] - shape.size[0] / 2;
+              const myRight = shape.position[0] + shape.size[0] / 2;
+
+              const roomAbove = renderedShapes.find(s =>
+                s.type !== "structure" && s.type !== "select" && s.type !== "text" &&
+                Math.abs(s.position[1] - shape.position[1]) < 5 &&
+                (s.position[0] + s.size[0] / 2 > myLeft + 0.1) &&
+                (s.position[0] - s.size[0] / 2 < myRight - 0.1)
+              );
+
+              const hasRoomAbove = !!roomAbove;
+
+              let baseColor = (themes as any)[themeName].neutral_dark;
+              if (roomAbove) {
+                if (roomAbove.color) {
+                  baseColor = roomAbove.color;
+                } else if (roomAbove.themeColors) {
+                  baseColor = roomAbove.themeColors[themeName] || baseColor;
+                }
+              }
+
+              const darkenedColor = new THREE.Color(baseColor).lerp(new THREE.Color(0x000000), 0.25).getHexString();
+
+              const scaffoldMat = parseMaterial({
+                albedo: `#${darkenedColor}`,
+                roughness: 0.95,
+                metalness: 0.2
+              });
+              scaffoldMat.polygonOffset = true;
+              scaffoldMat.polygonOffsetFactor = 1; // Slight pushback to ensure room interior renders cleanly if boundaries are perfectly flush
+              scaffoldMat.polygonOffsetUnits = 1;
+
+              return (
+                <group
+                  onPointerDown={(e) => {
+                    if (hasRoomAbove) return;
+                    handleNodePointerDown(e, shape.id);
+                  }}
+                  onDoubleClick={(e) => {
+                    if (hasRoomAbove) return;
+                    handleNodeDoubleClick(e, shape.id);
+                  }}
+                >
+                  <RoomMeshCSG
+                    width={shape.size[0]}
+                    height={shape.size[1]}
+                    depth={40}
+                    wallThickness={0.25}
+                    material={scaffoldMat}
+                    hasLeftWall={(() => {
+                      const x = Math.round(shape.position[0]);
+                      const y = Math.round(shape.position[1]);
+                      const w = shape.size[0] / 2;
+                      const leftCenters = [x - w - 5, x - w - 20, x - w - 40];
+                      return !leftCenters.some(c => blendablePositions.has(`${Math.round(c)},${y}`));
+                    })()}
+                    hasRightWall={(() => {
+                      const x = Math.round(shape.position[0]);
+                      const y = Math.round(shape.position[1]);
+                      const w = shape.size[0] / 2;
+                      const rightCenters = [x + w + 5, x + w + 20, x + w + 40];
+                      return !rightCenters.some(c => blendablePositions.has(`${Math.round(c)},${y}`));
+                    })()}
+                  />
+                </group>
+              );
+            })()}
 
             {activeTool === "vertex" &&
               selectedId === shape.id &&

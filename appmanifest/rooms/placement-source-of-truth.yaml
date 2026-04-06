@@ -1,7 +1,7 @@
 schemaVersion: 1.0
 project: villaggio-terrace
 title: Placement Source of Truth for Room/Node Restrictions
-status: draft
+status: in-progress
 
 intent:
   axiomatic:
@@ -10,14 +10,14 @@ intent:
       Placement is not arbitrary node dropping. It is a constrained architectural operation
       that must respect structural support, circulation, adjacency, face orientation, and
       room program logic. A room or node may only occupy a location when the placement
-      conditions are satisfied.
+      conditions are satisfied. All coordinates are mapped to the 10x10x10 Atom System.
   axiological:
     title: "Axiological Intent"
     description: |
       The system values believable tower planning, structural coherence, readable circulation,
       and emergent architectural layouts over permissive freeform placement. Shared edges,
-      support continuity, and construction logic should feel like real tower design systems
-      such as SimTower, Yoot Tower, and Project Highrise.
+      support continuity, and construction logic should feel like real tower design systems.
+      Sub-Atom (1x1) precision is maintained for props but structurally tied to the 10x10 Atom grid.
   teleological:
     title: "Teleological Intent"
     description: |

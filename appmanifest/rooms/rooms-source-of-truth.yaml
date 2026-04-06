@@ -5,20 +5,51 @@ intents:
       A building is not a collection of static 3D meshes; it is a continuous mathematical field.
       A "Room" is axiomatically defined as the boolean intersection of spatial constraints (floors, ceilings, walls).
       Structure (beams/pillars) dictates the boundaries, and the "Skin" (drywall, glass, concrete) is a procedural membrane stretched over or between these boundaries.
-      addendum: |
-        Cells already define room footprints on the grid; they are the canonical spatial atoms that constrain every architectural decision.
-        Beams span between cell corners (top/bottom/vertical) and constitute the primary load-bearing frame that connects adjacent rooms, ensuring shared walls collapse into a single structural element.
-        Framing beams are the finer detailing (door jambs, header/sill framing) that carve negative space for openings—these beams signal to the skin where drywall or glass must stop so there are no accidental bridges across doors or windows.
+      The Simulation is mode-agnostic; there is no bifurcation between "Viewer" and "Studio". The engine is a single, unified operational state.
+    systemUnits:
+      atom:
+        definition: "A strictly defined 10x10x10 unit cube (10 world units cubed)."
+        canonicalUse: "The core unit of measurement across all architectural, collision, and rendering layers."
+        coordinateSystem: "Discrete integer-based Atom-space for structural nodes; fractional Atom-space for prop/detail placement."
+    structuralGrid:
+      primary:
+        resolution: "10x10 units (1x1 Atoms)."
+        purpose: "Structural node alignment, room boundaries, and high-level collision detection."
+      secondary:
+        resolution: "1x1 units (0.1x0.1 Atoms)."
+        purpose: "Sub-Atom precision for furniture, equipment, and prop placement."
+      yAxisAnchor:
+        floorLevel: "Mathematics dictates the interior floor face sits at exactly +2.22 units above the room's local origin zero."
+        ceilingLevel: "Defined by the room's height parameter, minus structural slab thickness."
   axiological:
     title: "Axiological Intent (The Value System)"
     description: |
-      Procedural Emergence over Pre-fabrication: Valuing a system where placing two rooms next to each other automatically merges their shared walls, rather than requiring specific "corner" or "T-junction" 3D models.
-      Structural Honesty: The visual representation of the tower is a direct consequence of its load-bearing graph.
+      Procedural Emergence over Pre-fabrication: Valuing a system where placing two rooms next to each other automatically merges their shared walls via CSG logic.
+      Structural Honesty: Visual representation is a direct consequence of the load-bearing graph.
+      Visual Minimalism: Debugging telemetry (grids, holograms) must only manifest when contextually relevant to the operator (Selection-Based UI).
   teleological:
     title: "Teleological Intent (The Ultimate Goal)"
     description: |
-      To build a dynamic, living simulation where the architecture organically adapts to the player's management decisions.
-      Elevators carve boolean subtraction shafts through floors; structural stress dynamically thickens load-bearing pillars; and the entire tower renders as a single, perfectly batched, infinitely scalable mathematical shader.
+      To build a dynamic, living simulation where the architecture organically adapts to management decisions.
+      The system must allow for blind recreation from this manifest, ensuring that any future agentic intervention respects the Atom-based structural integrity and CSG boolean subtraction methodology.
+
+placementRules:
+  geometricConstraints:
+    discreteAtoms: "Rooms must span integer Atom widths (e.g., 20, 30, 40 units)."
+    collisionDetection: "Placement validation executes via a deterministic Atom-based overlap check against the TowerGraph."
+    zDepthContinuity: "Rooms maintain a standard depth of 40 units (4 Atoms) unless explicitly specified by the node type."
+  visibilityLogic:
+    gridHologram:
+      visibility: "Strictly tied to SELECTION + HUD toggle."
+      behavior: "A 10x10 Atom grid overlay materializes exclusively on the selected room's interior floor face (+2.22 Y offset)."
+      filtering: "Sub-Atom micro-lines (1x1) are calculated mathematically for placement but supressed visually to avoid matrix clutter."
+
+architecturalConstants:
+  wallThickness: 1.1
+  gridSizeX: 10
+  gridSizeY: 40
+  depthAtoms: 4
+  floorYOffset: 2.22
 
 relatedTruths:
   placement: "appmanifest/rooms/placement-source-of-truth.yaml"

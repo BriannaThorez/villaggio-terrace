@@ -6,7 +6,7 @@ import themes from "../shared/themes/color_palettes.json";
 import type {
   StructuralFace,
   StructuralRoomMetadata,
-} from "../features/rooms/structural/graph";
+} from "../features/roomPlacement/structural/graph";
 
 const getStructuralPortPosition = (
   shape: any,
@@ -25,14 +25,14 @@ const getStructuralPortPosition = (
     case "front":
       return [
         groundedX +
-          (port === "left" ? -halfWidth : port === "right" ? halfWidth : 0),
+        (port === "left" ? -halfWidth : port === "right" ? halfWidth : 0),
         groundedY + halfHeight,
         halfDepth,
       ];
     case "back":
       return [
         groundedX +
-          (port === "left" ? -halfWidth : port === "right" ? halfWidth : 0),
+        (port === "left" ? -halfWidth : port === "right" ? halfWidth : 0),
         groundedY + halfHeight,
         -halfDepth,
       ];
@@ -51,14 +51,14 @@ const getStructuralPortPosition = (
     case "ceiling":
       return [
         groundedX +
-          (port === "top" ? -halfWidth : port === "bottom" ? halfWidth : 0),
+        (port === "top" ? -halfWidth : port === "bottom" ? halfWidth : 0),
         groundedY + room.dimensions.height,
         port === "left" ? -halfDepth : port === "right" ? halfDepth : 0,
       ];
     case "floor":
       return [
         groundedX +
-          (port === "top" ? -halfWidth : port === "bottom" ? halfWidth : 0),
+        (port === "top" ? -halfWidth : port === "bottom" ? halfWidth : 0),
         groundedY,
         port === "left" ? -halfDepth : port === "right" ? halfDepth : 0,
       ];

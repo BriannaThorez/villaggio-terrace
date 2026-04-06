@@ -1,19 +1,22 @@
 import React, { useEffect, useMemo } from "react";
 import * as THREE from "three";
-import { parseMaterial } from "../../../engine/MaterialParser";
-import { buildRoomShellGeometry } from "../structural/geometry";
-import { RoomSkin } from "../structural/skin/RoomSkin";
-import { RoomMeshCSG } from "../visuals/RoomMeshCSG";
-import { useSimulationStore } from "../../../shared/utils/store";
-import { useInteriorSubgrid } from "../../interiorPlacement/hooks/useInteriorSubgrid";
-import { PlacementHologram } from "../../interiorPlacement/ui/PlacementHologram";
-import type { StructuralRoomMetadata } from "../structural/graph";
+import { parseMaterial } from "../../../../engine/MaterialParser";
+import { buildRoomShellGeometry } from "../../structural/geometry";
+import { RoomSkin } from "../../structural/skin/RoomSkin";
+import { RoomMeshCSG } from "../../visuals/RoomMeshCSG";
+import {
+  useSimulationStore,
+  SimulationNode,
+} from "../../../../shared/utils/store";
+import { useInteriorSubgrid } from "../../../interiorPlacement/hooks/useInteriorSubgrid";
+import { PlacementHologram } from "../../../interiorPlacement/ui/PlacementHologram";
+import type { StructuralRoomMetadata } from "../../structural/graph";
 import {
   DEFAULT_ROOM_SHELL_DIMENSIONS,
   type RoomOpeningDefinition,
   type RoomStructuralSettings,
-} from "../structural/types";
-import { computeSnappedWorldOffset } from "../../interiorPlacement/domain/CoordinateEngine";
+} from "../../structural/types";
+import { computeSnappedWorldOffset } from "../../../interiorPlacement/domain/CoordinateEngine";
 
 interface ResidentialRoomProps {
   position: [number, number, number];
@@ -63,12 +66,12 @@ export const ResidentialRoom: React.FC<ResidentialRoomProps> = ({
   const shellDimensions = useMemo(
     () => ({
       ...DEFAULT_ROOM_SHELL_DIMENSIONS,
-      width,
-      height,
-      depth,
+      width: width - (hasLeftWall ? 0.25 : 0) - (hasRightWall ? 0.25 : 0),
+      height: height - 0.75, // Floor is 0.5 thick, ceiling is 0.25 thick
+      depth: depth - 0.25, // Front is open, back wall is 0.25 thick
       ...(structuralSettings?.dimensions ?? {}),
     }),
-    [width, height, depth, structuralSettings?.dimensions],
+    [width, height, depth, hasLeftWall, hasRightWall, structuralSettings?.dimensions],
   );
   const effectiveOpenings = structuralSettings?.openings ?? openings;
 
@@ -78,8 +81,14 @@ export const ResidentialRoom: React.FC<ResidentialRoomProps> = ({
   );
   const roomGeometry = roomGeometryResult.shellGeometry;
 
-  const [, , zOffset] = position;
-  const groundedPosition: [number, number, number] = [0, 0, zOffset];
+  const roomPosition = useMemo<[number, number, number]>(() => {
+    let xOffset = 0;
+    if (hasLeftWall && !hasRightWall) xOffset = 0.125;
+    if (!hasLeftWall && hasRightWall) xOffset = -0.125;
+
+    // Y: 0.5 up for floor thickness. Z: 0.125 forward for back wall thickness.
+    return [position[0] + xOffset, position[1] + 0.5, position[2] + 0.125];
+  }, [position, hasLeftWall, hasRightWall]);
 
   const materials = useMemo(() => {
     const mat = parseMaterial({
@@ -115,7 +124,7 @@ export const ResidentialRoom: React.FC<ResidentialRoomProps> = ({
 
   return (
     <group
-      position={groundedPosition}
+      position={roomPosition}
       rotation={[0, 0, rotation]}
       onPointerDown={onPointerDown}
       onDoubleClick={onDoubleClick}
@@ -125,9 +134,9 @@ export const ResidentialRoom: React.FC<ResidentialRoomProps> = ({
         The Base CSG replaces overlapping primitive boundaries for a seamless interior.
       */}
       <RoomMeshCSG
-        width={width}
-        height={height}
-        depth={depth}
+        width={shellDimensions.width}
+        height={shellDimensions.height}
+        depth={shellDimensions.depth}
         material={materials[0]}
         hasLeftWall={hasLeftWall}
         hasRightWall={hasRightWall}

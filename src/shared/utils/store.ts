@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { SpatialHash } from "./SpatialHash";
 import { getWorkerPool } from "../../worker/client";
 import { SIMULATION_TASK_TYPE } from "../worker/protocol";
+import { validatePlacement } from "../../features/roomPlacement/constraints/placementRules";
 
 const globalHash = new SpatialHash(100);
 globalHash.insert("default-node", 0, 0, 40, 40);
@@ -34,7 +35,7 @@ export type SimulationNodeType =
   | "utility"
   | "lobby"
   | "elevator"
-  | "floor";
+  | "structure";
 
 // The visual grid unit is 4 StructuralCells wide by 1 StructuralCell high.
 // Since a StructuralCell is 1w x 4h (in StructuralAtoms), the visual grid unit is 4w x 4h in StructuralAtoms.
@@ -152,7 +153,15 @@ export interface SimulationState {
   setIsPanning: (isPanning: boolean) => void;
   setDragOffset: (offset: [number, number]) => void;
   setPreDragPosition: (pos: [number, number] | null) => void;
-  checkPlacement: (x: number, y: number, w: number, h: number, ignoreId?: string) => boolean;
+  checkPlacement: (
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    type: string,
+    ignoreId?: string,
+    isForce?: boolean,
+  ) => boolean;
   setLinkingFrom: (linking: { id: string; port: PortType } | null) => void;
   setLinkingTo: (pos: [number, number] | null) => void;
   resolveAllOverlaps: () => void;
@@ -325,30 +334,9 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     sunTime: parseFloat(localStorage.getItem("villaggio_sun_time") || "0.55"),
     sunIntensity: parseFloat(localStorage.getItem("villaggio_sun_intensity") || "10.0"),
 
-    checkPlacement: (x, y, w, h, ignoreId) => {
-      const state = get();
-      const cx1 = x;
-      const cy1 = y;
-
-      const candidates = globalHash.query(x, y, w, h);
-
-      for (const s2Id of candidates) {
-        if (s2Id === ignoreId) continue;
-        const s2 = state.shapes.find(s => s.id === s2Id);
-        if (!s2) continue;
-
-        const aabb2 = getAABB(s2);
-        const cx2 = s2.position[0] + aabb2.cx;
-        const cy2 = s2.position[1] + aabb2.cy;
-
-        if (
-          Math.abs(cx1 - cx2) < (w + aabb2.w) / 2 - 0.1 &&
-          Math.abs(cy1 - cy2) < (h + aabb2.h) / 2 - 0.1
-        ) {
-          return false; // Collision detected
-        }
-      }
-      return true; // Valid placement
+    checkPlacement: (x: number, y: number, w: number, h: number, type: string, ignoreId?: string, isForce = false) => {
+      const result = validatePlacement(x, y, w, h, get().shapes, type, ignoreId, isForce);
+      return result.isValid;
     },
     checkPlacementAuthoritative: async (x: number, y: number, w: number, h: number, ignoreId?: string) => {
       const workerPool = getWorkerPool();
@@ -365,26 +353,27 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       const state = get();
 
       // Modular Merging Logic (Industry Leading Foundation)
-      const mergeableTypes: SimulationNodeType[] = ["lobby", "floor"];
+      const mergeableTypes: SimulationNodeType[] = ["lobby", "structure"];
       if (mergeableTypes.includes(shape.type)) {
         const snappedX = shape.position[0];
         const snappedY = shape.position[1];
         const halfWidth = shape.size[0] / 2;
 
-        // Check for ALL adjacent rooms of same type on same floor
-        const adjacentNeighbors = state.shapes.filter(s =>
+        // Intersection + Adjacency Merge Engine (Union Algorithm)
+        const overlapEpsilon = 1.0;
+        const intersectingNeighbors = state.shapes.filter(s =>
+          s.id !== shape.id &&
           s.type === shape.type &&
           Math.abs(s.position[1] - snappedY) < 1 && // Same floor
           (
-            Math.abs(s.position[0] + s.size[0] / 2 - (snappedX - halfWidth)) < 1 || // Neighbor is to the left
-            Math.abs(s.position[0] - s.size[0] / 2 - (snappedX + halfWidth)) < 1    // Neighbor is to the right
+            // Check if AABBs intersect or are adjacent
+            Math.abs(s.position[0] - snappedX) <= (s.size[0] + shape.size[0]) / 2 + overlapEpsilon
           )
         );
 
-        if (adjacentNeighbors.length > 0) {
-          // Merge all neighbors and the new shape into the first neighbor
-          const prime = adjacentNeighbors[0];
-          const others = adjacentNeighbors.slice(1);
+        if (intersectingNeighbors.length > 0) {
+          const prime = intersectingNeighbors[0];
+          const others = intersectingNeighbors.slice(1);
 
           let minX = Math.min(prime.position[0] - prime.size[0] / 2, snappedX - halfWidth);
           let maxX = Math.max(prime.position[0] + prime.size[0] / 2, snappedX + halfWidth);
@@ -392,7 +381,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           others.forEach(o => {
             minX = Math.min(minX, o.position[0] - o.size[0] / 2);
             maxX = Math.max(maxX, o.position[0] + o.size[0] / 2);
-            state.deleteShape(o.id); // Remove merged neighbors
+            state.deleteShape(o.id);
           });
 
           const newWidth = maxX - minX;
@@ -403,13 +392,30 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
             size: [newWidth, prime.size[1]]
           }, skipHistory);
 
+          // Force update of underlying structure if room moved/expanded
+          if (shape.type !== 'structure') {
+            state.addShape({
+              id: `scaffold_${Math.random().toString(36).substr(2, 9)}`,
+              type: "structure",
+              position: [newCenterX, snappedY],
+              size: [newWidth, prime.size[1]],
+              vertices: [
+                [-newWidth / 2, -prime.size[1] / 2],
+                [newWidth / 2, -prime.size[1] / 2],
+                [newWidth / 2, prime.size[1] / 2],
+                [-newWidth / 2, prime.size[1] / 2],
+              ],
+              name: "Structural Scaffold",
+            }, true, true);
+          }
+
           set({ selectedId: prime.id });
           return;
         }
       }
 
       // Prevent exact placement duplicate or box intersection
-      if (!force && !state.checkPlacement(shape.position[0], shape.position[1], shape.size[0], shape.size[1], shape.id)) {
+      if (!force && !state.checkPlacement(shape.position[0], shape.position[1], shape.size[0], shape.size[1], shape.type as string, shape.id)) {
         return; // Placements must be strictly non-overlapping
       }
 
@@ -443,6 +449,19 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           name: shape.name || (shape.type.charAt(0).toUpperCase() + shape.type.slice(1))
         }]
       }));
+
+      // Immediately append invisible permanent scaffold structure
+      if (['residential', 'commercial', 'office', 'utility', 'lobby', 'elevator', 'stairs'].includes(shape.type) && shape.type !== 'structure') {
+        const stateAfter = get();
+        stateAfter.addShape({
+          id: `scaffold_${Math.random().toString(36).substr(2, 9)}`,
+          type: "structure",
+          position: shape.position,
+          size: shape.size,
+          vertices: shape.vertices,
+          name: "Structural Scaffold",
+        }, true, true);
+      }
     },
     updateShape: (id, updates, skipHistory = false) => {
       if (!skipHistory) {
@@ -453,31 +472,33 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           shapes: state.shapes.map((s) => {
             if (s.id === id) {
               const newShape = { ...s, ...updates };
-              globalHash.remove(id, s.position[0], s.position[1], s.size[0], s.size[1]);
-              globalHash.insert(id, newShape.position[0], newShape.position[1], newShape.size[0] || s.size[0], newShape.size[1] || s.size[1]);
+              if (s.type !== 'structure') {
+                globalHash.remove(id, s.position[0], s.position[1], s.size[0], s.size[1]);
+                globalHash.insert(id, newShape.position[0], newShape.position[1], newShape.size[0] || s.size[0], newShape.size[1] || s.size[1]);
 
-              const workerPool = getWorkerPool();
-              workerPool.submit({
-                taskType: SIMULATION_TASK_TYPE.SyncSpatialHash,
-                payload: {
-                  removes: [{
-                    id,
-                    x: s.position[0],
-                    y: s.position[1],
-                    w: s.size[0],
-                    h: s.size[1]
-                  }],
-                  inserts: [{
-                    id,
-                    x: newShape.position[0],
-                    y: newShape.position[1],
-                    w: newShape.size[0] || s.size[0],
-                    h: newShape.size[1] || s.size[1]
-                  }]
-                },
-                sceneRevision: 0,
-                clientRevision: 0,
-              });
+                const workerPool = getWorkerPool();
+                workerPool.submit({
+                  taskType: SIMULATION_TASK_TYPE.SyncSpatialHash,
+                  payload: {
+                    removes: [{
+                      id,
+                      x: s.position[0],
+                      y: s.position[1],
+                      w: s.size[0],
+                      h: s.size[1]
+                    }],
+                    inserts: [{
+                      id,
+                      x: newShape.position[0],
+                      y: newShape.position[1],
+                      w: newShape.size[0] || s.size[0],
+                      h: newShape.size[1] || s.size[1]
+                    }]
+                  },
+                  sceneRevision: 0,
+                  clientRevision: 0,
+                });
+              }
 
               if (
                 updates.size &&
@@ -505,23 +526,41 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       set((state) => {
         const shape = state.shapes.find(s => s.id === id);
         if (shape) {
-          globalHash.remove(id, shape.position[0], shape.position[1], shape.size[0], shape.size[1]);
+          // Guard: Cannot delete a foundation if a room sits on it
+          if (shape.type === 'structure') {
+            const myLeft = shape.position[0] - shape.size[0] / 2;
+            const myRight = shape.position[0] + shape.size[0] / 2;
+            const hasRoomAbove = state.shapes.some(s =>
+              s.type !== 'structure' && s.type !== 'text' &&
+              Math.abs(s.position[1] - shape.position[1]) < 5 &&
+              (s.position[0] + s.size[0] / 2 > myLeft + 0.1) &&
+              (s.position[0] - s.size[0] / 2 < myRight - 0.1)
+            );
+            if (hasRoomAbove) {
+              console.warn("Village: Deletion blocked - Foundation is occupied.");
+              return state;
+            }
+          }
 
-          const workerPool = getWorkerPool();
-          workerPool.submit({
-            taskType: SIMULATION_TASK_TYPE.SyncSpatialHash,
-            payload: {
-              removes: [{
-                id,
-                x: shape.position[0],
-                y: shape.position[1],
-                w: shape.size[0],
-                h: shape.size[1]
-              }]
-            },
-            sceneRevision: 0,
-            clientRevision: 0,
-          });
+          if (shape.type !== 'structure') {
+            globalHash.remove(id, shape.position[0], shape.position[1], shape.size[0], shape.size[1]);
+
+            const workerPool = getWorkerPool();
+            workerPool.submit({
+              taskType: SIMULATION_TASK_TYPE.SyncSpatialHash,
+              payload: {
+                removes: [{
+                  id,
+                  x: shape.position[0],
+                  y: shape.position[1],
+                  w: shape.size[0],
+                  h: shape.size[1]
+                }]
+              },
+              sceneRevision: 0,
+              clientRevision: 0,
+            });
+          }
         }
         const nextShapes = state.shapes.filter((s) => s.id !== id);
         const nextLinks = state.links.filter(
@@ -590,7 +629,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
         if (state.isDragging && state.selectedId) {
           const shape = state.shapes.find((s) => s.id === state.selectedId);
           if (shape) {
-            if (!state.checkPlacement(shape.position[0], shape.position[1], shape.size[0], shape.size[1], shape.id)) {
+            if (!state.checkPlacement(shape.position[0], shape.position[1], shape.size[0], shape.size[1], shape.type, shape.id)) {
               if (state.preDragPosition) {
                 state.updateShape(shape.id, { position: state.preDragPosition }, true);
               }
@@ -600,6 +639,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
         set({ isDragging, preDragPosition: null });
       }
     },
+    setPreDragPosition: (preDragPosition) => set({ preDragPosition }),
     setIsRotating: (isRotating) => {
       const state = get();
       if (!isRotating && state.isRotating && state.selectedId) {
@@ -672,13 +712,6 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     // Tooltip deconfliction
     activeTooltipId: null,
     setActiveTooltipId: (id) => set({ activeTooltipId: id }),
-    uiPositions: (() => {
-      try {
-        return JSON.parse(localStorage.getItem("villaggio_ui_positions") || "{}");
-      } catch {
-        return {};
-      }
-    })(),
     setUIPosition: (id, pos) => {
       set((state) => {
         const next = { ...state.uiPositions, [id]: pos };

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { createGrassIndicatorTextureSet } from "../../../../features/textures/lib/procedural/grass";
+import { createGrassIndicatorTextureSet } from "../../../features/textures/lib/procedural/grass";
 
 export interface GroundIndicatorPlaneProps {
   position?: [number, number, number];

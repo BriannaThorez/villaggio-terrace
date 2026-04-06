@@ -14,19 +14,20 @@ import {
   CheckmarkCircle01Icon,
   Layers01Icon as LayersIcon,
 } from "hugeicons-react";
+import { Construction } from "lucide-react";
 import { SmartTooltip } from "../shared/components/SmartTooltip";
 import { useMemo } from "react";
 
 type BuildToolId =
   | "select"
+  | "structure"
   | "lobby"
   | "residential"
   | "commercial"
   | "office"
   | "utility"
   | "elevator"
-  | "stairs"
-  | "floor";
+  | "stairs";
 
 export const BuildToolbar = () => {
   const setActiveTool = useSimulationStore((state) => state.setActiveTool);
@@ -42,11 +43,18 @@ export const BuildToolbar = () => {
         shortcut: "1",
       },
       {
+        id: "structure" as BuildToolId,
+        icon: Construction,
+        label: "Structure",
+        description: "Place persistent structural tower scaffold.",
+        shortcut: "2",
+      },
+      {
         id: "lobby" as BuildToolId,
         icon: Building01Icon,
         label: "Lobby",
         description: "Place lobby and entrance modules.",
-        shortcut: "2",
+        shortcut: "3",
       },
       {
         id: "residential" as BuildToolId,
@@ -89,13 +97,6 @@ export const BuildToolbar = () => {
         label: "Stairs",
         description: "Place stair core modules.",
         shortcut: "8",
-      },
-      {
-        id: "floor" as BuildToolId,
-        icon: LayersIcon,
-        label: "Floor",
-        description: "Place structural floor plates.",
-        shortcut: "9",
       },
     ],
     [],

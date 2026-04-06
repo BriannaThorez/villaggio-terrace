@@ -276,6 +276,7 @@ export interface CheckPlacementPayload {
   y: number;
   w: number;
   h: number;
+  type: string;
   ignoreId?: string;
 }
 
