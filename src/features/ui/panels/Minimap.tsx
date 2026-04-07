@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from "react";
-import { useSimulationStore } from "../shared/utils/store";
-import { SmartTooltip } from "../shared/components/SmartTooltip";
+import { useSimulationStore } from "../../../shared/utils/store";
+import { SmartTooltip } from "../../../shared/components/SmartTooltip";
 import { Map } from "lucide-react";
 import { motion } from "framer-motion";
 

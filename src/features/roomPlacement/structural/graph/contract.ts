@@ -11,6 +11,17 @@ export type StructuralFace =
   | "ceiling"
   | "floor";
 
+export const FACE_ORDER: StructuralFace[] = [
+  "front",
+  "right",
+  "back",
+  "left",
+  "ceiling",
+  "floor",
+];
+
+export const sortedUnique = (values: Iterable<string>) => [...new Set(values)].sort();
+
 export type CellBoundaryDirection = "north" | "south" | "east" | "west";
 
 export type BeamAxis = "x" | "y" | "z";

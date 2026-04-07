@@ -1,5 +1,8 @@
-import { SimulationNode } from "../../../entities/SimulationNodes";
+import type { SimulationNode } from "../../../entities/SimulationNodes";
 import { checkStructuralIntegrity } from "./structuralIntegrity";
+import { FloorBucketIndex, STRUCTURAL_CONSTANTS } from "./spatialIndex";
+
+const { COLLISION_EPSILON } = STRUCTURAL_CONSTANTS;
 
 export interface PlacementResult {
     isValid: boolean;
@@ -11,6 +14,9 @@ export interface PlacementResult {
 /**
  * Validates a proposed node placement against ALL simulation rules.
  * Consolidates collision detection and structural integrity (overhang) checks.
+ * 
+ * Performance: Accepts an optional FloorBucketIndex for O(1) floor-level
+ * queries instead of scanning every node in the simulation.
  */
 export const validatePlacement = (
     x: number,
@@ -20,11 +26,12 @@ export const validatePlacement = (
     allShapes: SimulationNode[],
     type: string,
     ignoreId?: string,
-    isForce = false
+    isForce = false,
+    index?: FloorBucketIndex
 ): PlacementResult => {
     // 1. Structural Integrity Check (Overhang)
     // Industry Standard Rule: Max 5 cell cantilever overhang without foundational support below.
-    const structuralResult = checkStructuralIntegrity(x, y, width, allShapes, type);
+    const structuralResult = checkStructuralIntegrity(x, y, width, allShapes, type, undefined, index);
     if (!structuralResult.isValid) {
         return {
             isValid: false,
@@ -34,12 +41,11 @@ export const validatePlacement = (
     }
 
     // 2. Collision Check
-    // We scan for overlaps with existing habitable rooms.
+    // Uses spatial index when available: only check same-floor nodes.
     // Foundation Scaffolds (type: "structure") are exempt from collision blocks.
-    const cx1 = x;
-    const cy1 = y;
+    const candidates = index ? index.getFloorNodes(y) : allShapes;
 
-    for (const s2 of allShapes) {
+    for (const s2 of candidates) {
         if (s2.id === ignoreId) continue;
         if (s2.type === "structure") continue;
         if (type !== 'empty_floor' && s2.type === "empty_floor") continue;
@@ -51,8 +57,8 @@ export const validatePlacement = (
 
         // Standard AABB overlap with epsilon
         if (
-            Math.abs(cx1 - cx2) < (width + w2) / 2 - 0.1 &&
-            Math.abs(cy1 - cy2) < (height + h2) / 2 - 0.1
+            Math.abs(x - cx2) < (width + w2) / 2 - COLLISION_EPSILON &&
+            Math.abs(y - cy2) < (height + h2) / 2 - COLLISION_EPSILON
         ) {
             if (!isForce) {
                 return { isValid: false, error: "collision", collidingId: s2.id };

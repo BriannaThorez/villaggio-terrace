@@ -6,7 +6,7 @@ import {
   Delete02Icon,
 } from "hugeicons-react";
 import { motion } from "framer-motion";
-import { useSimulationStore } from "../shared/utils/store";
+import { useSimulationStore } from "../../../shared/utils/store";
 
 const GUI_SPACING_REM = 0.375;
 const GUI_HALF_SPACING_REM = GUI_SPACING_REM / 2;

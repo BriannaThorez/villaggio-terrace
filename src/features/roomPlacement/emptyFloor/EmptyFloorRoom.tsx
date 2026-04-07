@@ -3,6 +3,11 @@ import * as THREE from "three";
 import { parseMaterial } from "../../../engine/MaterialParser";
 import { RoomMeshCSG } from "../visuals/RoomMeshCSG";
 import { generateWindowCutouts } from "../visuals/WindowGenerator";
+import {
+    STRUCTURE_WALL_THICKNESS,
+    STRUCTURE_FLOOR_THICKNESS,
+    STRUCTURE_CEILING_THICKNESS,
+} from "../constants/structuralConstants";
 
 interface EmptyFloorRoomProps {
     position: [number, number, number];
@@ -10,40 +15,63 @@ interface EmptyFloorRoomProps {
     width: number;
     height: number;
     depth: number;
-    id: string;
     hasLeftWall?: boolean;
     hasRightWall?: boolean;
     onPointerDown?: (e: any) => void;
     onDoubleClick?: (e: any) => void;
 }
 
+/**
+ * EmptyFloorRoom: Renders vacant structural scaffolds (Lobby/Floor).
+ *
+ * Like ResidentialRoom, this component is ENCAPSULATED inside its parent
+ * structure. Dimensions are inset by structure wall/floor/ceiling thicknesses.
+ */
 export const EmptyFloorRoom: React.FC<EmptyFloorRoomProps> = ({
     position,
     rotation,
     width,
     height,
     depth,
-    id,
     hasLeftWall = true,
     hasRightWall = true,
     onPointerDown,
     onDoubleClick,
 }) => {
-    // Architectural Configuration
-    const openingWidth = 7.5; // 25% (2.5 units) margin on each side of 10-unit cell
-    const openingHeight = 25.0; // Extreme high-profile vertical slit aesthetic
-    const verticalCenteringOffset = 0.275; // Aligned with the normalized structural interior
+    // ──────────────────────────────────────────────────────────
+    // Structural Inset: Same logic as ResidentialRoom.
+    // Room sits INSIDE the structure shell.
+    // ──────────────────────────────────────────────────────────
+    const insetWidth = useMemo(() => {
+        let w = width;
+        if (hasLeftWall) w -= STRUCTURE_WALL_THICKNESS;
+        if (hasRightWall) w -= STRUCTURE_WALL_THICKNESS;
+        return w;
+    }, [width, hasLeftWall, hasRightWall]);
 
-    const shellHeight = height - 0.75;
-    const shellDepth = depth - 0.25;
+    const insetHeight = height - STRUCTURE_FLOOR_THICKNESS - STRUCTURE_CEILING_THICKNESS;
+    const insetDepth = depth - STRUCTURE_WALL_THICKNESS; // Back wall; front is open
+
+    // Architectural Configuration
+    const openingWidth = 7.5;
+    const openingHeight = 25.0;
+    const verticalCenteringOffset = 0.275;
 
     const roomPosition = useMemo<[number, number, number]>(() => {
-        return [position[0], position[1] + 0.5, position[2] + 0.125];
-    }, [position]);
+        let xOffset = 0;
+        if (hasLeftWall && !hasRightWall) xOffset = STRUCTURE_WALL_THICKNESS / 2;
+        if (!hasLeftWall && hasRightWall) xOffset = -STRUCTURE_WALL_THICKNESS / 2;
+
+        return [
+            position[0] + xOffset,
+            position[1] + STRUCTURE_FLOOR_THICKNESS,       // Y: top of structure floor slab
+            position[2] + STRUCTURE_WALL_THICKNESS / 2,    // Z: inner face of back wall
+        ];
+    }, [position, hasLeftWall, hasRightWall]);
 
     const frameMaterial = useMemo(() => {
         return parseMaterial({
-            albedo: "#808080", // Metallic Silver/Grey
+            albedo: "#808080",
             roughness: 0.3,
             metalness: 0.8,
         });
@@ -51,10 +79,10 @@ export const EmptyFloorRoom: React.FC<EmptyFloorRoomProps> = ({
 
     const glassMaterial = useMemo(() => {
         return new THREE.MeshPhysicalMaterial({
-            color: "#8090A0", // Darker greyish tint
-            metalness: 0.9, // Highly reflective
+            color: "#8090A0",
+            metalness: 0.9,
             roughness: 0.05,
-            transmission: 0.95, // 95% TRANSPARENT
+            transmission: 0.95,
             opacity: 0.2,
             transparent: true,
             ior: 1.5,
@@ -64,18 +92,17 @@ export const EmptyFloorRoom: React.FC<EmptyFloorRoomProps> = ({
         });
     }, []);
 
-    // Standardized Architectural Window Generation
     const windowCutouts = useMemo(() => {
         return generateWindowCutouts({
-            roomWidth: width,
-            roomHeight: height,
-            roomDepth: depth - 0.25,
+            roomWidth: insetWidth,
+            roomHeight: insetHeight,
+            roomDepth: insetDepth,
             cutoutWidth: openingWidth,
             cutoutHeight: openingHeight,
             verticalOffset: verticalCenteringOffset,
             penetrationDepth: 20.0,
         });
-    }, [width, height, depth, openingWidth, openingHeight, verticalCenteringOffset]);
+    }, [insetWidth, insetHeight, insetDepth, openingWidth, openingHeight, verticalCenteringOffset]);
 
     return (
         <group
@@ -84,11 +111,10 @@ export const EmptyFloorRoom: React.FC<EmptyFloorRoomProps> = ({
             onPointerDown={onPointerDown}
             onDoubleClick={onDoubleClick}
         >
-            {/* Structural Shell with Modular CSG Voids */}
             <RoomMeshCSG
-                width={width}
-                height={height}
-                depth={depth - 0.25}
+                width={insetWidth}
+                height={insetHeight}
+                depth={insetDepth}
                 material={frameMaterial}
                 hasLeftWall={hasLeftWall}
                 hasRightWall={hasRightWall}
@@ -96,20 +122,16 @@ export const EmptyFloorRoom: React.FC<EmptyFloorRoomProps> = ({
                 cutouts={windowCutouts}
             />
 
-            {/* High-Fidelity Glass Insets (Centered in vertical slits) */}
             {windowCutouts.map((cutout, index) => (
-                <group key={`window-${index}`} position={[cutout.x, shellHeight / 2 + verticalCenteringOffset, 0]}>
-                    <group position={[0, 0, -shellDepth + 0.1]}>
-                        {/* The Glass Pane (Restricted to Shell Height for realism) */}
+                <group key={`window-${index}`} position={[cutout.x, insetHeight / 2 + verticalCenteringOffset, 0]}>
+                    <group position={[0, 0, -insetDepth + 0.1]}>
                         <mesh material={glassMaterial} position={[0, 0, 0.05]}>
-                            <boxGeometry args={[openingWidth, shellHeight, 0.05]} />
+                            <boxGeometry args={[openingWidth, insetHeight, 0.05]} />
                         </mesh>
-
-                        {/* Industrial Horizontal Sills */}
-                        <mesh material={frameMaterial} position={[0, shellHeight / 2 + 0.1, 0]}>
+                        <mesh material={frameMaterial} position={[0, insetHeight / 2 + 0.1, 0]}>
                             <boxGeometry args={[openingWidth + 0.4, 0.15, 0.3]} />
                         </mesh>
-                        <mesh material={frameMaterial} position={[0, -shellHeight / 2 - 0.1, 0]}>
+                        <mesh material={frameMaterial} position={[0, -insetHeight / 2 - 0.1, 0]}>
                             <boxGeometry args={[openingWidth + 0.4, 0.15, 0.3]} />
                         </mesh>
                     </group>

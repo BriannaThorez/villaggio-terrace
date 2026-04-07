@@ -1,12 +1,12 @@
 import React, { useMemo } from "react";
 import { Html, Line } from "@react-three/drei";
 import * as THREE from "three";
-import { useSimulationStore, type SimulationNode } from "../shared/utils/store";
+import { useSimulationStore, type SimulationNode } from "../../../shared/utils/store";
 import type {
   StructuralCanonicalFace,
   StructuralFace,
-} from "../features/roomPlacement/structural/graph";
-import { StructuralRoomMetadata } from "../features/roomPlacement/structural/graph";
+} from "../../roomPlacement/structural/graph";
+import { StructuralRoomMetadata } from "../../roomPlacement/structural/graph";
 import { RadialMenu } from "./RadialMenu";
 
 const START_LABEL_COLOR = "#ffffff";

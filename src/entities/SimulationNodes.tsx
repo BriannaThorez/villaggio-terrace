@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useState, useEffect } from "react";
 import { useThree } from "@react-three/fiber";
 import { ResidentialRoom } from "../features/roomPlacement/residential/base/ResidentialRoom";
 import { RoomMeshCSG } from "../features/roomPlacement/visuals/RoomMeshCSG";
-import { SelectionIndicator } from "../components/SelectionIndicator";
+import { SelectionIndicator } from "../features/ui/world_ui/SelectionIndicator";
 import { useFrame } from "@react-three/fiber";
 import { useSimulationStore, SimulationNode } from "../shared/utils/store";
 
@@ -12,7 +12,7 @@ import {
   ShapeSDFVertexShader,
   ShapeSDFFragmentShader,
 } from "../shared/shaders/ShapeSDFMaterial";
-import { RadialMenu } from "../components/RadialMenu";
+import { RadialMenu } from "../features/ui/world_ui/RadialMenu";
 import themes from "../shared/themes/color_palettes.json";
 import { RotateCw } from "lucide-react";
 import * as THREE from "three";
@@ -252,6 +252,9 @@ export const SimulationNodes = () => {
 
   // Ensure all structures have an empty floor or a real room.
   useEffect(() => {
+    if (useSimulationStore.getState().shapes.length === 0) {
+      useSimulationStore.getState().initializeWorld();
+    }
     const unpopulatedStructures = useSimulationStore.getState().shapes.filter(s => {
       if (s.type !== 'structure') return false;
       const hasRoom = useSimulationStore.getState().shapes.some(other =>
@@ -442,8 +445,9 @@ export const SimulationNodes = () => {
     // Preserve this handler so room/node movement can be re-enabled later without changing ownership or selection flow.
     if (e.button === 1) return;
 
-    // For residential rooms, we don't need the UV check if the event came from the room component itself
-    if (shape.type !== "residential" && shape.type !== "structure" && !isInsideShape(e.uv, shape)) return;
+    // For volumetric room components, rely on mesh intersection rather than 2D SDF UV mapping
+    const isVolumetricRoom = ["residential", "commercial", "office", "utility", "lobby", "elevator", "structure", "empty_floor"].includes(shape.type);
+    if (!isVolumetricRoom && !isInsideShape(e.uv, shape)) return;
 
     e.stopPropagation();
 
@@ -471,7 +475,8 @@ export const SimulationNodes = () => {
     const shape = renderedShapeById.get(id);
     if (!shape) return;
 
-    if (shape.type !== "residential" && shape.type !== "structure" && !isInsideShape(e.uv, shape)) return;
+    const isVolumetricRoom = ["residential", "commercial", "office", "utility", "lobby", "elevator", "structure", "empty_floor"].includes(shape.type);
+    if (!isVolumetricRoom && !isInsideShape(e.uv, shape)) return;
 
     e.stopPropagation();
     if (activeTool !== "select") return;
@@ -514,17 +519,7 @@ export const SimulationNodes = () => {
     }
   }, [editingId]);
 
-  // Precompute positions of blendable structures (Lobby, Floor) for adjacent wall removal
-  const blendablePositions = useMemo(() => {
-    const set = new Set<string>();
-    renderedShapes.forEach((s) => {
-      const allRoomTypes = ["residential", "commercial", "office", "utility", "lobby", "elevator", "structure", "empty_floor"];
-      if (allRoomTypes.includes(s.type)) {
-        set.add(`${Math.round(s.position[0])},${Math.round(s.position[1])}`);
-      }
-    });
-    return set;
-  }, [renderedShapes]);
+  // Legacy blendablePositions heuristic was removed for the Cell-Beam Structural Graph.
 
   return (
     <group>
@@ -693,43 +688,29 @@ export const SimulationNodes = () => {
               "empty_floor",
             ].includes(shape.type) &&
               (() => {
-                const allBlendableTypes = ["lobby", "structure", "empty_floor"];
-
                 let hasLeftWall = true;
                 let hasRightWall = true;
 
-                if (allBlendableTypes.includes(shape.type)) {
-                  const x = Math.round(shape.position[0]);
-                  const y = Math.round(shape.position[1]);
-                  const w = shape.size[0] / 2;
+                // Sole reliance on the high-accuracy Structural Cell-Beam Graph.
+                if (shape.structuralRoom) {
+                  const checkWall = (adjacentIds: string[]) => {
+                    if (adjacentIds.length === 0) return true;
+                    // Wall removal requires the adjacent space to be the exact same architectural archetype.
+                    // This explicitly preserves demising walls between distinct programmatic volumes (e.g. Lobby vs Empty Scaffold)
+                    const hasHomogenousNeighbor = adjacentIds.some(id => {
+                      const neighbor = renderedShapes.find(s => s.id === id);
+                      return neighbor && neighbor.type === shape.type;
+                    });
+                    return !hasHomogenousNeighbor;
+                  };
 
-                  // Check various neighbor center offsets exactly matching valid block half-widths
-                  const neighborHalfWidths = [5, 10, 15, 20, 25, 30, 35, 40];
-                  const leftNeighborCenters = neighborHalfWidths.map(diff => x - w - diff);
-                  const rightNeighborCenters = neighborHalfWidths.map(diff => x + w + diff);
-
-                  if (leftNeighborCenters.some(c => blendablePositions.has(`${Math.round(c)},${y}`))) {
-                    hasLeftWall = false;
-                  }
-                  if (rightNeighborCenters.some(c => blendablePositions.has(`${Math.round(c)},${y}`))) {
-                    hasRightWall = false;
-                  }
-                }
-
-                // Explicit graph override (Industry Leading Accuracy)
-                if (["lobby", "structure", "empty_floor"].includes(shape.type)) {
-                  if (shape.structuralRoom?.canonicalFaces.left.adjacentRoomIds.length) {
-                    hasLeftWall = false;
-                  }
-                  if (shape.structuralRoom?.canonicalFaces.right.adjacentRoomIds.length) {
-                    hasRightWall = false;
-                  }
+                  hasLeftWall = checkWall(shape.structuralRoom.canonicalFaces.left.adjacentRoomIds);
+                  hasRightWall = checkWall(shape.structuralRoom.canonicalFaces.right.adjacentRoomIds);
                 }
 
                 if (shape.type === "empty_floor") {
                   return (
                     <EmptyFloorRoom
-                      id={shape.id}
                       position={[0, 0, 0]}
                       rotation={0}
                       width={shape.size[0]}
@@ -760,6 +741,7 @@ export const SimulationNodes = () => {
                     position={[0, 0, 0]}
                     rotation={0}
                     size={shape.size}
+                    roomType={shape.type}
                     color={shape.color || (themes as any)[themeName].primary}
                     material={shape.material}
                     hasLeftWall={hasLeftWall}
@@ -792,7 +774,7 @@ export const SimulationNodes = () => {
               const myRight = shape.position[0] + shape.size[0] / 2;
 
               const roomAbove = renderedShapes.find(s =>
-                s.type !== "structure" && s.type !== "select" && s.type !== "text" &&
+                s.type !== "structure" &&
                 Math.abs(s.position[1] - shape.position[1]) < 5 &&
                 (s.position[0] + s.size[0] / 2 > myLeft + 0.1) &&
                 (s.position[0] - s.size[0] / 2 < myRight - 0.1)
@@ -838,20 +820,8 @@ export const SimulationNodes = () => {
                     wallThickness={0.25}
                     material={scaffoldMat}
                     hasBackWall={false}
-                    hasLeftWall={(() => {
-                      const x = Math.round(shape.position[0]);
-                      const y = Math.round(shape.position[1]);
-                      const w = shape.size[0] / 2;
-                      const leftCenters = [5, 10, 15, 20, 25, 30, 35, 40].map(diff => x - w - diff);
-                      return !leftCenters.some(c => blendablePositions.has(`${Math.round(c)},${y}`));
-                    })()}
-                    hasRightWall={(() => {
-                      const x = Math.round(shape.position[0]);
-                      const y = Math.round(shape.position[1]);
-                      const w = shape.size[0] / 2;
-                      const rightCenters = [5, 10, 15, 20, 25, 30, 35, 40].map(diff => x + w + diff);
-                      return !rightCenters.some(c => blendablePositions.has(`${Math.round(c)},${y}`));
-                    })()}
+                    hasLeftWall={shape.structuralRoom ? shape.structuralRoom.canonicalFaces.left.adjacentRoomIds.length === 0 : true}
+                    hasRightWall={shape.structuralRoom ? shape.structuralRoom.canonicalFaces.right.adjacentRoomIds.length === 0 : true}
                   />
                 </group>
               );

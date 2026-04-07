@@ -7,24 +7,26 @@ import {
   type SimulationNodeType,
 } from "../../../../shared/utils/store";
 import { STRUCTURAL_METADATA_CONTRACT_VERSION } from "./contract";
-import type {
-  BeamPlane,
-  BeamRole,
-  CellBoundaryDirection,
-  StructuralAdjacencyGap,
-  StructuralBeam,
-  StructuralCanonicalFace,
-  StructuralCell,
-  StructuralCellBeamGraph,
-  StructuralCorner,
-  StructuralFaceBounds,
-  StructuralFaceCutout,
-  StructuralFace,
-  StructuralMetadataExport,
-  StructuralOpeningMetadata,
-  StructuralRoomAdjacency,
-  StructuralRoomMetadata,
-  StructuralShape,
+import {
+  type BeamPlane,
+  type BeamRole,
+  type CellBoundaryDirection,
+  type StructuralAdjacencyGap,
+  type StructuralBeam,
+  type StructuralCanonicalFace,
+  type StructuralCell,
+  type StructuralCellBeamGraph,
+  type StructuralCorner,
+  type StructuralFaceBounds,
+  type StructuralFaceCutout,
+  type StructuralFace,
+  type StructuralMetadataExport,
+  type StructuralOpeningMetadata,
+  type StructuralRoomAdjacency,
+  type StructuralRoomMetadata,
+  type StructuralShape,
+  FACE_ORDER,
+  sortedUnique
 } from "./contract";
 import type {
   RoomFace,
@@ -45,14 +47,7 @@ const ROOM_NODE_TYPES = new Set<SimulationNodeType>([
 const ROOM_DEPTH = 40;
 const FLOOR_CLEARANCE = 1e-3;
 
-const FACE_ORDER: StructuralFace[] = [
-  "front",
-  "right",
-  "back",
-  "left",
-  "ceiling",
-  "floor",
-];
+
 
 const DIRECTION_TO_FACE: Record<CellBoundaryDirection, StructuralFace> = {
   north: "back",
@@ -91,7 +86,7 @@ const cornerKey = (x2: number, y2: number) => `${x2},${y2}`;
 
 const cornerId = (x2: number, y2: number) => `corner:${cornerKey(x2, y2)}`;
 
-const sortedUnique = (values: Iterable<string>) => [...new Set(values)].sort();
+
 
 const uniqueById = <T extends { id: string }>(values: Iterable<T>) => {
   const byId = new Map<string, T>();

@@ -3,9 +3,9 @@ import { SpatialHash } from "./SpatialHash";
 import { getWorkerPool } from "../../worker/client";
 import { SIMULATION_TASK_TYPE, type CheckPlacementPayload, type CheckPlacementResult } from "../worker/protocol";
 import { validatePlacement } from "../../features/roomPlacement/constraints/placementRules";
+import { FloorBucketIndex } from "../../features/roomPlacement/constraints/spatialIndex";
 
 const globalHash = new SpatialHash(100);
-globalHash.insert("default-node", 0, 0, 40, 40);
 
 /**
  * Simulation building blocks.
@@ -137,7 +137,7 @@ export interface SimulationState {
     updates: Partial<SimulationNode>,
     skipHistory?: boolean,
   ) => void;
-  deleteShape: (id: string) => void;
+  deleteShape: (id: string, isMerge?: boolean) => void;
   addLink: (
     from: string,
     to: string,
@@ -169,6 +169,7 @@ export interface SimulationState {
   undo: () => void;
   redo: () => void;
   pushToHistory: () => void;
+  initializeWorld: () => void;
   resetCamera: () => void;
   shouldResetCamera: boolean;
   setShouldResetCamera: (val: boolean) => void;
@@ -296,22 +297,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
   };
 
   return {
-    shapes: [
-      {
-        id: "default-node",
-        type: "residential",
-        position: [0, 0],
-        size: [40, 40],
-        vertices: [
-          [-20, -20],
-          [20, -20],
-          [20, 20],
-          [-20, 20],
-        ],
-        text: "Start",
-        name: "Gateway Suite",
-      },
-    ],
+    shapes: [],
     links: [],
     resources: { power: 50, water: 50, internet: 50 },
     towerGrid: new Map(),
@@ -336,7 +322,9 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     sunIntensity: parseFloat(localStorage.getItem("villaggio_sun_intensity") || "10.0"),
 
     checkPlacement: (x: number, y: number, w: number, h: number, type: string, ignoreId?: string, isForce = false) => {
-      const result = validatePlacement(x, y, w, h, get().shapes, type, ignoreId, isForce);
+      const shapes = get().shapes;
+      const index = new FloorBucketIndex(shapes);
+      const result = validatePlacement(x, y, w, h, shapes, type, ignoreId, isForce, index);
       return result.isValid;
     },
     checkPlacementAuthoritative: async (x: number, y: number, w: number, h: number, ignoreId?: string) => {
@@ -383,7 +371,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           others.forEach(o => {
             minX = Math.min(minX, o.position[0] - o.size[0] / 2);
             maxX = Math.max(maxX, o.position[0] + o.size[0] / 2);
-            state.deleteShape(o.id);
+            state.deleteShape(o.id, true);
           });
 
           const newWidth = maxX - minX;
@@ -393,6 +381,23 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
             position: [newCenterX, snappedY],
             size: [newWidth, prime.size[1]]
           }, skipHistory);
+
+          if (shape.type !== 'structure' && shape.type !== 'empty_floor') {
+            const myLeft = newCenterX - newWidth / 2;
+            const myRight = newCenterX + newWidth / 2;
+            const myTop = snappedY + prime.size[1] / 2;
+            const myBottom = snappedY - prime.size[1] / 2;
+
+            const toDelete = state.shapes.filter(s => {
+              if (s.type !== 'empty_floor') return false;
+              const sLeft = s.position[0] - s.size[0] / 2;
+              const sRight = s.position[0] + s.size[0] / 2;
+              const sTop = s.position[1] + s.size[1] / 2;
+              const sBottom = s.position[1] - s.size[1] / 2;
+              return (sLeft < myRight - 0.1 && sRight > myLeft + 0.1 && sBottom < myTop - 0.1 && sTop > myBottom + 0.1);
+            });
+            toDelete.forEach(o => state.deleteShape(o.id, true));
+          }
 
           // Force update of underlying structure if room moved/expanded
           if (shape.type !== 'structure') {
@@ -412,20 +417,37 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           }
 
           if (shape.type === 'structure') {
-            const hasRoom = state.shapes.some(s =>
-              s.type !== 'structure' && s.type !== 'empty_floor' &&
-              Math.abs(s.position[0] - shape.position[0]) < 0.1 &&
-              Math.abs(s.position[1] - shape.position[1]) < 0.1
-            );
-            if (!hasRoom) {
-              state.addShape({
-                id: `empty_floor_${Math.random().toString(36).substr(2, 9)}`,
-                type: 'empty_floor',
-                position: [...shape.position],
-                size: [...shape.size],
-                vertices: [...shape.vertices],
-                name: "Empty Floor"
-              }, true, true);
+            const currentShapes = get().shapes;
+            // Iterate over the newly merged structural bound by strict 10-width cell increments
+            for (let cx = minX + 5; cx < maxX; cx += 10) {
+              const hasRoom = currentShapes.some(s =>
+                s.type !== 'structure' && s.type !== 'empty_floor' &&
+                Math.abs(s.position[1] - snappedY) < 1 &&
+                s.position[0] - s.size[0] / 2 < cx + 0.1 &&
+                s.position[0] + s.size[0] / 2 > cx - 0.1
+              );
+              const hasEmptyFloor = currentShapes.some(s =>
+                s.type === 'empty_floor' &&
+                Math.abs(s.position[1] - snappedY) < 1 &&
+                s.position[0] - s.size[0] / 2 < cx + 0.1 &&
+                s.position[0] + s.size[0] / 2 > cx - 0.1
+              );
+
+              if (!hasRoom && !hasEmptyFloor) {
+                state.addShape({
+                  id: `empty_floor_${Math.random().toString(36).substring(2, 9)}`,
+                  type: 'empty_floor',
+                  position: [cx, snappedY],
+                  size: [10, prime.size[1]],
+                  vertices: [
+                    [-5, -prime.size[1] / 2],
+                    [5, -prime.size[1] / 2],
+                    [5, prime.size[1] / 2],
+                    [-5, prime.size[1] / 2],
+                  ],
+                  name: "Empty Floor"
+                }, true, true);
+              }
             }
           }
 
@@ -462,14 +484,23 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
 
       // Remove any overlapping empty_floor before placing a new room
       if (shape.type !== 'empty_floor' && shape.type !== 'structure') {
-        const overlappingEmptyFloor = state.shapes.find(s =>
-          s.type === 'empty_floor' &&
-          Math.abs(s.position[0] - shape.position[0]) < 0.1 &&
-          Math.abs(s.position[1] - shape.position[1]) < 0.1
-        );
-        if (overlappingEmptyFloor) {
-          state.deleteShape(overlappingEmptyFloor.id);
-        }
+        const myLeft = shape.position[0] - shape.size[0] / 2;
+        const myRight = shape.position[0] + shape.size[0] / 2;
+        const myTop = shape.position[1] + shape.size[1] / 2;
+        const myBottom = shape.position[1] - shape.size[1] / 2;
+
+        const toDelete = state.shapes.filter(s => {
+          if (s.type !== 'empty_floor') return false;
+          const sLeft = s.position[0] - s.size[0] / 2;
+          const sRight = s.position[0] + s.size[0] / 2;
+          const sTop = s.position[1] + s.size[1] / 2;
+          const sBottom = s.position[1] - s.size[1] / 2;
+          return (sLeft < myRight - 0.1 && sRight > myLeft + 0.1 && sBottom < myTop - 0.1 && sTop > myBottom + 0.1);
+        });
+
+        toDelete.forEach(o => {
+          if (o.id !== shape.id) state.deleteShape(o.id, true);
+        });
       }
 
       // Synchronize local spatial hash for authoritative main-thread collision checks
@@ -570,7 +601,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
         };
       });
     },
-    deleteShape: (id) => {
+    deleteShape: (id, isMerge = false) => {
       pushToHistory();
       const shapeToDelete = get().shapes.find(s => s.id === id);
       const isStructure = shapeToDelete?.type === 'structure';
@@ -580,7 +611,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
         const shape = state.shapes.find(s => s.id === id);
         if (shape) {
           // Guard: Cannot delete a foundation if a room sits on it
-          if (shape.type === 'structure') {
+          if (shape.type === 'structure' && !isMerge) {
             const myLeft = shape.position[0] - shape.size[0] / 2;
             const myRight = shape.position[0] + shape.size[0] / 2;
             const hasRoomAbove = state.shapes.some(s =>
@@ -628,52 +659,52 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       });
 
       const stateAfter = get();
-      if (shapeToDelete && isRoom) {
+      if (shapeToDelete && isRoom && !isMerge) {
         // Step 1: Discover all adjacent scaffolds that need to be covered AND are vacant
-        const overlappingStructures = stateAfter.shapes.filter(s =>
-          s.type === 'structure' &&
-          Math.abs(s.position[1] - shapeToDelete.position[1]) < 0.1 &&
-          s.position[0] + s.size[0] / 2 > shapeToDelete.position[0] - shapeToDelete.size[0] / 2 + 0.1 &&
-          s.position[0] - s.size[0] / 2 < shapeToDelete.position[0] + shapeToDelete.size[0] / 2 - 0.1 &&
+        const overlappingStructures = stateAfter.shapes.filter(s => {
+          if (s.type !== 'structure') return false;
+
+          // Same-floor check
+          if (Math.abs(s.position[1] - shapeToDelete.position[1]) > 0.1) return false;
+
+          // Bounds check: Does this structure overlap the deleted room's footprint?
+          const sLeft = s.position[0] - s.size[0] / 2;
+          const sRight = s.position[0] + s.size[0] / 2;
+          const deletedLeft = shapeToDelete.position[0] - shapeToDelete.size[0] / 2;
+          const deletedRight = shapeToDelete.position[0] + shapeToDelete.size[0] / 2;
+
+          const overlapsDeleted = (sRight > deletedLeft + 0.1) && (sLeft < deletedRight - 0.1);
+          if (!overlapsDeleted) return false;
+
           // Occupancy check: Ensure NO other room is sitting on this scaffold
-          !stateAfter.shapes.some(other =>
-            other.id !== s.id &&
-            other.type !== 'structure' &&
-            other.type !== 'empty_floor' &&
-            Math.abs(other.position[1] - s.position[1]) < 0.1 &&
-            Math.abs(other.position[0] - s.position[0]) < 0.1
-          )
-        );
+          const isOccupied = stateAfter.shapes.some(other => {
+            if (other.type === 'structure' || other.type === 'empty_floor' || other.id === s.id) return false;
 
-        if (overlappingStructures.length > 0) {
-          // Step 2: Merge their footprints into a single wide rectangle
-          let minX = Infinity;
-          let maxX = -Infinity;
-          let y = overlappingStructures[0].position[1];
-          let h = overlappingStructures[0].size[1];
+            // Same floor and X-overlap
+            if (Math.abs(other.position[1] - s.position[1]) > 0.1) return false;
 
-          overlappingStructures.forEach(s => {
-            minX = Math.min(minX, s.position[0] - s.size[0] / 2);
-            maxX = Math.max(maxX, s.position[0] + s.size[0] / 2);
+            const oLeft = other.position[0] - other.size[0] / 2;
+            const oRight = other.position[0] + other.size[0] / 2;
+
+            return (oRight > sLeft + 0.1) && (oLeft < sRight - 0.1);
           });
 
-          const mergedWidth = maxX - minX;
-          const centerX = minX + mergedWidth / 2;
+          return !isOccupied;
+        });
 
-          // Step 3: Add a single merged empty floor node
-          get().addShape({
-            id: `empty_floor_${Math.random().toString(36).substring(2, 9)}`,
-            type: 'empty_floor',
-            position: [centerX, y],
-            size: [mergedWidth, h],
-            vertices: [
-              [-mergedWidth / 2, -h / 2],
-              [mergedWidth / 2, -h / 2],
-              [mergedWidth / 2, h / 2],
-              [-mergedWidth / 2, h / 2],
-            ],
-            name: "Empty Floor"
-          }, true, true);
+        if (overlappingStructures.length > 0) {
+          // 🪲 FIX: Spawn individual empty blocks per vacant scaffold (instead of merging non-contiguous ones)
+          // This prevents "spilling" into occupied rooms between vacant ones.
+          overlappingStructures.forEach(str => {
+            get().addShape({
+              id: `empty_floor_${Math.random().toString(36).substring(2, 9)}`,
+              type: 'empty_floor',
+              position: [...str.position],
+              size: [...str.size],
+              vertices: [...str.vertices],
+              name: "Empty Floor"
+            }, true, true);
+          });
         }
       }
     },
@@ -779,6 +810,31 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       }
     },
     pushToHistory: () => pushToHistory(),
+    initializeWorld: () => {
+      // Clear shapes
+      set({ shapes: [] });
+      const stateAfterClear = get();
+
+      // Place 6 lobby cells (3 left, 3 right of x=0)
+      // Each is 10 width, depth 40
+      const startX = -25;
+      for (let i = 0; i < 6; i++) {
+        const x = startX + i * 10;
+        stateAfterClear.addShape({
+          id: `lobby_${i}_${Math.random().toString(36).substr(2, 9)}`,
+          type: "lobby",
+          position: [x, 0],
+          size: [10, 40],
+          vertices: [
+            [-5, -20],
+            [5, -20],
+            [5, 20],
+            [-5, 20],
+          ],
+          name: `Lobby Cell ${i + 1}`
+        }, true, true);
+      }
+    },
     resetCamera: () => set({ shouldResetCamera: true }),
     setShouldResetCamera: (val) => set({ shouldResetCamera: val }),
 

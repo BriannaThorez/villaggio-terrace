@@ -1,6 +1,6 @@
 import {
   useSimulationStore,
-} from "../shared/utils/store";
+} from "../../../shared/utils/store";
 import {
   Cursor01Icon,
   Home01Icon,
@@ -15,7 +15,7 @@ import {
   Layers01Icon as LayersIcon,
 } from "hugeicons-react";
 import { Construction } from "lucide-react";
-import { SmartTooltip } from "../shared/components/SmartTooltip";
+import { SmartTooltip } from "../../../shared/components/SmartTooltip";
 import { useMemo } from "react";
 
 type BuildToolId =

@@ -11,7 +11,7 @@ import {
     InformationCircleIcon,
 } from "hugeicons-react";
 import { motion } from "framer-motion";
-import { useSimulationStore } from "../shared/utils/store";
+import { useSimulationStore } from "../../../shared/utils/store";
 
 const typeIconMap = {
     lobby: Building01Icon,

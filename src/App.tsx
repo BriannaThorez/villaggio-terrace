@@ -1,12 +1,12 @@
 
 import { useEffect } from "react";
 import { SimulationCanvas } from "./widgets/SimulationCanvas";
-import { MainToolbar } from "./widgets/MainToolbar";
-import { BuildToolbar } from "./widgets/BuildToolbar";
-import { ControlsHint } from "./widgets/ControlsHint";
-import { CameraReadout } from "./components/CameraReadout";
-import { SelectionPanel } from "./widgets/SelectionPanel";
-import { Minimap } from "./widgets/Minimap";
+import { MainToolbar } from "./features/ui/toolbars/MainToolbar";
+import { BuildToolbar } from "./features/ui/toolbars/BuildToolbar";
+import { ControlsHint } from "./features/ui/hud/ControlsHint";
+import { CameraReadout } from "./features/ui/hud/CameraReadout";
+import { SelectionPanel } from "./features/ui/panels/SelectionPanel";
+import { Minimap } from "./features/ui/panels/Minimap";
 import { WeatherPanel } from "./features/weather/ui/WeatherPanel";
 import { useSimulationStore } from "./shared/utils";
 import themes from "./shared/themes/color_palettes.json";

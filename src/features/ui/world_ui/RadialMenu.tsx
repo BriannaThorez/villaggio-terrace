@@ -5,7 +5,7 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import { useSimulationStore } from "../shared/utils/store";
+import { useSimulationStore } from "../../../shared/utils/store";
 import {
   Palette,
   Trash2,
@@ -16,8 +16,8 @@ import {
   Box,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import themes from "../shared/themes/color_palettes.json";
-import { getMenuOffset } from "../shared/utils/layout";
+import themes from "../../../shared/themes/color_palettes.json";
+import { getMenuOffset } from "../../../shared/utils/layout";
 
 interface RadialMenuProps {
   shapeId: string;
@@ -75,11 +75,10 @@ const MenuItem = React.memo(
         aria-label={label || "Menu Item"}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
-        className={`absolute w-40 h-40 -ml-20 -mt-20 rounded-full border flex flex-col items-center justify-center shadow-lg transition-all group will-change-transform ${
-          color
+        className={`absolute w-40 h-40 -ml-20 -mt-20 rounded-full border flex flex-col items-center justify-center shadow-lg transition-all group will-change-transform ${color
             ? "border-white/30 hover:scale-125 hover:border-white"
             : "bg-background border-text/20 text-text hover:bg-primary hover:text-background hover:border-accent"
-        }`}
+          }`}
         style={
           color
             ? { backgroundColor: color, boxShadow: `0 0 60px ${color}66` }
@@ -89,9 +88,8 @@ const MenuItem = React.memo(
         <div className="scale-[4]">{icon}</div>
         {label && (
           <span
-            className={`absolute left-1/2 -translate-x-1/2 text-[36px] font-bold uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap text-text drop-shadow-[0_0_10px_var(--background)] ${
-              y > 0 ? "-top-28" : "-bottom-28"
-            }`}
+            className={`absolute left-1/2 -translate-x-1/2 text-[36px] font-bold uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap text-text drop-shadow-[0_0_10px_var(--background)] ${y > 0 ? "-top-28" : "-bottom-28"
+              }`}
           >
             {label}
           </span>
@@ -309,11 +307,10 @@ export const RadialMenu: React.FC<RadialMenuProps> = ({ shapeId }) => {
         onPointerUp={handleTriggerPointerUp}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
-        className={`absolute w-40 h-40 -ml-20 -mt-20 rounded-full bg-background border-8 flex items-center justify-center transition-all duration-300 ${
-          isOpen || hovered
+        className={`absolute w-40 h-40 -ml-20 -mt-20 rounded-full bg-background border-8 flex items-center justify-center transition-all duration-300 ${isOpen || hovered
             ? "border-accent text-accent shadow-[0_20px_50px_rgba(0,0,0,0.4)]"
             : "border-text/20 text-text shadow-[0_20px_50px_rgba(0,0,0,0.4)]"
-        } z-20`}
+          } z-20`}
       >
         <div className="scale-[4]">
           {isOpen ? (

@@ -1,13 +1,17 @@
-import type { StructuralFace, StructuralRoomMetadata } from "./contract";
+import {
+  type StructuralFace,
+  type StructuralRoomMetadata,
+  sortedUnique
+} from "./contract";
 
-const uniqueSortedIds = (ids: Iterable<string>) => [...new Set(ids)].sort();
-
+/** @internal - Legacy test utility for beam graph validation */
 export const getCanonicalFaceBeamIds = (
   room: StructuralRoomMetadata,
   face: StructuralFace,
-) => uniqueSortedIds(room.canonicalFaces[face].beamIds);
+) => sortedUnique(room.canonicalFaces[face].beamIds);
 
+/** @internal - Legacy test utility for beam graph validation */
 export const getNeighborSharedWallBeamIds = (
   room: StructuralRoomMetadata,
   neighborRoomId: string,
-) => uniqueSortedIds(room.adjacency[neighborRoomId]?.sharedWallBeamIds ?? []);
+) => sortedUnique(room.adjacency[neighborRoomId]?.sharedWallBeamIds ?? []);

@@ -1,7 +1,7 @@
 import React from "react";
-import { useSimulationStore } from "../shared/utils/store";
+import { useSimulationStore } from "../../../shared/utils/store";
 import { Compass } from "lucide-react";
-import themes from "../shared/themes/color_palettes.json";
+import themes from "../../../shared/themes/color_palettes.json";
 
 export const CameraReadout: React.FC = () => {
   const cameraRotation = useSimulationStore((state) => state.cameraRotation);

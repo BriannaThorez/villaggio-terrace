@@ -2,10 +2,19 @@ import * as THREE from "three";
 
 export type RoomFace = "front" | "back" | "left" | "right" | "top" | "bottom";
 
-export type StructuralFace = "front" | "back" | "left" | "right";
+export type StructuralWallFace = "front" | "back" | "left" | "right";
 export type StructuralBoundary = "top" | "bottom";
 export type StructuralBoundaryRole = "ceiling" | "floor";
 export type OpeningKind = "door" | "window" | "cutaway";
+
+export const FACE_ORDER: RoomFace[] = [
+  "front",
+  "back",
+  "left",
+  "right",
+  "top",
+  "bottom",
+];
 
 export interface RoomShellDimensions {
   width: number;
@@ -63,13 +72,13 @@ export interface RoomStructuralSettings {
 
 export interface RoomValidationIssue {
   code:
-    | "invalid-dimensions"
-    | "invalid-opening"
-    | "opening-out-of-bounds"
-    | "opening-overlap"
-    | "invalid-zone"
-    | "completion-missing"
-    | "completion-mismatch";
+  | "invalid-dimensions"
+  | "invalid-opening"
+  | "opening-out-of-bounds"
+  | "opening-overlap"
+  | "invalid-zone"
+  | "completion-missing"
+  | "completion-mismatch";
   message: string;
   openingId?: string;
   zoneId?: string;
@@ -159,7 +168,7 @@ export const STRUCTURAL_FACE_TO_BOUNDARY: Record<
   bottom: "floor",
 };
 
-export const isStructuralFace = (face: RoomFace): face is StructuralFace =>
+export const isStructuralFace = (face: RoomFace): face is StructuralWallFace =>
   face === "front" || face === "back" || face === "left" || face === "right";
 
 export const isStructuralBoundary = (

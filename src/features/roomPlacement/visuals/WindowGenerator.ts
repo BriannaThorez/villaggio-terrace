@@ -1,4 +1,4 @@
-import * as THREE from "three";
+
 
 /**
  * Interface for CSG cutout definitions

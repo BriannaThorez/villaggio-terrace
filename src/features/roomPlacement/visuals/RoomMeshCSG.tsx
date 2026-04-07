@@ -41,7 +41,7 @@ const scaleBoxUVs = (geo: THREE.BoxGeometry) => {
     return geo;
 };
 
-export const RoomMeshCSG: React.FC<RoomMeshCSGProps> = ({
+const RoomMeshCSGInner: React.FC<RoomMeshCSGProps> = ({
     width,
     height,
     depth,
@@ -100,3 +100,23 @@ export const RoomMeshCSG: React.FC<RoomMeshCSGProps> = ({
         </group>
     );
 };
+
+/**
+ * Memoized CSG room shell renderer.
+ * Custom comparator prevents re-computation when parent re-renders
+ * without changing structural geometry props.
+ */
+export const RoomMeshCSG = React.memo(RoomMeshCSGInner, (prev, next) => {
+    return (
+        prev.width === next.width &&
+        prev.height === next.height &&
+        prev.depth === next.depth &&
+        prev.wallThickness === next.wallThickness &&
+        prev.material === next.material &&
+        prev.hasLeftWall === next.hasLeftWall &&
+        prev.hasRightWall === next.hasRightWall &&
+        prev.hasBackWall === next.hasBackWall &&
+        prev.cutouts === next.cutouts // Reference equality — parents must stabilize via useMemo
+    );
+});
+

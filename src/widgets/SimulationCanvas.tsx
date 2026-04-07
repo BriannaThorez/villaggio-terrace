@@ -9,6 +9,7 @@ import {
 import themes from "../shared/themes/color_palettes.json";
 import { Bloom, Noise, Vignette, N8AO } from "@react-three/postprocessing";
 import { HolographicFloors } from "../features/environment/HolographicFloors";
+import { HolographicHeightScale } from "../features/environment/HolographicHeightScale";
 import { GroundIndicatorPlane } from "../features/environment/components/GroundIndicatorPlane";
 import { SimulationNodes } from "../entities/SimulationNodes";
 import { InternetConnectivity } from "../features/roomPlacement/visuals/InternetConnectivity";
@@ -20,6 +21,7 @@ import {
   useSimulationStore,
   snapX,
   getPlacementCenterY,
+  getFloorBaseY,
 } from "../shared/utils/store";
 import * as THREE from "three";
 import { useRef, useEffect, useMemo, useState } from "react";
@@ -174,6 +176,7 @@ const CanvasScene = () => {
   const wasDraggingRef = useRef(false);
   const wasPanningRef = useRef(false);
   const pointerDownPos = useRef<[number, number] | null>(null);
+  const lastStampedCellKey = useRef<string | null>(null);
 
   const addShape = useSimulationStore((state) => state.addShape);
   const setActiveTool = useSimulationStore((state) => state.setActiveTool);
@@ -381,11 +384,12 @@ const CanvasScene = () => {
     };
   }, [editingId, selectedId, deleteShape, setSelectedId]);
 
-  const handleClick = (event: any) => {
+  const handleClick = (event: any, forceStamp?: boolean) => {
     if (
-      wasLinkingRef.current ||
-      wasDraggingRef.current ||
-      wasPanningRef.current
+      !forceStamp &&
+      (wasLinkingRef.current ||
+        wasDraggingRef.current ||
+        wasPanningRef.current)
     ) {
       wasLinkingRef.current = false;
       wasDraggingRef.current = false;
@@ -416,6 +420,8 @@ const CanvasScene = () => {
     }
 
     // Unify raycasting math for bit-for-bit placement parity (Industry leading finish)
+    // Unify raycasting math for bit-for-bit placement parity (Industry leading finish)
+    // We ALWAYS re-calculate the intersection against the Z=0 plane to prevent perspective/depth-plane drift
     raycaster.setFromCamera(pointer, camera);
     const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
     const intersectPoint = new THREE.Vector3();
@@ -617,8 +623,30 @@ const CanvasScene = () => {
       }
     }
 
-    if (e.point) {
-      // Stamping logic removed to enforce single-click placement
+    if (e.nativeEvent.buttons === 1) {
+      const isStampableTool = activeTool === "lobby" || activeTool === "structure";
+      if (isStampableTool && !currentIsPanning && !currentIsRotating && !currentLinkingFrom) {
+        // Unify raycasting math for bit-for-bit placement parity (Industry leading finish)
+        raycaster.setFromCamera(pointer, camera);
+        const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+        const intersectPoint = new THREE.Vector3();
+        raycaster.ray.intersectPlane(plane, intersectPoint);
+
+        if (intersectPoint) {
+          // Continuous row construction (SimTower style sequential placement)
+          // We use a cell key to prevent double-stamping in the same grid spot during the move
+          const snappedX = Math.round(intersectPoint.x / 10) * 10;
+          const snappedY = activeTool === "lobby" ? 0 : getFloorBaseY(intersectPoint.y);
+          const cellKey = `${snappedX}:${snappedY}:${activeTool}`;
+
+          if (lastStampedCellKey.current !== cellKey) {
+            lastStampedCellKey.current = cellKey;
+            handleClick(e, true);
+          }
+        }
+      }
+    } else if (e.nativeEvent.buttons === 0) {
+      lastStampedCellKey.current = null;
     }
 
     const zoom = (camera as THREE.OrthographicCamera).zoom;
@@ -815,7 +843,7 @@ const CanvasScene = () => {
         dampingFactor={0.1}
         enabled={!isDragging && !linkingFrom && !isRotating && !isPanning}
         mouseButtons={{
-          LEFT: THREE.MOUSE.PAN,
+          LEFT: activeTool === "select" ? THREE.MOUSE.PAN : undefined as any,
           MIDDLE: THREE.MOUSE.ROTATE,
           RIGHT: THREE.MOUSE.PAN,
         }}
@@ -882,12 +910,14 @@ const CanvasScene = () => {
       />
 
       <HolographicFloors />
+      <HolographicHeightScale />
 
       <mesh
         position={[0, 0, -150]}
         onPointerUp={handlePointerUp}
         onPointerDown={handlePointerDown}
         onClick={handleClick}
+        onPointerMove={handlePointerMove}
       >
         <planeGeometry args={[4000, 4000]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />

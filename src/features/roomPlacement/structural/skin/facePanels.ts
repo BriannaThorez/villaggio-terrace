@@ -1,6 +1,5 @@
 import type {
   StructuralFace,
-  StructuralFaceBounds,
   StructuralFaceCutout,
   StructuralRoomMetadata,
 } from "../graph";
@@ -9,36 +8,7 @@ const FRONT_FACE_Z = 0;
 const BACK_FACE_Z = 0;
 const FLOOR_Y = 0;
 
-export const buildRoomFaceBounds = (
-  room: StructuralRoomMetadata,
-  face: StructuralFace,
-): StructuralFaceBounds => {
-  const halfWidth = room.dimensions.width / 2;
-  const halfDepth = room.dimensions.depth / 2;
-  const floorY = 0;
-  const ceilingY = room.dimensions.height;
 
-  switch (face) {
-    case "front":
-    case "back":
-      return {
-        min: [-halfWidth, floorY],
-        max: [halfWidth, ceilingY],
-      };
-    case "left":
-    case "right":
-      return {
-        min: [-halfDepth, floorY],
-        max: [halfDepth, ceilingY],
-      };
-    case "ceiling":
-    case "floor":
-      return {
-        min: [-halfWidth, -halfDepth],
-        max: [halfWidth, halfDepth],
-      };
-  }
-};
 
 export const buildCutoutOutlinePoints = (
   room: StructuralRoomMetadata,

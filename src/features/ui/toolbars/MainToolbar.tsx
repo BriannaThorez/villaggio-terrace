@@ -1,6 +1,6 @@
 import {
   useSimulationStore,
-} from "../shared/utils/store";
+} from "../../../shared/utils/store";
 import {
   Menu01Icon,
   FlashIcon,
@@ -15,10 +15,10 @@ import {
   KeyboardIcon
 } from "hugeicons-react";
 import { Droplet, Map } from "lucide-react";
-import { SmartTooltip } from "../shared/components/SmartTooltip";
-import { generateSVG } from "../shared/utils/svgExport";
+import { SmartTooltip } from "../../../shared/components/SmartTooltip";
+import { generateSVG } from "../../../shared/utils/svgExport";
 import React, { useState, createElement } from "react";
-import themes from "../shared/themes/color_palettes.json";
+import themes from "../../../shared/themes/color_palettes.json";
 
 const GUI_SPACING_REM = 0.375;
 const GUI_CONTAINER_PADDING_REM = GUI_SPACING_REM * 2;

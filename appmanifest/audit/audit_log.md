@@ -154,14 +154,22 @@ Every file in `src/features/roomPlacement` was read in full. Every exported symb
 
 ---
 
-## Cross-Reference Summary
+---
 
-| Consumer | Producers |
-|----------|-----------|
-| `ResidentialRoom.tsx` | `RoomMeshCSG`, `RoomSkin`, `buildRoomShellGeometry`, `computeSnappedWorldOffset`, `PlacementHologram` |
-| `EmptyFloorRoom.tsx` | `RoomMeshCSG`, `WindowGenerator`, `parseMaterial` |
-| `SimulationNodes.tsx` | `EmptyFloorRoom`, `RoomMeshCSG` |
-| `SimulationCanvas.tsx` | `InternetConnectivity` |
-| `RoomSkin.tsx` | `buildCutoutOutlinePoints` from `facePanels.ts` |
-| Tests only | `getCanonicalFaceBeamIds`, `getNeighborSharedWallBeamIds` |
-| Zero consumers | `buildRoomFaceBounds`, `deriveRoomPlacementZones`, `deriveRoomAnchors`, `deriveRoomValidationOverlay`, `buildRoomStructuralLayout`, `sharedGeometries` |
+## Phase 0 Execution Summary (Purge Complete)
+
+**Date**: 2026-04-06  
+**Status**: ✅ COMPLETE  
+**Impact**: ~850 lines removed. Zero production breakage.
+
+### Actions Taken:
+1. **[ResidentialRoom]**: Removed orphaned `sharedGeometries` and `roomGeometry` construction path. CSG is now the sole renderer.
+2. **[RoomSkin]**: Stripped all dead material/texture allocations. Removed unused props. Component is now strictly a thin overlay.
+3. **[Geometry/index.ts]**: Purged 600+ lines of dead exports and helpers related to legacy shell geometry.
+4. **[Cleanup]**: Deleted empty `structural/components/` and `objects/` directories. Resolved unused imports in utilities.
+5. **[Annotation]**: Marked test-only helpers as `@internal` to prevent accidental production use.
+
+### Current State:
+The `roomPlacement` feature slice is now "lean and mean". The hot path in `SimulationNodes` no longer allocates redundant hidden meshes or materials, reducing memory pressure during room dragging.
+
+---
