@@ -1,0 +1,31 @@
+Debugger listening on ws://127.0.0.1:58523/88678931-9295-4e43-a6be-e19c0cbdd3d6
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger attached.
+Debugger listening on ws://127.0.0.1:57906/b49e92e2-c604-4fc3-aa9d-2e6441a53192
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger attached.
+src/engine/MaterialParser.ts(60,5): error TS1117: An object literal cannot have multiple properties with the same name.
+src/engine/MaterialParser.ts(61,5): error TS1117: An object literal cannot have multiple properties with the same name.
+src/entities/SimulationNodes.tsx(797,43): error TS2367: This comparison appears to be unintentional because the types '"residential" | "box" | "diamond" | "circle" | "parallelogram" | "cylinder" | "document" | "hexagon" | "trapezoid" | "terminal" | "predefined_process" | "internal_storage" | ... 12 more ... | "empty_floor"' and '"select"' have no overlap.
+src/features/environment/HolographicFloors.tsx(35,25): error TS2322: Type '{ children: string; position: [number, number, number]; color: string; fontSize: number; anchorX: "left"; anchorY: "bottom"; fillOpacity: number; depthTest: boolean; letterSpacing: number; }' is not assignable to type 'IntrinsicAttributes & Omit<Mutable<Overwrite<Partial<Overwrite<Mesh<BufferGeometry<NormalBufferAttributes, BufferGeometryEventMap>, Material | Material[], Object3DEventMap>, MathProps<...> & ... 1 more ... & Partial<...>>>, Omit<...>>>, "ref"> & { ...; } & RefAttributes<...>'.
+  Property 'depthTest' does not exist on type 'IntrinsicAttributes & Omit<Mutable<Overwrite<Partial<Overwrite<Mesh<BufferGeometry<NormalBufferAttributes, BufferGeometryEventMap>, Material | Material[], Object3DEventMap>, MathProps<...> & ... 1 more ... & Partial<...>>>, Omit<...>>>, "ref"> & { ...; } & RefAttributes<...>'.
+src/features/roomPlacement/constraints/placementRules.ts(1,10): error TS2724: '"../../../entities/SimulationNodes"' has no exported member named 'SimulationNode'. Did you mean 'SimulationNodes'?
+src/features/roomPlacement/constraints/structuralIntegrity.ts(1,10): error TS2724: '"../../../entities/SimulationNodes"' has no exported member named 'SimulationNode'. Did you mean 'SimulationNodes'?
+src/features/roomPlacement/structural/graph/cellBeamGraph.test.ts(32,3): error TS2353: Object literal may only specify known properties, and 'structuralSettings' does not exist in type 'SimulationNode'.
+src/features/roomPlacement/visuals/InternetConnectivity.tsx(10,69): error TS2367: This comparison appears to be unintentional because the types '"residential" | "box" | "diamond" | "circle" | "parallelogram" | "cylinder" | "document" | "hexagon" | "trapezoid" | "terminal" | "predefined_process" | "internal_storage" | ... 12 more ... | "empty_floor"' and '"floor"' have no overlap.
+src/features/textures/lib/gpu/index.ts(19,3): error TS2322: Type 'TextureFilter' is not assignable to type 'MagnificationTextureFilter'.
+  Type '1004' is not assignable to type 'MagnificationTextureFilter'.
+src/shared/utils/store.ts(344,46): error TS2304: Cannot find name 'CheckPlacementPayload'.
+src/shared/utils/store.ts(344,69): error TS2304: Cannot find name 'CheckPlacementResult'.
+src/shared/utils/store.ts(350,21): error TS2339: Property 'isValid' does not exist on type 'WorkerPoolTaskHandle<CheckPlacementResult>'.
+src/widgets/MainToolbar.tsx(233,35): error TS2345: Argument of type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to parameter of type '{ (props: Omit<HugeiconsIconProps, "icon">): Element; displayName: string; }'.
+  Property 'displayName' is optional in type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' but required in type '{ (props: Omit<HugeiconsIconProps, "icon">): Element; displayName: string; }'.
+src/worker/pool.ts(184,5): error TS2322: Type '(role: WorkerRole) => Worker' is not assignable to type '() => Worker'.
+  Target signature provides too few arguments. Expected 1 or more, but got 0.
+src/worker/pool.ts(327,39): error TS2554: Expected 0 arguments, but got 1.
+src/worker/runtime.ts(536,34): error TS2339: Property 'location' does not exist on type 'DedicatedWorkerGlobalScope'.
+src/worker/runtime.ts(537,52): error TS2339: Property 'location' does not exist on type 'DedicatedWorkerGlobalScope'.
+src/worker/verification.test.ts(29,40): error TS2339: Property 'checkPlacementAuthoritative' does not exist on type 'SimulationState'.
+src/worker/verification.test.ts(34,38): error TS2339: Property 'checkPlacementAuthoritative' does not exist on type 'SimulationState'.
+Waiting for the debugger to disconnect...
+Waiting for the debugger to disconnect...

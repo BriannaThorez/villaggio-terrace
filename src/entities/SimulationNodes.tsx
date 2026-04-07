@@ -23,6 +23,7 @@ import {
   type StructuralShape,
 } from "../features/roomPlacement/structural/graph";
 import { parseMaterial } from "../engine/MaterialParser";
+import { EmptyFloorRoom } from "../features/roomPlacement/emptyFloor/EmptyFloorRoom";
 
 type RenderShape = StructuralShape<SimulationNode>;
 
@@ -248,6 +249,34 @@ export const SimulationNodes = () => {
   const portMeshRef = useRef<THREE.InstancedMesh>(null);
   const materialRef = useRef<any>(null);
   const { size } = useThree();
+
+  // Ensure all structures have an empty floor or a real room.
+  useEffect(() => {
+    const unpopulatedStructures = useSimulationStore.getState().shapes.filter(s => {
+      if (s.type !== 'structure') return false;
+      const hasRoom = useSimulationStore.getState().shapes.some(other =>
+        other.type !== 'structure' &&
+        Math.abs(other.position[0] - s.position[0]) < 0.1 &&
+        Math.abs(other.position[1] - s.position[1]) < 0.1
+      );
+      return !hasRoom;
+    });
+
+    if (unpopulatedStructures.length > 0) {
+      setTimeout(() => {
+        unpopulatedStructures.forEach(str => {
+          useSimulationStore.getState().addShape({
+            id: `empty_floor_${Math.random().toString(36).substr(2, 9)}`,
+            type: 'empty_floor',
+            position: [...str.position],
+            size: [...str.size],
+            vertices: [...str.vertices],
+            name: "Empty Floor"
+          }, true, true);
+        });
+      }, 0);
+    }
+  }, []);
   const themeName = useSimulationStore((state) => state.themeName);
 
   // Reusable THREE objects to avoid GC pressure in hot loops
@@ -342,6 +371,7 @@ export const SimulationNodes = () => {
         "lobby",
         "elevator",
         "structure",
+        "empty_floor",
       ].includes(shape.type);
 
       if (isRoom) {
@@ -488,7 +518,7 @@ export const SimulationNodes = () => {
   const blendablePositions = useMemo(() => {
     const set = new Set<string>();
     renderedShapes.forEach((s) => {
-      const allRoomTypes = ["residential", "commercial", "office", "utility", "lobby", "elevator", "structure"];
+      const allRoomTypes = ["residential", "commercial", "office", "utility", "lobby", "elevator", "structure", "empty_floor"];
       if (allRoomTypes.includes(s.type)) {
         set.add(`${Math.round(s.position[0])},${Math.round(s.position[1])}`);
       }
@@ -650,6 +680,8 @@ export const SimulationNodes = () => {
               <SelectionIndicator shape={shape} />
             )}
 
+
+
             {/* Room Rendering */}
             {[
               "residential",
@@ -658,9 +690,10 @@ export const SimulationNodes = () => {
               "utility",
               "lobby",
               "elevator",
+              "empty_floor",
             ].includes(shape.type) &&
               (() => {
-                const allBlendableTypes = ["lobby", "structure"];
+                const allBlendableTypes = ["lobby", "structure", "empty_floor"];
 
                 let hasLeftWall = true;
                 let hasRightWall = true;
@@ -670,9 +703,10 @@ export const SimulationNodes = () => {
                   const y = Math.round(shape.position[1]);
                   const w = shape.size[0] / 2;
 
-                  // Check various neighbor center offsets (5 for 10w, 20 for 40w, etc)
-                  const leftNeighborCenters = [x - w - 5, x - w - 20, x - w - 40];
-                  const rightNeighborCenters = [x + w + 5, x + w + 20, x + w + 40];
+                  // Check various neighbor center offsets exactly matching valid block half-widths
+                  const neighborHalfWidths = [5, 10, 15, 20, 25, 30, 35, 40];
+                  const leftNeighborCenters = neighborHalfWidths.map(diff => x - w - diff);
+                  const rightNeighborCenters = neighborHalfWidths.map(diff => x + w + diff);
 
                   if (leftNeighborCenters.some(c => blendablePositions.has(`${Math.round(c)},${y}`))) {
                     hasLeftWall = false;
@@ -683,13 +717,42 @@ export const SimulationNodes = () => {
                 }
 
                 // Explicit graph override (Industry Leading Accuracy)
-                if (["lobby", "structure"].includes(shape.type)) {
+                if (["lobby", "structure", "empty_floor"].includes(shape.type)) {
                   if (shape.structuralRoom?.canonicalFaces.left.adjacentRoomIds.length) {
                     hasLeftWall = false;
                   }
                   if (shape.structuralRoom?.canonicalFaces.right.adjacentRoomIds.length) {
                     hasRightWall = false;
                   }
+                }
+
+                if (shape.type === "empty_floor") {
+                  return (
+                    <EmptyFloorRoom
+                      id={shape.id}
+                      position={[0, 0, 0]}
+                      rotation={0}
+                      width={shape.size[0]}
+                      height={shape.size[1]}
+                      depth={40}
+                      hasLeftWall={hasLeftWall}
+                      hasRightWall={hasRightWall}
+                      onPointerDown={(e) => {
+                        if (!isSelectionMode) return;
+                        e.stopPropagation();
+                        // Movement interactions are intentionally disabled for now.
+                        // Keep this selection binding so move behavior can be re-enabled later.
+                        handleNodePointerDown(e, shape.id);
+                      }}
+                      onDoubleClick={(e) => {
+                        if (!isSelectionMode) return;
+                        e.stopPropagation();
+                        // Movement interactions are intentionally disabled for now.
+                        // This hook remains so future node move/edit interactions can be restored.
+                        handleNodeDoubleClick(e, shape.id);
+                      }}
+                    />
+                  );
                 }
 
                 return (
@@ -774,18 +837,19 @@ export const SimulationNodes = () => {
                     depth={40}
                     wallThickness={0.25}
                     material={scaffoldMat}
+                    hasBackWall={false}
                     hasLeftWall={(() => {
                       const x = Math.round(shape.position[0]);
                       const y = Math.round(shape.position[1]);
                       const w = shape.size[0] / 2;
-                      const leftCenters = [x - w - 5, x - w - 20, x - w - 40];
+                      const leftCenters = [5, 10, 15, 20, 25, 30, 35, 40].map(diff => x - w - diff);
                       return !leftCenters.some(c => blendablePositions.has(`${Math.round(c)},${y}`));
                     })()}
                     hasRightWall={(() => {
                       const x = Math.round(shape.position[0]);
                       const y = Math.round(shape.position[1]);
                       const w = shape.size[0] / 2;
-                      const rightCenters = [x + w + 5, x + w + 20, x + w + 40];
+                      const rightCenters = [5, 10, 15, 20, 25, 30, 35, 40].map(diff => x + w + diff);
                       return !rightCenters.some(c => blendablePositions.has(`${Math.round(c)},${y}`));
                     })()}
                   />

@@ -42,6 +42,7 @@ export const validatePlacement = (
     for (const s2 of allShapes) {
         if (s2.id === ignoreId) continue;
         if (s2.type === "structure") continue;
+        if (type !== 'empty_floor' && s2.type === "empty_floor") continue;
 
         const w2 = s2.size[0];
         const h2 = s2.size[1];

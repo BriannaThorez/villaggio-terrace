@@ -39,6 +39,7 @@ const ROOM_NODE_TYPES = new Set<SimulationNodeType>([
   "utility",
   "lobby",
   "elevator",
+  "empty_floor",
 ]);
 
 const ROOM_DEPTH = 40;
@@ -360,13 +361,13 @@ const buildFramingBeamsForOpening = (
   const pointsForFace =
     face === "front" || face === "back"
       ? {
-          map: (u: number, v: number): [number, number, number] =>
-            toBeamPoint3(u, v, planePosition),
-        }
+        map: (u: number, v: number): [number, number, number] =>
+          toBeamPoint3(u, v, planePosition),
+      }
       : {
-          map: (u: number, v: number): [number, number, number] =>
-            toBeamPoint3(planePosition, v, u),
-        };
+        map: (u: number, v: number): [number, number, number] =>
+          toBeamPoint3(planePosition, v, u),
+      };
 
   const beams: StructuralBeam[] = [
     buildOpeningBeam(

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo } from "react";
 import * as THREE from "three";
+import { Text } from "@react-three/drei";
 import { parseMaterial } from "../../../../engine/MaterialParser";
 import { buildRoomShellGeometry } from "../../structural/geometry";
 import { RoomSkin } from "../../structural/skin/RoomSkin";
@@ -178,8 +179,21 @@ export const ResidentialRoom: React.FC<ResidentialRoomProps> = ({
           castShadow
           receiveShadow
         >
-          <boxGeometry args={[10, 5, 10]} />
+          <boxGeometry args={[8, 2, 6]} />
           <meshStandardMaterial color="#FF5F1F" roughness={0.8} />
+          {/* Pillow */}
+          <mesh position={[2.5, 1.2, 0]}>
+            <boxGeometry args={[2, 0.5, 4]} />
+            <meshStandardMaterial color="#FFE5B4" roughness={0.9} />
+          </mesh>
+          <Text
+            position={[0, 1.5, 0]}
+            fontSize={0.8}
+            color="white"
+            anchorX="center"
+          >
+            BED
+          </Text>
         </mesh>
       </group>
     </group>
