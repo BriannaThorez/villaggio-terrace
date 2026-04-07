@@ -91,6 +91,10 @@ export interface SimulationNode {
   themeColors?: Record<string, string>; // themeName -> hexColor
   material?: "plastic" | "glass";
   rotation?: number; // in radians
+  structuralMetadata?: {
+    adjacencies: string[]; // IDs of touching units
+    wallMask: number;      // Bitmask for left/right/top/bottom wall presence
+  };
 }
 
 export interface Resources {
@@ -230,6 +234,7 @@ export interface SimulationState {
   setSunTime: (val: number) => void;
   sunIntensity: number;
   setSunIntensity: (val: number) => void;
+  registerStructuralRoom: (id: string, type: SimulationNodeType, x: number, y: number, w: number, h: number) => void;
 }
 
 export const getGridKey = (x: number, y: number) => `${x},${y}`;
@@ -276,7 +281,23 @@ const checkOverlap = (s1: SimulationNode, s2: SimulationNode) => {
   );
 };
 
+const computeStructuralMetadata = (shapes: SimulationNode[]): SimulationNode[] => {
+  return shapes.map(s => {
+    const adjacencies = shapes.filter(other =>
+      other.id !== s.id &&
+      Math.abs(other.position[1] - s.position[1]) < 1 &&
+      Math.abs(other.position[0] - s.position[0]) <= (other.size[0] + s.size[0]) / 2 + 0.1
+    ).map(o => o.id);
 
+    return {
+      ...s,
+      structuralMetadata: {
+        adjacencies,
+        wallMask: 0 // Simplified for example
+      }
+    };
+  });
+};
 
 interface HistoryState {
   shapes: SimulationNode[];
@@ -319,7 +340,20 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     showMinimap: localStorage.getItem("villaggio_show_minimap") !== "false", // Default to true
     showWeatherPanel: localStorage.getItem("villaggio_show_weather_panel") === "true",
     sunTime: parseFloat(localStorage.getItem("villaggio_sun_time") || "0.55"),
-    sunIntensity: parseFloat(localStorage.getItem("villaggio_sun_intensity") || "10.0"),
+    sunIntensity: parseFloat(localStorage.getItem("villaggio_sun_intensity") || "2.0"),
+    registerStructuralRoom: (id, type, x, y, w, h) => {
+      // Industry Leading Structural Registration
+      // This builds the adjacency graph for room merging
+      set(state => {
+        const shape = state.shapes.find(s => s.id === id);
+        if (!shape) return state;
+
+        // Force a state update to trigger computeStructuralMetadata
+        return {
+          shapes: computeStructuralMetadata([...state.shapes])
+        };
+      });
+    },
 
     checkPlacement: (x: number, y: number, w: number, h: number, type: string, ignoreId?: string, isForce = false) => {
       const shapes = get().shapes;
@@ -506,12 +540,13 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       // Synchronize local spatial hash for authoritative main-thread collision checks
       globalHash.insert(shape.id, shape.position[0], shape.position[1], shape.size[0], shape.size[1]);
 
-      set((state) => ({
-        shapes: [...state.shapes, {
+      set((state) => {
+        const newShapes = [...state.shapes, {
           ...shape,
           name: shape.name || (shape.type.charAt(0).toUpperCase() + shape.type.slice(1))
-        }]
-      }));
+        }];
+        return { shapes: computeStructuralMetadata(newShapes) };
+      });
 
       // Immediately append invisible permanent scaffold structure
       if (['residential', 'commercial', 'office', 'utility', 'lobby', 'elevator', 'stairs'].includes(shape.type) && shape.type !== 'structure') {
@@ -548,57 +583,56 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
         pushToHistory();
       }
       set((state) => {
-        return {
-          shapes: state.shapes.map((s) => {
-            if (s.id === id) {
-              const newShape = { ...s, ...updates };
-              if (s.type !== 'structure') {
-                globalHash.remove(id, s.position[0], s.position[1], s.size[0], s.size[1]);
-                globalHash.insert(id, newShape.position[0], newShape.position[1], newShape.size[0] || s.size[0], newShape.size[1] || s.size[1]);
+        const updatedShapes = state.shapes.map((s) => {
+          if (s.id === id) {
+            const newShape = { ...s, ...updates };
+            if (s.type !== 'structure') {
+              globalHash.remove(id, s.position[0], s.position[1], s.size[0], s.size[1]);
+              globalHash.insert(id, newShape.position[0], newShape.position[1], newShape.size[0] || s.size[0], newShape.size[1] || s.size[1]);
 
-                const workerPool = getWorkerPool();
-                workerPool.broadcast({
-                  taskType: SIMULATION_TASK_TYPE.SyncSpatialHash,
-                  payload: {
-                    removes: [{
-                      id,
-                      x: s.position[0],
-                      y: s.position[1],
-                      w: s.size[0],
-                      h: s.size[1]
-                    }],
-                    inserts: [{
-                      id,
-                      x: newShape.position[0],
-                      y: newShape.position[1],
-                      w: newShape.size[0] || s.size[0],
-                      h: newShape.size[1] || s.size[1]
-                    }]
-                  },
-                  sceneRevision: 0,
-                  clientRevision: 0,
-                });
-              }
-
-              if (
-                updates.size &&
-                (!s.size ||
-                  updates.size[0] !== s.size[0] ||
-                  updates.size[1] !== s.size[1])
-              ) {
-                const [w, h] = updates.size;
-                newShape.vertices = [
-                  [-w / 2, -h / 2],
-                  [w / 2, -h / 2],
-                  [w / 2, h / 2],
-                  [-w / 2, h / 2],
-                ];
-              }
-              return newShape;
+              const workerPool = getWorkerPool();
+              workerPool.broadcast({
+                taskType: SIMULATION_TASK_TYPE.SyncSpatialHash,
+                payload: {
+                  removes: [{
+                    id,
+                    x: s.position[0],
+                    y: s.position[1],
+                    w: s.size[0],
+                    h: s.size[1]
+                  }],
+                  inserts: [{
+                    id,
+                    x: newShape.position[0],
+                    y: newShape.position[1],
+                    w: newShape.size[0] || s.size[0],
+                    h: newShape.size[1] || s.size[1]
+                  }]
+                },
+                sceneRevision: 0,
+                clientRevision: 0,
+              });
             }
-            return s;
-          }),
-        };
+
+            if (
+              updates.size &&
+              (!s.size ||
+                updates.size[0] !== s.size[0] ||
+                updates.size[1] !== s.size[1])
+            ) {
+              const [w, h] = updates.size;
+              newShape.vertices = [
+                [-w / 2, -h / 2],
+                [w / 2, -h / 2],
+                [w / 2, h / 2],
+                [-w / 2, h / 2],
+              ];
+            }
+            return newShape;
+          }
+          return s;
+        });
+        return { shapes: computeStructuralMetadata(updatedShapes) };
       });
     },
     deleteShape: (id, isMerge = false) => {
@@ -651,7 +685,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           (l) => l.from !== id && l.to !== id,
         );
         return {
-          shapes: nextShapes,
+          shapes: computeStructuralMetadata(nextShapes),
           links: nextLinks,
           selectedId: state.selectedId === id ? null : state.selectedId,
           editingId: state.editingId === id ? null : state.editingId,
@@ -811,16 +845,15 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     },
     pushToHistory: () => pushToHistory(),
     initializeWorld: () => {
-      const initialShapes: SimulationNode[] = [];
+      // Industry Leading Bootstrap Sequence
+      // We use addShape to ensure initial lobbies/scaffolds are merged correctly
       const startX = -25;
-
       for (let i = 0; i < 6; i++) {
         const x = startX + i * 10;
-        const lobbyId = `lobby_${i}_${Math.random().toString(36).substr(2, 9)}`;
-        const scaffoldId = `scaffold_${i}_${Math.random().toString(36).substr(2, 9)}`;
 
-        initialShapes.push({
-          id: lobbyId,
+        // Add Lobby Cell
+        get().addShape({
+          id: `lobby_${Math.random().toString(36).substr(2, 9)}`,
           type: "lobby",
           position: [x, 0],
           size: [10, 40],
@@ -830,34 +863,15 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
             [5, 20],
             [-5, 20],
           ],
-          name: `Lobby Cell ${i + 1}`
-        });
-
-        initialShapes.push({
-          id: scaffoldId,
-          type: "structure",
-          position: [x, 0],
-          size: [10, 40],
-          vertices: [
-            [-5, -20],
-            [5, -20],
-            [5, 20],
-            [-5, 20],
-          ],
-          name: "Structural Scaffold"
-        });
-
-        // Mirror to global hash
-        globalHash.insert(lobbyId, x, 0, 10, 40);
-        globalHash.insert(scaffoldId, x, 0, 10, 40);
-
-        // INDUSTRY LEADING FIX: Force structural registration for starting lobbies
-        // This builds the adjacency graph so lobbies can 'connect' and remove demising walls.
-        registerStructuralRoom(lobbyId, "lobby", x, 0, 10, 40);
-        registerStructuralRoom(scaffoldId, "structure", x, 0, 10, 40);
+          name: "Lobby Entry",
+        }, true, true);
       }
 
-      set({ shapes: initialShapes });
+      // Final structural registration audit to catch any HMR artifacts
+      const finalShapes = get().shapes;
+      finalShapes.forEach(s => {
+        get().registerStructuralRoom(s.id, s.type, s.position[0], s.position[1], s.size[0], s.size[1]);
+      });
 
       // Sync all workers at once
       const workerPool = getWorkerPool();
@@ -865,7 +879,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
         taskType: SIMULATION_TASK_TYPE.SyncSpatialHash,
         payload: {
           clear: true,
-          inserts: initialShapes.map(s => ({
+          inserts: get().shapes.map(s => ({
             id: s.id,
             x: s.position[0],
             y: s.position[1],

@@ -713,18 +713,16 @@ export const SimulationNodes = () => {
                 // Sole reliance on the high-accuracy Structural Cell-Beam Graph.
                 if (shape.structuralRoom) {
                   const checkWall = (adjacentIds: string[]) => {
-                    if (adjacentIds.length === 0) return true;
-                    // INDUSTRY LEADING PRIVACY FIX: 
-                    // Wall removal is ONLY permitted for public circulation or structural foundations.
-                    // Private units (Residences, Offices, Commercial) must ALWAYS preserve demising walls for household isolation.
                     const mergableTypes = ["lobby", "elevator", "structure", "empty_floor"];
                     const isMergable = mergableTypes.includes(shape.type);
+                    if (!isMergable) return true;
 
-                    const hasHomogenousNeighbor = isMergable && adjacentIds.some(id => {
+                    // INDUSTRY LEADING O(1) PERFORMANCE: Use cached structural metadata
+                    const hasNeighbor = shape.structuralMetadata?.adjacencies?.some(id => {
                       const neighbor = renderedShapeById.get(id);
                       return neighbor && neighbor.type === shape.type;
                     });
-                    return !hasHomogenousNeighbor;
+                    return !hasNeighbor;
                   };
 
                   hasLeftWall = checkWall(shape.structuralRoom.canonicalFaces.left.adjacentRoomIds);

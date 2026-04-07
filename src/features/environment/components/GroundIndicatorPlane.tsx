@@ -37,42 +37,25 @@ export const GroundIndicatorPlane: React.FC<GroundIndicatorPlaneProps> = ({
     0,
     position[2],
   ];
-  const textureSet = useMemo(
-    () =>
-      createGrassIndicatorTextureSet({
-        size: 1024,
-        seed,
-        repeat: Math.max(1, Math.round(Math.max(width, depth) / 32)),
-        variant: "soft",
-        baseColor: "#1a1612", // Deep soil brown
-        bladeColor: "#2a221a", // Earth tones
-        accentColor: "#221a14",
-      }),
-    [depth, seed, width],
-  );
-
   const material = useMemo(() => {
     const mat = new THREE.MeshPhysicalMaterial({
-      color: "#241d18", // Dark dirt brown
-      roughness: 1.0, // Absolute matte
-      metalness: 0.0,
-      sheen: 1.0, // Adds soft matte glow for 'frosted' look
-      sheenRoughness: 1.0,
-      sheenColor: "#45382d", // Subdued highlight
+      color: "#3d2b1f", // Rich Dark Brown (Chocolate)
+      roughness: 0.8, // Frost the surface
+      metalness: 0.0, // Subdued reflection
+      ior: 1.4,
+      transmission: 0,
+      clearcoat: 0.5, // Subtle architectural glow
+      clearcoatRoughness: 0.9,
+      thickness: 2,
+      envMapIntensity: 0.2, // Avoid excessive sheen
       transparent: false,
       opacity: 1.0,
       depthWrite: true,
       side: THREE.FrontSide,
-      map: textureSet.diffuse,
-      normalMap: textureSet.normal,
-      bumpMap: textureSet.bump,
-      bumpScale: 0.4, // Increased for micro-texture frosting
-      normalScale: new THREE.Vector2(0.8, 0.8), // Smoother transition
-      envMapIntensity: 0.0, // Reject environment reflections
     });
     mat.toneMapped = true;
     return mat;
-  }, [textureSet.bump, textureSet.diffuse, textureSet.normal]);
+  }, []);
 
   return (
     <mesh
