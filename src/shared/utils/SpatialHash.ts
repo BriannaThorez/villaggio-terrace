@@ -18,14 +18,19 @@ export class SpatialHash {
   }
 
   insert(id: string, x: number, y: number, width: number, height: number) {
-    const startX = x - width / 2;
-    const startY = y - height / 2;
-    const endX = x + width / 2;
-    const endY = y + height / 2;
+    const minX = x - width / 2;
+    const minY = y - height / 2;
+    const maxX = x + width / 2;
+    const maxY = y + height / 2;
 
-    for (let ix = startX; ix <= endX + this.cellSize; ix += this.cellSize) {
-      for (let iy = startY; iy <= endY + this.cellSize; iy += this.cellSize) {
-        const hash = this.getHash(Math.min(ix, endX), Math.min(iy, endY));
+    const startCX = Math.floor(minX / this.cellSize);
+    const endCX = Math.floor(maxX / this.cellSize);
+    const startCY = Math.floor(minY / this.cellSize);
+    const endCY = Math.floor(maxY / this.cellSize);
+
+    for (let cx = startCX; cx <= endCX; cx++) {
+      for (let cy = startCY; cy <= endCY; cy++) {
+        const hash = `${cx},${cy}`;
         if (!this.grid.has(hash)) {
           this.grid.set(hash, new Set());
         }
@@ -35,14 +40,19 @@ export class SpatialHash {
   }
 
   remove(id: string, x: number, y: number, width: number, height: number) {
-    const startX = x - width / 2;
-    const startY = y - height / 2;
-    const endX = x + width / 2;
-    const endY = y + height / 2;
+    const minX = x - width / 2;
+    const minY = y - height / 2;
+    const maxX = x + width / 2;
+    const maxY = y + height / 2;
 
-    for (let ix = startX; ix <= endX + this.cellSize; ix += this.cellSize) {
-      for (let iy = startY; iy <= endY + this.cellSize; iy += this.cellSize) {
-        const hash = this.getHash(Math.min(ix, endX), Math.min(iy, endY));
+    const startCX = Math.floor(minX / this.cellSize);
+    const endCX = Math.floor(maxX / this.cellSize);
+    const startCY = Math.floor(minY / this.cellSize);
+    const endCY = Math.floor(maxY / this.cellSize);
+
+    for (let cx = startCX; cx <= endCX; cx++) {
+      for (let cy = startCY; cy <= endCY; cy++) {
+        const hash = `${cx},${cy}`;
         const cell = this.grid.get(hash);
         if (cell) {
           cell.delete(id);
@@ -56,17 +66,24 @@ export class SpatialHash {
 
   query(x: number, y: number, width: number, height: number): Set<string> {
     const result = new Set<string>();
-    const startX = x - width / 2;
-    const startY = y - height / 2;
-    const endX = x + width / 2;
-    const endY = y + height / 2;
+    const minX = x - width / 2;
+    const minY = y - height / 2;
+    const maxX = x + width / 2;
+    const maxY = y + height / 2;
 
-    for (let ix = startX; ix <= endX + this.cellSize; ix += this.cellSize) {
-      for (let iy = startY; iy <= endY + this.cellSize; iy += this.cellSize) {
-        const hash = this.getHash(Math.min(ix, endX), Math.min(iy, endY));
+    const startCX = Math.floor(minX / this.cellSize);
+    const endCX = Math.floor(maxX / this.cellSize);
+    const startCY = Math.floor(minY / this.cellSize);
+    const endCY = Math.floor(maxY / this.cellSize);
+
+    for (let cx = startCX; cx <= endCX; cx++) {
+      for (let cy = startCY; cy <= endCY; cy++) {
+        const hash = `${cx},${cy}`;
         const cell = this.grid.get(hash);
         if (cell) {
-          cell.forEach(id => result.add(id));
+          for (const id of cell) {
+            result.add(id);
+          }
         }
       }
     }

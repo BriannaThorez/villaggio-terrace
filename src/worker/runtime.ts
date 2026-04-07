@@ -66,6 +66,7 @@ export interface WorkerTaskRequest<TPayload = unknown> {
   clientRevision: number;
   role?: WorkerRole;
   priority?: number;
+  silent?: boolean;
   createdAt: number;
 }
 
@@ -397,6 +398,13 @@ const handleTask = async (task: WorkerTaskRequest) => {
       return;
     }
 
+    if (task.silent) {
+      if (emitTerminalOnce()) {
+        // Silent success - do not post message back to main thread
+      }
+      return;
+    }
+
     if (emitTerminalOnce()) {
       postEnvelope(
         createWorkerResultEnvelope(task.taskType, task.requestId, result, {
@@ -454,6 +462,7 @@ const handleEnvelope = (envelope: WorkerEnvelope) => {
       clientRevision: taskEnvelope.clientRevision,
       role: (taskEnvelope.role as WorkerRole | undefined) ?? runtimeRole,
       priority: taskEnvelope.priority,
+      silent: taskEnvelope.silent,
       createdAt: taskEnvelope.createdAtMs,
     });
     return;

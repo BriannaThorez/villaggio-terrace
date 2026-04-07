@@ -88,6 +88,8 @@ export interface WorkerPoolTaskOptions<TPayload = unknown> {
   clientRevision: number;
   role?: WorkerRole;
   priority?: number;
+  silent?: boolean;
+  key?: string;
 }
 
 export interface WorkerPoolTaskHandle<TResult = unknown> {
@@ -117,6 +119,7 @@ interface PendingTaskRecord<TResult = unknown> {
   staleKey: string;
   createdAt: number;
   terminalEmitted: boolean;
+  key?: string;
 }
 
 export interface WorkerPoolOptions {
@@ -134,8 +137,8 @@ const DEFAULT_STALE_WINDOW_MS = 15_000;
 const createRequestId = () =>
   `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;
 
-const makeStaleKey = (request: WorkerTaskRequestEnvelope) =>
-  `${request.type}:${request.sceneRevision}:${request.clientRevision}`;
+const makeStaleKey = (request: WorkerTaskRequestEnvelope, key?: string) =>
+  key ?? `${request.type}:${request.sceneRevision}:${request.clientRevision}`;
 
 const isTerminalStatus = (status: WorkerPoolTaskStatus) =>
   status === "completed" ||
@@ -179,6 +182,9 @@ export class WorkerPoolCoordinator {
   private readonly workerFactory: () => Worker;
   private readonly maxQueueSize: number;
   private readonly staleWindowMs: number;
+  private dispatchScheduled = false;
+  private lastDispatchAt = 0;
+
 
   constructor(options: WorkerPoolOptions) {
     this.workerFactory = options.workerFactory;
@@ -212,10 +218,20 @@ export class WorkerPoolCoordinator {
         clientRevision: options.clientRevision,
         role: options.role,
         priority: options.priority,
+        silent: options.silent,
       },
     );
 
-    const staleKey = makeStaleKey(request);
+    const staleKey = makeStaleKey(request, options.key);
+
+    // Aggressive cancellation: if a task with the same key exists, cancel it.
+    if (options.key) {
+      for (const [id, pending] of this.pending.entries()) {
+        if (pending.key === options.key && !isTerminalStatus(pending.status)) {
+          this.cancel(id, "Superseded by newer task with same key");
+        }
+      }
+    }
 
     const promise = new Promise<TResult>((resolve, reject) => {
       const pending: PendingTaskRecord<TResult> = {
@@ -226,10 +242,15 @@ export class WorkerPoolCoordinator {
         staleKey,
         createdAt: Date.now(),
         terminalEmitted: false,
+        key: options.key,
       };
 
       this.pending.set(request.requestId, pending);
       this.queue.push(pending);
+
+      // Sort queue by priority
+      this.queue.sort((a, b) => (b.request.priority ?? 0) - (a.request.priority ?? 0));
+
       this.dispatch();
     });
 
@@ -241,6 +262,49 @@ export class WorkerPoolCoordinator {
       },
       status: () => this.pending.get(request.requestId)?.status ?? "completed",
     };
+  }
+
+  broadcast<TPayload, TResult = unknown>(
+    options: WorkerPoolTaskOptions<TPayload>,
+  ): Promise<TResult[]> {
+    const promises: Promise<TResult>[] = [];
+
+    for (const worker of this.workers) {
+      if (!worker.healthy) continue;
+
+      const request = createWorkerTaskEnvelope(
+        options.taskType,
+        createRequestId(),
+        options.payload,
+        {
+          createdAtMs: Date.now(),
+          sceneRevision: options.sceneRevision,
+          clientRevision: options.clientRevision,
+          role: options.role,
+          priority: 5, // High priority for broadcasts
+          silent: options.silent,
+        },
+      );
+
+      const promise = new Promise<TResult>((resolve, reject) => {
+        const pending: PendingTaskRecord<TResult> = {
+          request,
+          resolve,
+          reject,
+          status: "running", // Immediately running as it's sent
+          staleKey: makeStaleKey(request),
+          createdAt: Date.now(),
+          terminalEmitted: false,
+          worker,
+        };
+        this.pending.set(request.requestId, pending);
+        markWorkerBusy(worker);
+        worker.worker.postMessage(request);
+      });
+      promises.push(promise);
+    }
+
+    return Promise.all(promises);
   }
 
   cancel(requestId: string, reason?: string) {
@@ -423,8 +487,18 @@ export class WorkerPoolCoordinator {
     this.spawnWorker(record.role);
   }
 
-  private dispatch() {
+  public dispatch() {
+    if (this.dispatchScheduled) return;
+    this.dispatchScheduled = true;
+    queueMicrotask(() => this._dispatch());
+  }
+
+  private _dispatch() {
+    this.dispatchScheduled = false;
     if (this.queue.length === 0) return;
+
+    // Fast-path for priority sorting (only if needed)
+    this.queue.sort((a, b) => (b.request.priority ?? 0) - (a.request.priority ?? 0));
 
     for (const pending of [...this.queue]) {
       if (pending.status !== "queued") continue;
@@ -565,6 +639,12 @@ export class WorkerPoolClient {
 
   cancel(requestId: string, reason?: string) {
     return this.coordinator.cancel(requestId, reason);
+  }
+
+  broadcast<TPayload, TResult = unknown>(
+    options: WorkerPoolTaskOptions<TPayload>,
+  ): Promise<TResult[]> {
+    return this.coordinator.broadcast<TPayload, TResult>(options);
   }
 
   shutdown() {

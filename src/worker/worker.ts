@@ -21,14 +21,6 @@ const { role } = getWorkerRuntimeState();
 
 registerFoundationWorkerTasks();
 
-if (role === "layout" || role === "default") {
-  registerLayoutTasks();
-}
-
-if (role === "routing" || role === "default") {
-  registerRoutingTasks();
-}
-
-if (role === "analysis" || role === "default") {
-  registerAnalysisTasks();
-}
+registerLayoutTasks();
+registerRoutingTasks();
+registerAnalysisTasks();

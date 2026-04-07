@@ -467,7 +467,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       }
 
       const workerPool = getWorkerPool();
-      workerPool.submit({
+      workerPool.broadcast({
         taskType: SIMULATION_TASK_TYPE.SyncSpatialHash,
         payload: {
           inserts: [{
@@ -557,7 +557,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
                 globalHash.insert(id, newShape.position[0], newShape.position[1], newShape.size[0] || s.size[0], newShape.size[1] || s.size[1]);
 
                 const workerPool = getWorkerPool();
-                workerPool.submit({
+                workerPool.broadcast({
                   taskType: SIMULATION_TASK_TYPE.SyncSpatialHash,
                   payload: {
                     removes: [{
@@ -630,7 +630,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
             globalHash.remove(id, shape.position[0], shape.position[1], shape.size[0], shape.size[1]);
 
             const workerPool = getWorkerPool();
-            workerPool.submit({
+            workerPool.broadcast({
               taskType: SIMULATION_TASK_TYPE.SyncSpatialHash,
               payload: {
                 removes: [{
@@ -811,17 +811,16 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     },
     pushToHistory: () => pushToHistory(),
     initializeWorld: () => {
-      // Clear shapes
-      set({ shapes: [] });
-      const stateAfterClear = get();
-
-      // Place 6 lobby cells (3 left, 3 right of x=0)
-      // Each is 10 width, depth 40
+      const initialShapes: SimulationNode[] = [];
       const startX = -25;
+
       for (let i = 0; i < 6; i++) {
         const x = startX + i * 10;
-        stateAfterClear.addShape({
-          id: `lobby_${i}_${Math.random().toString(36).substr(2, 9)}`,
+        const lobbyId = `lobby_${i}_${Math.random().toString(36).substr(2, 9)}`;
+        const scaffoldId = `scaffold_${i}_${Math.random().toString(36).substr(2, 9)}`;
+
+        initialShapes.push({
+          id: lobbyId,
           type: "lobby",
           position: [x, 0],
           size: [10, 40],
@@ -832,8 +831,51 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
             [-5, 20],
           ],
           name: `Lobby Cell ${i + 1}`
-        }, true, true);
+        });
+
+        initialShapes.push({
+          id: scaffoldId,
+          type: "structure",
+          position: [x, 0],
+          size: [10, 40],
+          vertices: [
+            [-5, -20],
+            [5, -20],
+            [5, 20],
+            [-5, 20],
+          ],
+          name: "Structural Scaffold"
+        });
+
+        // Mirror to global hash
+        globalHash.insert(lobbyId, x, 0, 10, 40);
+        globalHash.insert(scaffoldId, x, 0, 10, 40);
+
+        // INDUSTRY LEADING FIX: Force structural registration for starting lobbies
+        // This builds the adjacency graph so lobbies can 'connect' and remove demising walls.
+        registerStructuralRoom(lobbyId, "lobby", x, 0, 10, 40);
+        registerStructuralRoom(scaffoldId, "structure", x, 0, 10, 40);
       }
+
+      set({ shapes: initialShapes });
+
+      // Sync all workers at once
+      const workerPool = getWorkerPool();
+      workerPool.broadcast({
+        taskType: SIMULATION_TASK_TYPE.SyncSpatialHash,
+        payload: {
+          clear: true,
+          inserts: initialShapes.map(s => ({
+            id: s.id,
+            x: s.position[0],
+            y: s.position[1],
+            w: s.size[0],
+            h: s.size[1]
+          }))
+        },
+        sceneRevision: 0,
+        clientRevision: 0,
+      });
     },
     resetCamera: () => set({ shouldResetCamera: true }),
     setShouldResetCamera: (val) => set({ shouldResetCamera: val }),

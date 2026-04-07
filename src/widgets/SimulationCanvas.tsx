@@ -16,6 +16,11 @@ import { InternetConnectivity } from "../features/roomPlacement/visuals/Internet
 import { SolarSystem } from "../features/lighting/ui/SolarSystem";
 import { RainField, RainMist } from "../features/weather/ui/WeatherEffects";
 import { WeatherPanel } from "../features/weather/ui/WeatherPanel";
+// [DISABLED] SimPeople — re-enable after grass shader integration
+// import { SimPeopleManager } from "../features/simPeople/components/SimPeopleManager";
+// import { usePeopleSpawner } from "../features/simPeople/store/usePeopleSpawner";
+// import { useSimPeopleLoop } from "../features/simPeople/animations/useSimPeopleLoop";
+import { GrassField } from "../features/environment/components/GrassField";
 import { SimulationLinks } from "../entities/SimulationLinks";
 import {
   useSimulationStore,
@@ -171,6 +176,9 @@ const CanvasScene = () => {
 
   const currentTheme = useMemo(() => (themes as any)[themeName], [themeName]);
   const isDark = currentTheme.mode === "dark";
+
+  // usePeopleSpawner();
+  // useSimPeopleLoop();
 
   const wasLinkingRef = useRef(false);
   const wasDraggingRef = useRef(false);
@@ -886,9 +894,10 @@ const CanvasScene = () => {
       <InternetConnectivity />
       <SimulationLinks />
       <GroundIndicatorPlane
-        position={[0, 0, 0]}
-        thickness={5}
-        color="#2e7d32"
+        width={5000}
+        depth={5000}
+        thickness={10}
+        color="#241d18"
         opacity={1.0}
         renderOrder={-1}
       />
@@ -911,6 +920,16 @@ const CanvasScene = () => {
 
       <HolographicFloors />
       <HolographicHeightScale />
+      {/* <SimPeopleManager /> */}
+      <GrassField
+        width={1000}
+        instances={250000}
+        joints={3}
+        bladeWidth={0.25}
+        bladeHeight={1.0}
+        position={[0, 0.2, 0]}
+        uMaxDistance={380}
+      />
 
       <mesh
         position={[0, 0, -150]}

@@ -77,6 +77,7 @@ export interface WorkerTaskRequestEnvelope<
   clientRevision: number;
   role?: string;
   priority?: number;
+  silent?: boolean;
   createdAtMs: number;
   cancellation?: WorkerCancellationMetadata;
   fallback?: WorkerFallbackMetadata;

@@ -44,18 +44,21 @@ export const GroundIndicatorPlane: React.FC<GroundIndicatorPlaneProps> = ({
         seed,
         repeat: Math.max(1, Math.round(Math.max(width, depth) / 32)),
         variant: "soft",
-        baseColor: "#1a2b16", // Deep, velvety forest green
-        bladeColor: "#223d1d", // Subtle highlights
-        accentColor: "#2a3d20", // Muted undertones
+        baseColor: "#1a1612", // Deep soil brown
+        bladeColor: "#2a221a", // Earth tones
+        accentColor: "#221a14",
       }),
     [depth, seed, width],
   );
 
   const material = useMemo(() => {
     const mat = new THREE.MeshPhysicalMaterial({
-      color: "#ffffff",
+      color: "#241d18", // Dark dirt brown
       roughness: 1.0, // Absolute matte
-      metalness: 0.0, // Non-metallic velvet
+      metalness: 0.0,
+      sheen: 1.0, // Adds soft matte glow for 'frosted' look
+      sheenRoughness: 1.0,
+      sheenColor: "#45382d", // Subdued highlight
       transparent: false,
       opacity: 1.0,
       depthWrite: true,
@@ -63,7 +66,7 @@ export const GroundIndicatorPlane: React.FC<GroundIndicatorPlaneProps> = ({
       map: textureSet.diffuse,
       normalMap: textureSet.normal,
       bumpMap: textureSet.bump,
-      bumpScale: 0.15, // Muted bumps for velvet feel
+      bumpScale: 0.4, // Increased for micro-texture frosting
       normalScale: new THREE.Vector2(0.8, 0.8), // Smoother transition
       envMapIntensity: 0.0, // Reject environment reflections
     });
@@ -74,7 +77,6 @@ export const GroundIndicatorPlane: React.FC<GroundIndicatorPlaneProps> = ({
   return (
     <mesh
       position={[0, -thickness / 2, 0]}
-      receiveShadow
       renderOrder={-2} // Behind grid but above background
     >
       <boxGeometry args={[width, thickness, depth]} />

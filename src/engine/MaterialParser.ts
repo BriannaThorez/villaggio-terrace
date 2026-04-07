@@ -50,14 +50,12 @@ export const parseMaterial = (
 ): THREE.MeshPhysicalMaterial => {
   const material = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color(config.albedo),
-    roughness: config.roughness,
-    metalness: config.metalness,
     // ARCHITECTURAL REFINEMENT: Re-enabling subtle micro-texture
     // Balancing "Solid" aesthetic with "Drywall" physical depth
     clearcoat: 0.3, // Reduced from 0.6 for a less "glossy" rainy look
     clearcoatRoughness: 0.2, // Rougher clearcoat for diffuse light
     envMapIntensity: 0.45, // SLASHED from 1.2 to match "Seattle" overcast gloom
-    roughness: 0.65, // Increased slightly to dampen grit flickering
+    roughness: 0.65, // Dampens grit flickering
     metalness: 0.0
   });
 

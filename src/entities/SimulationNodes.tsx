@@ -245,6 +245,25 @@ export const SimulationNodes = () => {
     [renderedShapes],
   );
 
+  // PRE-CALCULATE Foundation/Room Relationship (Industry Leading O(N) Speedup)
+  const roomByFoundationId = useMemo(() => {
+    const map = new Map<string, RenderShape>();
+    const rooms = renderedShapes.filter(s => s.type !== "structure" && s.type !== "empty_floor" && s.type !== "text");
+    const structures = renderedShapes.filter(s => s.type === "structure");
+
+    structures.forEach(str => {
+      const myLeft = str.position[0] - str.size[0] / 2;
+      const myRight = str.position[0] + str.size[0] / 2;
+      const roomAbove = rooms.find(s =>
+        Math.abs(s.position[1] - str.position[1]) < 5 &&
+        (s.position[0] + s.size[0] / 2 > myLeft + 0.1) &&
+        (s.position[0] - s.size[0] / 2 < myRight - 0.1)
+      );
+      if (roomAbove) map.set(str.id, roomAbove);
+    });
+    return map;
+  }, [renderedShapes]);
+
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const portMeshRef = useRef<THREE.InstancedMesh>(null);
   const materialRef = useRef<any>(null);
@@ -695,10 +714,14 @@ export const SimulationNodes = () => {
                 if (shape.structuralRoom) {
                   const checkWall = (adjacentIds: string[]) => {
                     if (adjacentIds.length === 0) return true;
-                    // Wall removal requires the adjacent space to be the exact same architectural archetype.
-                    // This explicitly preserves demising walls between distinct programmatic volumes (e.g. Lobby vs Empty Scaffold)
-                    const hasHomogenousNeighbor = adjacentIds.some(id => {
-                      const neighbor = renderedShapes.find(s => s.id === id);
+                    // INDUSTRY LEADING PRIVACY FIX: 
+                    // Wall removal is ONLY permitted for public circulation or structural foundations.
+                    // Private units (Residences, Offices, Commercial) must ALWAYS preserve demising walls for household isolation.
+                    const mergableTypes = ["lobby", "elevator", "structure", "empty_floor"];
+                    const isMergable = mergableTypes.includes(shape.type);
+
+                    const hasHomogenousNeighbor = isMergable && adjacentIds.some(id => {
+                      const neighbor = renderedShapeById.get(id);
                       return neighbor && neighbor.type === shape.type;
                     });
                     return !hasHomogenousNeighbor;
@@ -770,16 +793,7 @@ export const SimulationNodes = () => {
 
             {/* Background Scaffold Rendering via Unified CSG */}
             {shape.type === "structure" && (() => {
-              const myLeft = shape.position[0] - shape.size[0] / 2;
-              const myRight = shape.position[0] + shape.size[0] / 2;
-
-              const roomAbove = renderedShapes.find(s =>
-                s.type !== "structure" &&
-                Math.abs(s.position[1] - shape.position[1]) < 5 &&
-                (s.position[0] + s.size[0] / 2 > myLeft + 0.1) &&
-                (s.position[0] - s.size[0] / 2 < myRight - 0.1)
-              );
-
+              const roomAbove = roomByFoundationId.get(shape.id);
               const hasRoomAbove = !!roomAbove;
 
               let baseColor = (themes as any)[themeName].neutral_dark;
