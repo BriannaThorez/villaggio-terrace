@@ -24,6 +24,7 @@ import {
 } from "../features/roomPlacement/structural/graph";
 import { parseMaterial } from "../engine/MaterialParser";
 import { EmptyFloorRoom } from "../features/roomPlacement/emptyFloor/EmptyFloorRoom";
+import { LobbyRoom } from "../features/roomPlacement/lobby/LobbyRoom";
 
 type RenderShape = StructuralShape<SimulationNode>;
 
@@ -455,7 +456,7 @@ export const SimulationNodes = () => {
   ]);
 
   const handleNodePointerDown = (e: any, id: string) => {
-    if (e.button === 2) return; // Ignore right click
+    e.stopPropagation();
 
     const shape = renderedShapeById.get(id);
     if (!shape) return;
@@ -467,8 +468,6 @@ export const SimulationNodes = () => {
     // For volumetric room components, rely on mesh intersection rather than 2D SDF UV mapping
     const isVolumetricRoom = ["residential", "commercial", "office", "utility", "lobby", "elevator", "structure", "empty_floor"].includes(shape.type);
     if (!isVolumetricRoom && !isInsideShape(e.uv, shape)) return;
-
-    e.stopPropagation();
 
     if (editingId && editingId !== id) {
       const editingShape = renderedShapeById.get(editingId);
@@ -486,6 +485,7 @@ export const SimulationNodes = () => {
   };
 
   const handleNodeDoubleClick = (e: any, id: string) => {
+    e.stopPropagation();
     if (!isSelectionMode) return;
 
     // Movement interactions are intentionally disabled for now.
@@ -497,7 +497,6 @@ export const SimulationNodes = () => {
     const isVolumetricRoom = ["residential", "commercial", "office", "utility", "lobby", "elevator", "structure", "empty_floor"].includes(shape.type);
     if (!isVolumetricRoom && !isInsideShape(e.uv, shape)) return;
 
-    e.stopPropagation();
     if (activeTool !== "select") return;
     if (shape.type === "text") {
       setEditingId(id);
@@ -757,6 +756,31 @@ export const SimulationNodes = () => {
                   );
                 }
 
+                if (shape.type === "lobby") {
+                  return (
+                    <LobbyRoom
+                      position={[0, 0, 0]}
+                      rotation={0}
+                      width={shape.size[0]}
+                      height={shape.size[1]}
+                      depth={40}
+                      color={shape.color || (themes as any)[themeName].primary}
+                      hasLeftWall={hasLeftWall}
+                      hasRightWall={hasRightWall}
+                      onPointerDown={(e) => {
+                        if (!isSelectionMode) return;
+                        e.stopPropagation();
+                        handleNodePointerDown(e, shape.id);
+                      }}
+                      onDoubleClick={(e) => {
+                        if (!isSelectionMode) return;
+                        e.stopPropagation();
+                        handleNodeDoubleClick(e, shape.id);
+                      }}
+                    />
+                  );
+                }
+
                 return (
                   <ResidentialRoom
                     position={[0, 0, 0]}
@@ -817,10 +841,12 @@ export const SimulationNodes = () => {
               return (
                 <group
                   onPointerDown={(e) => {
+                    e.stopPropagation();
                     if (hasRoomAbove) return;
                     handleNodePointerDown(e, shape.id);
                   }}
                   onDoubleClick={(e) => {
+                    e.stopPropagation();
                     if (hasRoomAbove) return;
                     handleNodeDoubleClick(e, shape.id);
                   }}

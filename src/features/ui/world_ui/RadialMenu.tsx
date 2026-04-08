@@ -76,8 +76,8 @@ const MenuItem = React.memo(
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         className={`absolute w-40 h-40 -ml-20 -mt-20 rounded-full border flex flex-col items-center justify-center shadow-lg transition-all group will-change-transform ${color
-            ? "border-white/30 hover:scale-125 hover:border-white"
-            : "bg-background border-text/20 text-text hover:bg-primary hover:text-background hover:border-accent"
+          ? "border-white/30 hover:scale-125 hover:border-white"
+          : "bg-background border-text/20 text-text hover:bg-primary hover:text-background hover:border-accent"
           }`}
         style={
           color
@@ -136,8 +136,8 @@ export const RadialMenu: React.FC<RadialMenuProps> = ({ shapeId }) => {
   }, [shape, shapes]);
 
   const handleToggle = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
+    (e: React.MouseEvent | React.PointerEvent) => {
+      if (e.stopPropagation) e.stopPropagation();
       if (!isOpen) {
         setIsOpen(true);
         setMenuStack(["main"]);
@@ -169,7 +169,7 @@ export const RadialMenu: React.FC<RadialMenuProps> = ({ shapeId }) => {
     }
 
     pointerStartRef.current = null;
-    e.stopPropagation();
+    if (e.stopPropagation) e.stopPropagation();
   };
 
   const goBack = useCallback(() => {
@@ -308,8 +308,8 @@ export const RadialMenu: React.FC<RadialMenuProps> = ({ shapeId }) => {
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
         className={`absolute w-40 h-40 -ml-20 -mt-20 rounded-full bg-background border-8 flex items-center justify-center transition-all duration-300 ${isOpen || hovered
-            ? "border-accent text-accent shadow-[0_20px_50px_rgba(0,0,0,0.4)]"
-            : "border-text/20 text-text shadow-[0_20px_50px_rgba(0,0,0,0.4)]"
+          ? "border-accent text-accent shadow-[0_20px_50px_rgba(0,0,0,0.4)]"
+          : "border-text/20 text-text shadow-[0_20px_50px_rgba(0,0,0,0.4)]"
           } z-20`}
       >
         <div className="scale-[4]">

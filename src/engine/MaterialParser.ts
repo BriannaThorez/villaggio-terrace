@@ -189,11 +189,23 @@ export const getResidentialMaterials = (wallTint: string): THREE.Material[] => {
 };
 
 export const getEmptyFloorMaterials = (wallTint: string): THREE.Material[] => {
-  const floor = parseAssetMaterial("painted_concrete_floor", "#ffffff");
+  const floor = parseAssetMaterial("concrete_floor_1", "#ffffff");
   const ceiling = parseAssetMaterial("concrete_wall_1", "#ffffff");
   const wall = parseAssetMaterial("concrete_wall_1", wallTint);
   return [wall, wall, ceiling, floor, wall, wall];
 };
+
+export const getLobbyMaterials = (wallTint: string): THREE.Material[] => {
+  const floor = parseAssetMaterial("grey_cartago_tiles", "#ffffff");
+  const wall = parseRoomMaterial({ albedo: "#ffffff", roughness: 0.9, metalness: 0.0 }); // Uses Painted Plaster by default
+  const ceiling = parseAssetMaterial("concrete_wall_1", "#ffffff");
+
+  // Custom wall tint for the lobby
+  const tintedWall = parseRoomMaterial({ albedo: wallTint, roughness: 0.9, metalness: 0.0 });
+
+  return [tintedWall, tintedWall, ceiling, floor, tintedWall, tintedWall];
+};
+
 
 
 export const disposeParsedMaterial = (

@@ -140,7 +140,7 @@ export const ResidentialRoom: React.FC<ResidentialRoomProps> = ({
         width={shellDimensions.width}
         height={shellDimensions.height}
         depth={shellDimensions.depth}
-        material={materials[0]}
+        material={materials}
         hasLeftWall={hasLeftWall}
         hasRightWall={hasRightWall}
       />

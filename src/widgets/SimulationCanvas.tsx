@@ -231,6 +231,7 @@ const CanvasScene = () => {
   const sphereRef = useRef<THREE.Mesh>(null);
   const lastSyncTimeRef = useRef(0);
   const lastStampedPos = useRef<string | null>(null);
+  const isClickMovedRef = useRef(false);
 
 
 
@@ -398,11 +399,15 @@ const CanvasScene = () => {
       !forceStamp &&
       (wasLinkingRef.current ||
         wasDraggingRef.current ||
-        wasPanningRef.current)
+        wasPanningRef.current ||
+        isClickMovedRef.current)
     ) {
       wasLinkingRef.current = false;
       wasDraggingRef.current = false;
       wasPanningRef.current = false;
+      pointerDownPos.current = null;
+      if (event.stopPropagation) event.stopPropagation();
+      isClickMovedRef.current = false;
       return;
     }
 
@@ -422,7 +427,6 @@ const CanvasScene = () => {
 
     if (
       activeTool === "select" ||
-      activeTool === "link" ||
       activeTool === "vertex"
     ) {
       return;
@@ -567,7 +571,7 @@ const CanvasScene = () => {
       lastPlacedCellRef.current = null;
     }, 100);
 
-    const id = Math.random().toString(36);
+    const id = `room_${Math.random().toString(36).substring(2, 9)}`;
     addShape(
       {
         id,
@@ -616,10 +620,12 @@ const CanvasScene = () => {
       if (isDragging) {
         setIsDragging(false);
         currentIsDragging = false;
+        wasDraggingRef.current = true;
       }
       if (isPanning) {
         setIsPanning(false);
         currentIsPanning = false;
+        wasPanningRef.current = true;
       }
       if (isRotating) {
         setIsRotating(false);
@@ -629,6 +635,16 @@ const CanvasScene = () => {
         setLinkingFrom(null);
         setLinkingTo(null);
         currentLinkingFrom = null;
+        wasLinkingRef.current = true;
+      }
+    }
+
+    // Pointer jitter threshold for "click vs move"
+    if (pointerDownPos.current && e.nativeEvent.buttons !== 0) {
+      const dx = e.nativeEvent.clientX - pointerDownPos.current[0];
+      const dy = e.nativeEvent.clientY - pointerDownPos.current[1];
+      if (Math.sqrt(dx * dx + dy * dy) > 3) {
+        isClickMovedRef.current = true;
       }
     }
 
@@ -758,7 +774,8 @@ const CanvasScene = () => {
     wasPanningRef.current = false;
     wasDraggingRef.current = false;
     wasLinkingRef.current = false;
-    pointerDownPos.current = [e.clientX, e.clientY];
+    isClickMovedRef.current = false;
+    pointerDownPos.current = [e.nativeEvent.clientX, e.nativeEvent.clientY];
 
     if (e.button === 2) {
       return;
@@ -767,7 +784,7 @@ const CanvasScene = () => {
     if (e.nativeEvent.target.tagName !== "CANVAS") return;
 
     if (activeTool !== "select") return;
-    if (selectedId) setSelectedId(null);
+    // Don't deselect here, let handlePointerUp/handleClick decide based on movement
   };
 
   const handlePointerUp = (e: any) => {
@@ -776,15 +793,17 @@ const CanvasScene = () => {
 
     let wasStaticClick = false;
     if (pointerDownPos.current) {
-      const dx = e.clientX - pointerDownPos.current[0];
-      const dy = e.clientY - pointerDownPos.current[1];
+      const dx = e.nativeEvent.clientX - pointerDownPos.current[0];
+      const dy = e.nativeEvent.clientY - pointerDownPos.current[1];
       const dist = Math.sqrt(dx * dx + dy * dy);
       if (dist > 6) {
+        isClickMovedRef.current = true;
       } else {
         wasStaticClick = true;
         wasPanningRef.current = false;
         wasDraggingRef.current = false;
         wasLinkingRef.current = false;
+        isClickMovedRef.current = false;
       }
     }
 
@@ -794,7 +813,10 @@ const CanvasScene = () => {
     }
 
     if (e.button === 0 && wasStaticClick && activeTool === "select") {
-      setSelectedId(null); // LEFT CLICK DESELECT ONLY IN SELECT MODE
+      // Only deselect if we didn't just finished a drag/pan/move
+      if (!wasDraggingRef.current && !wasPanningRef.current && !wasLinkingRef.current && !isClickMovedRef.current) {
+        setSelectedId(null); // LEFT CLICK DESELECT ONLY IN SELECT MODE
+      }
     }
 
     if (linkingFrom) {

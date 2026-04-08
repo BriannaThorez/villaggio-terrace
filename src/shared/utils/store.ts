@@ -566,12 +566,21 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
         }, true, true);
       } else if (shape.type === 'structure') {
         const stateAfter = get();
-        const hasRoom = stateAfter.shapes.some(s =>
-          s.type !== 'structure' && s.type !== 'empty_floor' &&
-          Math.abs(s.position[0] - shape.position[0]) < 0.1 &&
-          Math.abs(s.position[1] - shape.position[1]) < 0.1
-        );
-        if (!hasRoom) {
+        // Check structural vacancy using SpatialHash for localized speed
+        const candidates = globalHash.query(shape.position[0], shape.position[1], shape.size[0] - 0.2, shape.size[1] - 0.2);
+        let isOccupied = false;
+        for (const id of candidates) {
+          const s = stateAfter.shapes.find(sh => sh.id === id);
+          if (s && s.type !== 'structure' && s.type !== 'empty_floor' &&
+            Math.abs(s.position[1] - shape.position[1]) < 0.1 &&
+            (s.position[0] + s.size[0] / 2 > shape.position[0] - shape.size[0] / 2 + 0.1) &&
+            (s.position[0] - s.size[0] / 2 < shape.position[0] + shape.size[0] / 2 - 0.1)) {
+            isOccupied = true;
+            break;
+          }
+        }
+
+        if (!isOccupied) {
           stateAfter.addShape({
             id: `empty_floor_${Math.random().toString(36).substr(2, 9)}`,
             type: 'empty_floor',
@@ -698,53 +707,64 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       });
 
       const stateAfter = get();
-      if (shapeToDelete && isRoom && !isMerge) {
-        // Step 1: Discover all adjacent scaffolds that need to be covered AND are vacant
-        const overlappingStructures = stateAfter.shapes.filter(s => {
-          if (s.type !== 'structure') return false;
+      if (!isMerge) {
+        // --- INDUSTRY LEADING LOCALIZED VACANCY RESTORATION ---
+        const currentShapes = stateAfter.shapes;
 
-          // Same-floor check
-          if (Math.abs(s.position[1] - shapeToDelete.position[1]) > 0.1) return false;
+        // Expanded sweep: Focus on the floor of deletion, but check all nearby structures
+        const centerX = shapeToDelete?.position[0] ?? 0;
+        const centerY = shapeToDelete?.position[1] ?? 0;
+        const searchRadiusX = (shapeToDelete?.size[0] ?? 0) / 2 + 50; // Increased sweep to find all adjacent structure segments
 
-          // Bounds check: Does this structure overlap the deleted room's footprint?
-          const sLeft = s.position[0] - s.size[0] / 2;
-          const sRight = s.position[0] + s.size[0] / 2;
-          const deletedLeft = shapeToDelete.position[0] - shapeToDelete.size[0] / 2;
-          const deletedRight = shapeToDelete.position[0] + shapeToDelete.size[0] / 2;
+        const impactedStructures = currentShapes.filter(s =>
+          s.type === 'structure' &&
+          Math.abs(s.position[1] - centerY) < 1 &&
+          Math.abs(s.position[0] - centerX) <= searchRadiusX
+        );
 
-          const overlapsDeleted = (sRight > deletedLeft + 0.1) && (sLeft < deletedRight - 0.1);
-          if (!overlapsDeleted) return false;
+        impactedStructures.forEach(str => {
+          const strLeft = str.position[0] - str.size[0] / 2;
+          const strRight = str.position[0] + str.size[0] / 2;
 
-          // Occupancy check: Ensure NO other room is sitting on this scaffold
-          const isOccupied = stateAfter.shapes.some(other => {
-            if (other.type === 'structure' || other.type === 'empty_floor' || other.id === s.id) return false;
+          // Iterate through every 10-unit cell in this structure segment
+          for (let cx = strLeft + 5; cx < strRight; cx += 10) {
+            // RELAXED CONSTRAINT: A cell is a candidate if it intersects the deleted shape's footprint
+            // OR if it is within 5 units of it (to handle floating point/alignment edge cases)
+            const cellInFootprint = Math.abs(cx - centerX) <= (shapeToDelete?.size[0] ?? 0) / 2 + 5.1;
 
-            // Same floor and X-overlap
-            if (Math.abs(other.position[1] - s.position[1]) > 0.1) return false;
+            if (!cellInFootprint) continue;
 
-            const oLeft = other.position[0] - other.size[0] / 2;
-            const oRight = other.position[0] + other.size[0] / 2;
+            const isCellOccupied = currentShapes.some(s =>
+              s.type !== 'structure' && s.type !== 'empty_floor' &&
+              Math.abs(s.position[1] - str.position[1]) < 1 &&
+              s.position[0] - s.size[0] / 2 < cx + 0.1 &&
+              s.position[0] + s.size[0] / 2 > cx - 0.1
+            );
 
-            return (oRight > sLeft + 0.1) && (oLeft < sRight - 0.1);
-          });
+            const hasEmptyFloor = currentShapes.some(s =>
+              s.type === 'empty_floor' &&
+              Math.abs(s.position[1] - str.position[1]) < 1 &&
+              s.position[0] - s.size[0] / 2 < cx + 0.1 &&
+              s.position[0] + s.size[0] / 2 > cx - 0.1
+            );
 
-          return !isOccupied;
+            if (!isCellOccupied && !hasEmptyFloor) {
+              stateAfter.addShape({
+                id: `empty_floor_${Math.random().toString(36).substring(2, 9)}`,
+                type: 'empty_floor',
+                position: [cx, str.position[1]],
+                size: [10, str.size[1]],
+                vertices: [
+                  [-5, -str.size[1] / 2],
+                  [5, -str.size[1] / 2],
+                  [5, str.size[1] / 2],
+                  [-5, str.size[1] / 2],
+                ],
+                name: "Empty Floor"
+              }, true, true);
+            }
+          }
         });
-
-        if (overlappingStructures.length > 0) {
-          // 🪲 FIX: Spawn individual empty blocks per vacant scaffold (instead of merging non-contiguous ones)
-          // This prevents "spilling" into occupied rooms between vacant ones.
-          overlappingStructures.forEach(str => {
-            get().addShape({
-              id: `empty_floor_${Math.random().toString(36).substring(2, 9)}`,
-              type: 'empty_floor',
-              position: [...str.position],
-              size: [...str.size],
-              vertices: [...str.vertices],
-              name: "Empty Floor"
-            }, true, true);
-          });
-        }
       }
     },
     addLink: (from, to, fromPort, toPort) => {

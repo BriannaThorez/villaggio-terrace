@@ -220,7 +220,7 @@ export const SelectionOverlay: React.FC<SelectionIndicatorProps> = ({
     stopPropagation: () => void;
     point: { x: number; y: number };
   }) => {
-    e.stopPropagation();
+    if (e.stopPropagation) e.stopPropagation();
     pushToHistory();
     setIsDragging(true);
     setDragOffset([

@@ -69,11 +69,17 @@ import concreteWallArm from "../../../assets/textures/concrete_wall_1/concrete_w
 import concreteWallNor from "../../../assets/textures/concrete_wall_1/concrete_wall_1_nor_gl_4k.png";
 import concreteWallDisp from "../../../assets/textures/concrete_wall_1/concrete_wall_1_disp_4k.png";
 
+import greyCartagoDiff from "../../../assets/textures/grey_cartago_tiles/grey_cartago_03_diff_4k.png";
+import greyCartagoArm from "../../../assets/textures/grey_cartago_tiles/grey_cartago_03_arm_4k.png";
+import greyCartagoNor from "../../../assets/textures/grey_cartago_tiles/grey_cartago_03_nor_gl_4k.png";
+import greyCartagoDisp from "../../../assets/textures/grey_cartago_tiles/grey_cartago_03_disp_4k.png";
+
 const ASSET_REGISTRY: Record<string, { diff: string, arm: string, nor: string, disp: string }> = {
     "wood_floor_1": { diff: woodFloorDiff, arm: woodFloorArm, nor: woodFloorNor, disp: woodFloorDisp },
     "beige_wall_1": { diff: beigeWallDiff, arm: beigeWallArm, nor: beigeWallNor, disp: beigeWallDisp },
-    "painted_concrete_floor": { diff: paintedConcreteFloorDiff, arm: paintedConcreteFloorArm, nor: paintedConcreteFloorNor, disp: paintedConcreteFloorDisp },
+    "concrete_floor_1": { diff: paintedConcreteFloorDiff, arm: paintedConcreteFloorArm, nor: paintedConcreteFloorNor, disp: paintedConcreteFloorDisp },
     "concrete_wall_1": { diff: concreteWallDiff, arm: concreteWallArm, nor: concreteWallNor, disp: concreteWallDisp },
+    "grey_cartago_tiles": { diff: greyCartagoDiff, arm: greyCartagoArm, nor: greyCartagoNor, disp: greyCartagoDisp },
 };
 
 export const getTextureBundle = (assetName: string): TextureBundle => {
