@@ -14,7 +14,6 @@ import {
 } from "../features/materialsEngine/presets/paintedPlaster";
 import { getTextureBundle } from "../features/materialsEngine/presets/materials";
 
-const SALMON_TINT = new THREE.Color(0xf7b8ae);
 
 
 const drywallTextureCache = createTextureCache<DrywallTextureBundle>();
@@ -106,7 +105,7 @@ export const parseRoomMaterial = (
   }
 
   const textureBundle = getPaintedPlasterBundle();
-  const baseColor = new THREE.Color(config.albedo).lerp(SALMON_TINT, 0.45);
+  const baseColor = new THREE.Color(config.albedo);
 
   const material = new THREE.MeshPhysicalMaterial({
     color: baseColor,

@@ -456,7 +456,11 @@ export const SimulationNodes = () => {
   ]);
 
   const handleNodePointerDown = (e: any, id: string) => {
-    e.stopPropagation();
+    // Only stop propagation for left-click (Button 0) to allow right-click (Button 2) 
+    // to bubble up to the global tool cancellation listener.
+    if (e.button === 0) {
+      e.stopPropagation();
+    }
 
     const shape = renderedShapeById.get(id);
     if (!shape) return;

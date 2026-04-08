@@ -593,10 +593,22 @@ const CanvasScene = () => {
   };
 
   useEffect(() => {
-    const handleGlobalUp = () => {
+    const handleGlobalUp = (e: PointerEvent) => {
       setIsPanning(false);
       setIsRotating(false);
       setIsDragging(false);
+
+      // Global right-click tool cancellation (Industry leading stability)
+      // This ensures that right-click ALWAYS dismisses the active tool, 
+      // even if a sub-component mesh stopped propagation of the Three.js event.
+      if (e.button === 2) {
+        const currentTool = useSimulationStore.getState().activeTool;
+        if (currentTool !== 'select') {
+          setActiveTool('select');
+          setSelectedId(null);
+        }
+      }
+
       setLinkingFrom(null);
       setLinkingTo(null);
     };
@@ -608,6 +620,8 @@ const CanvasScene = () => {
     setIsDragging,
     setLinkingFrom,
     setLinkingTo,
+    setActiveTool,
+    setSelectedId,
   ]);
 
   const handlePointerMove = (e: any) => {
@@ -808,8 +822,7 @@ const CanvasScene = () => {
     }
 
     if (e.button === 2 && wasStaticClick) {
-      setActiveTool("select");
-      setSelectedId(null); // RIGHT CLICK DESELECT
+      // Handled globally in handleGlobalUp for industry-leading reliability
     }
 
     if (e.button === 0 && wasStaticClick && activeTool === "select") {
