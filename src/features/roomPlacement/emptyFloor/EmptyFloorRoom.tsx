@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import * as THREE from "three";
-import { parseMaterial } from "../../../engine/MaterialParser";
+import { parseMaterial, getEmptyFloorMaterials } from "../../../engine/MaterialParser";
 import { RoomMeshCSG } from "../visuals/RoomMeshCSG";
 import { generateWindowCutouts } from "../visuals/WindowGenerator";
 import {
@@ -77,6 +77,10 @@ export const EmptyFloorRoom: React.FC<EmptyFloorRoomProps> = ({
         });
     }, []);
 
+    const roomShellMaterials = useMemo(() => {
+        return getEmptyFloorMaterials("#909090");
+    }, []);
+
     const glassMaterial = useMemo(() => {
         return new THREE.MeshPhysicalMaterial({
             color: "#8090A0",
@@ -115,7 +119,7 @@ export const EmptyFloorRoom: React.FC<EmptyFloorRoomProps> = ({
                 width={insetWidth}
                 height={insetHeight}
                 depth={insetDepth}
-                material={frameMaterial}
+                material={roomShellMaterials}
                 hasLeftWall={hasLeftWall}
                 hasRightWall={hasRightWall}
                 hasBackWall={true}

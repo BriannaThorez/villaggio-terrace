@@ -12,6 +12,7 @@ import {
   disposePaintedPlasterBundles,
   getPaintedPlasterBundle,
 } from "../features/materialsEngine/presets/paintedPlaster";
+import { getTextureBundle } from "../features/materialsEngine/presets/materials";
 
 const SALMON_TINT = new THREE.Color(0xf7b8ae);
 
@@ -54,6 +55,9 @@ const getManagedMaterialKey = (config: MaterialConfig) =>
 
 const getRoomMaterialKey = (config: MaterialConfig) =>
   ["room-material", config.albedo, config.roughness, config.metalness].join(":");
+
+const getAssetMaterialKey = (assetName: string, tintHex: string) =>
+  ["asset-material", assetName, tintHex].join(":");
 
 export const parseMaterial = (
   config: MaterialConfig,
@@ -133,8 +137,6 @@ export const parseRoomMaterial = (
 
   material.needsUpdate = true;
 
-
-
   const managed = createManagedMaterial(material, [
     textureBundle.albedoMap,
     textureBundle.aoMap,
@@ -147,6 +149,52 @@ export const parseRoomMaterial = (
   roomMaterialCache.set(cacheKey, managed);
   return managed.material as THREE.MeshPhysicalMaterial;
 };
+
+export const parseAssetMaterial = (assetName: string, tintHex: string = "#ffffff"): THREE.MeshPhysicalMaterial => {
+  const cacheKey = getAssetMaterialKey(assetName, tintHex);
+  const existing = roomMaterialCache.get(cacheKey);
+  if (existing) return existing.material as THREE.MeshPhysicalMaterial;
+
+  const bundle = getTextureBundle(assetName);
+  const material = new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color(tintHex),
+    map: bundle.albedoMap,
+    aoMap: bundle.aoMap,
+    roughnessMap: bundle.roughnessMap,
+    metalnessMap: bundle.metalnessMap,
+    normalMap: bundle.normalMap,
+    displacementMap: bundle.displacementMap,
+    displacementScale: 0.01,
+    displacementBias: -0.005,
+    side: THREE.FrontSide,
+    shadowSide: THREE.BackSide,
+    roughness: 1.0,
+    metalness: 0.0,
+    envMapIntensity: 0.5
+  });
+
+  applyTriplanarProjection(material, { scale: 0.05, detailScale: 5, detailIntensity: 0.3 });
+
+  material.needsUpdate = true;
+  const managed = createManagedMaterial(material, [bundle.albedoMap, bundle.aoMap, bundle.normalMap, bundle.roughnessMap]);
+  roomMaterialCache.set(cacheKey, managed);
+  return material;
+};
+
+export const getResidentialMaterials = (wallTint: string): THREE.Material[] => {
+  const floor = parseAssetMaterial("wood_floor_1", "#ffffff");
+  const ceiling = parseAssetMaterial("beige_wall_1", "#ffffff");
+  const wall = parseAssetMaterial("beige_wall_1", wallTint);
+  return [wall, wall, ceiling, floor, wall, wall];
+};
+
+export const getEmptyFloorMaterials = (wallTint: string): THREE.Material[] => {
+  const floor = parseAssetMaterial("painted_concrete_floor", "#ffffff");
+  const ceiling = parseAssetMaterial("concrete_wall_1", "#ffffff");
+  const wall = parseAssetMaterial("concrete_wall_1", wallTint);
+  return [wall, wall, ceiling, floor, wall, wall];
+};
+
 
 export const disposeParsedMaterial = (
   material?: THREE.Material | null,
