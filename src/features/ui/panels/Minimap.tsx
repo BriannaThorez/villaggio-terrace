@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import { useSimulationStore } from "../../../shared/utils/store";
 import { SmartTooltip } from "../../../shared/components/SmartTooltip";
 import { Map } from "lucide-react";
@@ -8,19 +8,27 @@ export const Minimap: React.FC = () => {
   const shapes = useSimulationStore((state) => state.shapes);
   const links = useSimulationStore((state) => state.links);
   const cameraState = useSimulationStore((state) => state.cameraState);
-  const requestCameraMove = useSimulationStore(
-    (state) => state.requestCameraMove,
-  );
+  const requestCameraMove = useSimulationStore((state) => state.requestCameraMove);
+
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+
   const [isDraggingViewport, setIsDraggingViewport] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
-  const [localZoom, setLocalZoom] = useState(0.375);
+  const [localZoom, setLocalZoom] = useState(0.45);
   const [localCenter, setLocalCenter] = useState<[number, number]>([0, 0]);
   const lastMousePos = useRef<[number, number]>([0, 0]);
 
   const uiPositions = useSimulationStore((state) => state.uiPositions);
   const setUIPosition = useSimulationStore((state) => state.setUIPosition);
-  const pos = uiPositions["minimap"] || { x: 0, y: 0 };
+
+  // High-performance viewport clamping for the initial render
+  const pos = useMemo(() => {
+    const raw = uiPositions["minimap"] || { x: 0, y: 0 };
+    // If the position is extreme (likely corrupted or off-screen), reset to safe default
+    if (raw.x < -window.innerWidth * 0.5) return { x: 16, y: 0 };
+    return raw;
+  }, [uiPositions]);
 
   const handleDragEnd = (_: any, info: any) => {
     setUIPosition("minimap", {
@@ -29,106 +37,120 @@ export const Minimap: React.FC = () => {
     });
   };
 
-  // Initial auto-center on shapes
-  useMemo(() => {
+  // Center on shapes initially if no center exists
+  useEffect(() => {
     if (shapes.length > 0 && localCenter[0] === 0 && localCenter[1] === 0) {
-      let avgX = 0;
-      let avgY = 0;
-      shapes.forEach((s) => {
-        avgX += s.position[0];
-        avgY += s.position[1];
-      });
-      setLocalCenter([avgX / shapes.length, avgY / shapes.length]);
+      const avg = shapes.reduce((acc, s) => [acc[0] + s.position[0], acc[1] + s.position[1]], [0, 0]);
+      setLocalCenter([avg[0] / shapes.length, avg[1] / shapes.length]);
     }
   }, [shapes.length]);
 
-  // Viewport rectangle calculation in world units
+  // High-performance Canvas rendering for shapes and links
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const width = canvas.width;
+    const height = canvas.height;
+    ctx.clearRect(0, 0, width, height);
+
+    const viewSize = width / localZoom;
+    const minX = localCenter[0] - viewSize / 2;
+    const minY = -localCenter[1] - viewSize / 2;
+
+    const transformX = (worldX: number) => ((worldX - minX) / viewSize) * width;
+    const transformY = (worldY: number) => ((-worldY - minY) / viewSize) * height;
+
+    // Draw Grid
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+    ctx.setLineDash([]);
+    const gridSize = 100;
+    const startX = Math.floor(minX / gridSize) * gridSize;
+    const startY = Math.floor(minY / gridSize) * gridSize;
+
+    for (let x = startX; x < minX + viewSize; x += gridSize) {
+      const px = transformX(x);
+      ctx.beginPath();
+      ctx.moveTo(px, 0);
+      ctx.lineTo(px, height);
+      ctx.stroke();
+    }
+    for (let y = startY; y < minY + viewSize; y += gridSize) {
+      const py = ((y - minY) / viewSize) * height;
+      ctx.beginPath();
+      ctx.moveTo(0, py);
+      ctx.lineTo(width, py);
+      ctx.stroke();
+    }
+
+    // Draw Links
+    ctx.strokeStyle = "rgba(100, 180, 255, 0.2)";
+    ctx.lineWidth = 1;
+    links.forEach(link => {
+      const from = shapes.find(s => s.id === link.from);
+      const to = shapes.find(s => s.id === link.to);
+      if (from && to) {
+        ctx.beginPath();
+        ctx.moveTo(transformX(from.position[0]), transformY(from.position[1]));
+        ctx.lineTo(transformX(to.position[0]), transformY(to.position[1]));
+        ctx.stroke();
+      }
+    });
+
+    // Draw Shapes
+    ctx.fillStyle = "rgba(100, 180, 255, 0.5)";
+    shapes.forEach(shape => {
+      const x = transformX(shape.position[0] - shape.size[0] / 2);
+      const y = transformY(shape.position[1] + shape.size[1] / 2);
+      const w = (shape.size[0] / viewSize) * width;
+      const h = (shape.size[1] / viewSize) * height;
+      ctx.fillRect(x, y, w, h);
+    });
+  }, [shapes, links, localZoom, localCenter]);
+
+  // SVG Layer for Interactive Viewport and Bounds
   const viewport = useMemo(() => {
     const { position, worldWidth, worldHeight } = cameraState;
-    const [camX, camY] = position;
-
     return {
-      x: camX - worldWidth / 2,
-      y: camY - worldHeight / 2,
-      width: worldWidth,
-      height: worldHeight,
+      x: position[0] - worldWidth / 2,
+      y: position[1] - worldHeight / 2,
+      w: worldWidth,
+      h: worldHeight
     };
   }, [cameraState]);
 
-  // Calculate the viewBox
   const viewSize = 200 / localZoom;
-  const viewBox = {
-    minX: localCenter[0] - viewSize / 2,
-    minY: -localCenter[1] - viewSize / 2,
-    width: viewSize,
-    height: viewSize,
-  };
-
-  const getInteractionCoords = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!svgRef.current) return null;
-    const rect = svgRef.current.getBoundingClientRect();
-    const clientX =
-      "touches" in e
-        ? (e as React.TouchEvent).touches[0].clientX
-        : (e as React.MouseEvent).clientX;
-    const clientY =
-      "touches" in e
-        ? (e as React.TouchEvent).touches[0].clientY
-        : (e as React.MouseEvent).clientY;
-
-    const xPercent = (clientX - rect.left) / rect.width;
-    const yPercent = (clientY - rect.top) / rect.height;
-
-    const svgX = viewBox.minX + xPercent * viewBox.width;
-    const svgY = viewBox.minY + yPercent * viewBox.height;
-    const worldX = svgX;
-    const worldY = -svgY;
-
-    return { worldX, worldY, svgX, svgY, clientX, clientY };
-  };
+  const viewBoxMinX = localCenter[0] - viewSize / 2;
+  const viewBoxMinY = -localCenter[1] - viewSize / 2;
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    const coords = getInteractionCoords(e);
-    if (!coords) return;
+    if (!svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * viewSize + viewBoxMinX;
+    const y = ((e.clientY - rect.top) / rect.height) * viewSize + viewBoxMinY;
 
-    const { worldX, svgY, clientX, clientY } = coords;
-
-    if (e.button === 2 || e.button === 1) {
-      setIsPanning(true);
-      lastMousePos.current = [clientX, clientY];
-    } else if (e.button === 0) {
+    if (e.button === 0) {
       setIsDraggingViewport(true);
-      requestCameraMove([worldX, -svgY]);
+      requestCameraMove([x, -y]);
+    } else {
+      setIsPanning(true);
+      lastMousePos.current = [e.clientX, e.clientY];
     }
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (isPanning) {
-      const dx = e.clientX - lastMousePos.current[0];
-      const dy = e.clientY - lastMousePos.current[1];
-
-      const rect = svgRef.current!.getBoundingClientRect();
-      const worldDx = (dx / rect.width) * viewBox.width;
-      const worldDy = (dy / rect.height) * viewBox.height;
-
-      setLocalCenter((prev) => [prev[0] - worldDx, prev[1] + worldDy]);
+      const dx = (e.clientX - lastMousePos.current[0]) * (viewSize / 200);
+      const dy = (e.clientY - lastMousePos.current[1]) * (viewSize / 200);
+      setLocalCenter(prev => [prev[0] - dx, prev[1] + dy]);
       lastMousePos.current = [e.clientX, e.clientY];
     } else if (isDraggingViewport) {
-      const coords = getInteractionCoords(e);
-      if (coords) {
-        requestCameraMove([coords.worldX, coords.worldY]);
-      }
-    }
-  };
-
-  const handleWheel = (e: React.WheelEvent) => {
-    e.stopPropagation();
-    const delta = e.deltaY;
-    const zoomFactor = 1.1;
-    if (delta > 0) {
-      setLocalZoom((prev) => Math.max(0.01, prev / zoomFactor));
-    } else {
-      setLocalZoom((prev) => Math.min(5.0, prev * zoomFactor));
+      const rect = svgRef.current!.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * viewSize + viewBoxMinX;
+      const y = ((e.clientY - rect.top) / rect.height) * viewSize + viewBoxMinY;
+      requestCameraMove([x, -y]);
     }
   };
 
@@ -138,159 +160,58 @@ export const Minimap: React.FC = () => {
       dragMomentum={false}
       onDragEnd={handleDragEnd}
       animate={{ x: pos.x, y: pos.y }}
-      id="minimap-container"
-      className="absolute bottom-20 right-4 z-[90] w-48 h-48 bg-background/95 backdrop-blur-xl border border-text/10 rounded-xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.4)] pointer-events-auto cursor-grab active:cursor-grabbing group transition-all duration-300 hover:border-primary/40"
-      onWheel={handleWheel}
-      onContextMenu={(e) => e.preventDefault()}
+      className="absolute bottom-20 right-4 z-[90] w-52 h-52 bg-background/90 backdrop-blur-md border border-text/10 rounded-2xl overflow-hidden shadow-2xl pointer-events-auto cursor-grab active:cursor-grabbing group"
+      onWheel={e => setLocalZoom(z => Math.max(0.1, Math.min(2, z - e.deltaY * 0.001)))}
+      onContextMenu={e => e.preventDefault()}
     >
+      <canvas
+        ref={canvasRef}
+        width={400}
+        height={400}
+        className="absolute inset-0 w-full h-full pointer-events-none opacity-80"
+      />
+
       <svg
         ref={svgRef}
-        viewBox={`${viewBox.minX} ${viewBox.minY} ${viewBox.width} ${viewBox.height}`}
-        className="w-full h-full cursor-crosshair active:cursor-grabbing"
-        onPointerDown={(e) => e.stopPropagation()} // Overrides the outer motion.div to prevent panel drag during panning
+        viewBox={`${viewBoxMinX} ${viewBoxMinY} ${viewSize} ${viewSize}`}
+        className="absolute inset-0 w-full h-full cursor-crosshair active:cursor-move"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
-        onMouseUp={() => {
-          setIsDraggingViewport(false);
-          setIsPanning(false);
-        }}
-        onMouseLeave={() => {
-          setIsDraggingViewport(false);
-          setIsPanning(false);
-        }}
-        onTouchStart={(e) => {
-          const coords = getInteractionCoords(e);
-          if (coords) {
-            setIsDraggingViewport(true);
-            requestCameraMove([coords.worldX, coords.worldY]);
-          }
-        }}
-        onTouchMove={(e) => {
-          if (isDraggingViewport) {
-            const coords = getInteractionCoords(e);
-            if (coords) requestCameraMove([coords.worldX, coords.worldY]);
-          }
-        }}
-        onTouchEnd={() => setIsDraggingViewport(false)}
+        onMouseUp={() => { setIsDraggingViewport(false); setIsPanning(false); }}
+        onMouseLeave={() => { setIsDraggingViewport(false); setIsPanning(false); }}
       >
-        {/* Grid lines - Perfectly anchored to world (0,0) */}
-        <defs>
-          <pattern
-            id="minimap-grid-stable"
-            width="100"
-            height="100"
-            patternUnits="userSpaceOnUse"
-          >
-            <path
-              d="M 100 0 L 0 0 0 100"
-              fill="none"
-              stroke="var(--text)"
-              strokeOpacity="0.12"
-              strokeWidth="2"
-            />
-          </pattern>
-        </defs>
-
-        {/* Infinite-feeling grid background */}
-        <rect
-          x={viewBox.minX - 500}
-          y={viewBox.minY - 500}
-          width={viewBox.width + 1000}
-          height={viewBox.height + 1000}
-          fill="url(#minimap-grid-stable)"
-        />
-
-        {/* Links */}
-        {links.map((link) => {
-          const from = shapes.find((s) => s.id === link.from);
-          const to = shapes.find((s) => s.id === link.to);
-          if (!from || !to) return null;
-          return (
-            <line
-              key={link.id}
-              x1={from.position[0]}
-              y1={-from.position[1]}
-              x2={to.position[0]}
-              y2={-to.position[1]}
-              stroke="var(--primary)"
-              strokeWidth="2"
-              opacity="0.25"
-              strokeLinecap="round"
-            />
-          );
-        })}
-
-        {/* Shapes */}
-        {shapes.map((shape) => (
-          <rect
-            key={shape.id}
-            x={shape.position[0] - shape.size[0] / 2}
-            y={-shape.position[1] - shape.size[1] / 2}
-            width={shape.size[0]}
-            height={shape.size[1]}
-            fill="var(--primary)"
-            opacity="0.5"
-            rx="2"
-            className="transition-opacity duration-200 group-hover:opacity-70"
-          />
-        ))}
-
-        {/* Viewport Rectangle */}
         <rect
           x={viewport.x}
-          y={-viewport.y - viewport.height}
-          width={viewport.width}
-          height={viewport.height}
+          y={-viewport.y - viewport.h}
+          width={viewport.w}
+          height={viewport.h}
           fill="var(--accent)"
-          fillOpacity="0.15"
+          fillOpacity="0.1"
           stroke="var(--accent)"
           strokeWidth={2 / localZoom}
-          strokeDasharray={`${4 / localZoom} ${2 / localZoom}`}
-          opacity="0.9"
           className="pointer-events-none"
         />
       </svg>
 
-      {/* HUD Overlay */}
-      <div className="absolute top-2 left-2 flex items-center gap-1.5 pointer-events-none">
-        <Map
-          size={12}
-          className="text-text drop-shadow-[0_0_8px_var(--primary)]"
-        />
+      <div className="absolute top-3 left-3 flex items-center gap-2 pointer-events-none">
+        <Map size={14} className="text-primary" />
+        <span className="text-[10px] font-bold tracking-widest uppercase opacity-40">Tactical Overlay</span>
       </div>
 
-      <div className="absolute bottom-2 left-2 flex items-center gap-2 pointer-events-none">
-        <span className="text-[8px] font-mono text-text/60 uppercase tracking-widest">
-          Z:{localZoom.toFixed(2)}
-        </span>
-        <span className="text-[8px] font-mono text-text/40 uppercase tracking-widest">
-          {cameraState.zoom.toFixed(1)}x
-        </span>
+      <div className="absolute bottom-3 left-3 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/5 pointer-events-none">
+        <span className="text-[9px] font-mono opacity-80">Z:{localZoom.toFixed(2)}</span>
       </div>
 
-      {/* Quick-center button */}
-      <div className="absolute bottom-2 right-2">
-        <SmartTooltip
-          content="Recenter Minimap"
-          description="Align the minimap center with the current camera viewport."
-          position="left"
-        >
+      <div className="absolute bottom-3 right-3">
+        <SmartTooltip content="Recenter View" position="left">
           <button
-            onClick={() =>
-              setLocalCenter([cameraState.position[0], cameraState.position[1]])
-            }
-            className="p-1 rounded bg-secondary/20 border border-primary/10 hover:bg-primary/20 hover:border-primary/40 transition-all group/btn"
+            onClick={() => setLocalCenter([cameraState.position[0], cameraState.position[1]])}
+            className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-primary/20 transition-colors pointer-events-auto"
           >
-            <div className="w-2 h-2 border border-primary/60 group-hover/btn:border-primary" />
+            <div className="w-2 h-2 rounded-full bg-primary" />
           </button>
         </SmartTooltip>
       </div>
-
-      {/* Decorative corners */}
-      <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-accent/40" />
-      <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-accent/40" />
-      <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-accent/40" />
-      <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-accent/40" />
     </motion.div>
   );
 };

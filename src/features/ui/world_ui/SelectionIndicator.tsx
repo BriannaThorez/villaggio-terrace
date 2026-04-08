@@ -18,8 +18,8 @@ const MENU_BUTTON_SCALE = 1.0;
 const ROTATE_BUTTON_SCALE = 1.0;
 
 const FRONT_FRAME_COLOR = "#39ff14";
-const FRONT_FRAME_EDGE = "rgba(57, 255, 20, 0.95)";
-const FRONT_FRAME_GLOW = "rgba(57, 255, 20, 0.14)";
+const FRONT_FRAME_EDGE = "#39ff14";
+const FRONT_FRAME_GLOW = "#39ff14";
 
 interface SelectionIndicatorProps {
   shape: SimulationNode & {
@@ -249,6 +249,8 @@ export const SelectionOverlay: React.FC<SelectionIndicatorProps> = ({
           color={FRONT_FRAME_EDGE}
           lineWidth={1.5}
           dashed={false}
+          transparent
+          opacity={0.95}
         />
       </group>
 

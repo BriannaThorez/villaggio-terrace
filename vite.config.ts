@@ -7,7 +7,10 @@ export default defineConfig(() => {
   const disableHmr = process.env.DISABLE_HMR === "true";
   return {
     base: "/villaggio-terrace/",
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(),
+      tailwindcss(),
+    ],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "."),

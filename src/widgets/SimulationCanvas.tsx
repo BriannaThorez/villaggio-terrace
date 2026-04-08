@@ -10,6 +10,7 @@ import themes from "../shared/themes/color_palettes.json";
 import { Bloom, Noise, Vignette, N8AO } from "@react-three/postprocessing";
 import { HolographicFloors } from "../features/environment/HolographicFloors";
 import { HolographicHeightScale } from "../features/environment/HolographicHeightScale";
+import { HolographicWidthScale } from "../features/environment/HolographicWidthScale";
 import { GroundIndicatorPlane } from "../features/environment/components/GroundIndicatorPlane";
 import { SimulationNodes } from "../entities/SimulationNodes";
 import { InternetConnectivity } from "../features/roomPlacement/visuals/InternetConnectivity";
@@ -908,10 +909,10 @@ const CanvasScene = () => {
         args={[2000, 2000]}
         cellSize={10}
         cellThickness={1.0}
-        cellColor={isDark ? "rgba(216, 231, 242, 0.2)" : "rgba(237, 244, 249, 0.2)"}
+        cellColor={isDark ? "#d8e7f2" : "#edf4f9"}
         sectionSize={40}
         sectionThickness={1.5}
-        sectionColor={isDark ? "rgba(143, 178, 200, 0.2)" : "rgba(199, 214, 226, 0.2)"}
+        sectionColor={isDark ? "#8fb2c8" : "#c7d6e2"}
         fadeDistance={280}
         fadeStrength={1.5}
         followCamera={false} // Manually following via useFrame for better control
@@ -920,6 +921,7 @@ const CanvasScene = () => {
 
       <HolographicFloors />
       <HolographicHeightScale />
+      <HolographicWidthScale />
       {/* <SimPeopleManager /> */}
       <GrassField
         width={1000}
@@ -981,16 +983,21 @@ const CanvasScene = () => {
 };
 
 export const SimulationCanvas = () => {
-  const cameraState = useSimulationStore((state) => state.cameraState);
   const showWeather = useSimulationStore((state) => state.showWeather);
+
+  // High-performance camera initialization:
+  // We use initial state to bootstrap the camera, but DO NOT subscribe to changes here.
+  // Reactive camera updates are handled by OrbitControls and synced back to the store
+  // via throttled events to prevent feedback loops and main-thread locking.
+  const [initialCamera] = useState(() => useSimulationStore.getState().cameraState);
 
   return (
     <Canvas
       orthographic
-      shadows="soft"
+      shadows={{ type: THREE.PCFShadowMap }}
       camera={{
-        zoom: cameraState.zoom,
-        position: cameraState.position as [number, number, number],
+        zoom: initialCamera.zoom,
+        position: initialCamera.position as [number, number, number],
         far: 5000,
         near: -5000
       }}

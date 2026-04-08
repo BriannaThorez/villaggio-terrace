@@ -14,7 +14,7 @@ import {
   ArrowTurnForwardIcon,
   KeyboardIcon
 } from "hugeicons-react";
-import { Droplet, Map } from "lucide-react";
+import { Droplet, Map, DollarSign } from "lucide-react";
 import { SmartTooltip } from "../../../shared/components/SmartTooltip";
 import { generateSVG } from "../../../shared/utils/svgExport";
 import React, { useState, createElement } from "react";
@@ -23,8 +23,12 @@ import themes from "../../../shared/themes/color_palettes.json";
 const GUI_SPACING_REM = 0.375;
 const GUI_CONTAINER_PADDING_REM = GUI_SPACING_REM * 2;
 const GUI_BUTTON_PADDING_REM = 0.44;
-const GUI_RESOURCE_BADGE_PADDING_REM = GUI_SPACING_REM * 1.5;
-const GUI_RESOURCE_GAP_REM = GUI_SPACING_REM;
+const RESOURCE_ICON_NUMBER_GAP_REM = 0.25;
+const RESOURCE_HORIZONTAL_PADDING_REM = 0.55;
+const RESOURCE_VERTICAL_PADDING_REM = 0.22;
+const RESOURCE_CONTAINER_GAP_REM = 0.15;
+const MONEY_BUTTON_PADDING_REM = 0.45;
+const MONEY_BUTTON_GAP_REM = 0.45;
 const GUI_ICON_SIZE = 28;
 const GUI_ICON_STROKE = 1.5;
 
@@ -42,14 +46,26 @@ const separatorStyle = {
 };
 
 const resourceBadgeStyle = {
-  gap: `${GUI_RESOURCE_GAP_REM}rem`,
-  padding: `${GUI_RESOURCE_BADGE_PADDING_REM}rem ${GUI_RESOURCE_BADGE_PADDING_REM * 2}rem`,
+  gap: `${RESOURCE_ICON_NUMBER_GAP_REM}rem`,
+  padding: `${RESOURCE_VERTICAL_PADDING_REM}rem ${RESOURCE_HORIZONTAL_PADDING_REM}rem`,
 };
+
+const moneyIndicatorButtonStyle = {
+  padding: `${MONEY_BUTTON_PADDING_REM}rem ${MONEY_BUTTON_PADDING_REM * 2}rem`,
+  gap: `${MONEY_BUTTON_GAP_REM}rem`,
+};
+
+const moneyFormatter = new Intl.NumberFormat("en-US", {
+  maximumFractionDigits: 0,
+});
+
+const formatMoneyDisplay = (value: number) => moneyFormatter.format(value);
 
 export const MainToolbar = () => {
   const themeName = useSimulationStore((state) => state.themeName);
   const setThemeName = useSimulationStore((state) => state.setThemeName);
   const resources = useSimulationStore((state) => state.resources);
+  const spendableMoney = useSimulationStore((state) => state.spendableMoney);
   const undo = useSimulationStore((state) => state.undo);
   const redo = useSimulationStore((state) => state.redo);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
@@ -84,6 +100,20 @@ export const MainToolbar = () => {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  const formattedSpendableMoney = formatMoneyDisplay(spendableMoney);
+  const moneyIndicator = (
+    <SmartTooltip content="Spendable Money">
+      <button
+        type="button"
+        className="inline-flex items-center justify-center rounded-full border border-primary/30 bg-primary/5 text-[0.75rem] font-semibold text-primary shadow-[0_10px_30px_rgba(37,99,235,0.35)] transition-all hover:scale-[1.02]"
+        style={moneyIndicatorButtonStyle}
+      >
+        <DollarSign size={18} strokeWidth={1.5} />
+        <span className="whitespace-nowrap">{formattedSpendableMoney}</span>
+      </button>
+    </SmartTooltip>
+  );
 
   const iconButton = (
     onClick: () => void,
@@ -198,19 +228,25 @@ export const MainToolbar = () => {
 
   const resourceBadge = (
     label: string,
-    Icon: typeof FlashIcon,
+    Icon: React.ComponentType<any>,
     value: number,
     iconColor: string,
   ) => (
     <SmartTooltip content={label}>
-      <div className="flex items-center text-sm font-medium text-text/80" style={resourceBadgeStyle}>
-        {value}
+      <div
+        className="flex items-center text-sm font-medium text-text/80"
+        style={resourceBadgeStyle}
+      >
         <Icon
-          size={GUI_ICON_SIZE}
-          strokeWidth={GUI_ICON_STROKE}
-          className={!iconColor.startsWith('#') ? iconColor : ''}
-          style={iconColor.startsWith('#') ? { color: iconColor } : {}}
+          size={20}
+          strokeWidth={1.25}
+          className={!iconColor.startsWith("#") ? iconColor : undefined}
+          style={{
+            ...(iconColor.startsWith("#") ? { color: iconColor } : {}),
+            flexShrink: 0,
+          }}
         />
+        <span className="whitespace-nowrap">{value}</span>
       </div>
     </SmartTooltip>
   );
@@ -225,10 +261,11 @@ export const MainToolbar = () => {
         }}
       >
         {menuButton}
+        {moneyIndicator}
         <div style={separatorStyle} />
 
         {/* Resource Indicators Group with 50% spacing adjustment and equal alignment */}
-        <div className="flex items-center" style={{ gap: `${GUI_SPACING_REM * 0.25}rem` }}>
+        <div className="flex items-center" style={{ gap: `${RESOURCE_CONTAINER_GAP_REM}rem` }}>
           {resourceBadge("Power", FlashIcon, resources.power, "text-yellow-400")}
           {resourceBadge("Water", Droplet, resources.water, "text-blue-400")}
           {resourceBadge("Internet", Wifi01Icon, resources.internet, "#FF5F1F")}

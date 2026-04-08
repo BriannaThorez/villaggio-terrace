@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { Text } from "@react-three/drei";
-import { parseMaterial } from "../../../../engine/MaterialParser";
+import { parseRoomMaterial } from "../../../../engine/MaterialParser";
 import { StructuralCutoutOverlay } from "../../structural/skin/RoomSkin";
 import { RoomMeshCSG } from "../../visuals/RoomMeshCSG";
 import {
@@ -113,7 +113,7 @@ export const ResidentialRoom: React.FC<ResidentialRoomProps> = ({
   }, [position, hasLeftWall, hasRightWall]);
 
   const materials = useMemo(() => {
-    const mat = parseMaterial({
+    const mat = parseRoomMaterial({
       albedo: color,
       roughness: 0.8,
       metalness: 0.1,

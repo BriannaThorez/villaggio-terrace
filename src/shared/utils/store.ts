@@ -107,6 +107,7 @@ export interface SimulationState {
   shapes: SimulationNode[];
   links: Link[];
   resources: Resources;
+  spendableMoney: number;
   towerGrid: Map<string, string>; // "x,y" -> shapeId
   activeTool:
   | SimulationNodeType
@@ -234,6 +235,7 @@ export interface SimulationState {
   setSunTime: (val: number) => void;
   sunIntensity: number;
   setSunIntensity: (val: number) => void;
+  setSpendableMoney: (value: number) => void;
   registerStructuralRoom: (id: string, type: SimulationNodeType, x: number, y: number, w: number, h: number) => void;
 }
 
@@ -309,6 +311,8 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
   const redoStack: HistoryState[] = [];
 
   const savedUIPositions = JSON.parse(localStorage.getItem("villaggio_ui_positions") || "{}");
+  const savedSpendableMoney = parseFloat(localStorage.getItem("villaggio_spendable_money") ?? "");
+  const initialSpendableMoney = Number.isFinite(savedSpendableMoney) ? savedSpendableMoney : 10000000;
 
   const pushToHistory = () => {
     const { shapes, links } = get();
@@ -321,6 +325,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     shapes: [],
     links: [],
     resources: { power: 50, water: 50, internet: 50 },
+    spendableMoney: initialSpendableMoney,
     towerGrid: new Map(),
     activeTool: "select",
     selectedId: null,
@@ -963,6 +968,10 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     setSunIntensity: (val) => {
       localStorage.setItem("villaggio_sun_intensity", String(val));
       set({ sunIntensity: val });
+    },
+    setSpendableMoney: (value) => {
+      localStorage.setItem("villaggio_spendable_money", value.toString());
+      set({ spendableMoney: value });
     },
   };
 });
