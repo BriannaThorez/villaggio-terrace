@@ -29,6 +29,7 @@ type BuildToolId =
 
 export const BuildToolbar = () => {
   const setActiveTool = useSimulationStore((state) => state.setActiveTool);
+  const setActiveModuleId = useSimulationStore((state) => state.setActiveModuleId);
   const activeTool = useSimulationStore((state) => state.activeTool);
 
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
@@ -54,9 +55,9 @@ export const BuildToolbar = () => {
         icon: Home01Icon,
         label: "Residential",
         subTypes: [
-          { id: "res_studio", label: "Studio", size: [10, 40], color: "#4ade80" },
-          { id: "res_1br", label: "1-Bedroom", size: [20, 40], color: "#22c55e" },
-          { id: "res_2br", label: "2-Bedroom", size: [30, 40], color: "#16a34a" },
+          { id: "residential-studio-1", label: "Studio", size: [10, 40], color: "#4ade80" },
+          { id: "residential-1br-1", label: "1-Bedroom", size: [20, 40], color: "#22c55e" },
+          { id: "residential-2br-1", label: "2-Bedroom", size: [30, 40], color: "#16a34a" },
         ]
       },
       {
@@ -64,9 +65,9 @@ export const BuildToolbar = () => {
         icon: OfficeIcon,
         label: "Office",
         subTypes: [
-          { id: "off_small", label: "Small Office", size: [10, 40], color: "#60a5fa" },
-          { id: "off_med", label: "Executive Suite", size: [20, 40], color: "#3b82f6" },
-          { id: "off_large", label: "Corporate HQ", size: [30, 80], color: "#2563eb" },
+          { id: "office-small-insurance", label: "Small Office", size: [10, 40], color: "#60a5fa" },
+          { id: "office-medium-accounting", label: "Executive Suite", size: [20, 40], color: "#3b82f6" },
+          { id: "office-large-law", label: "Corporate HQ", size: [30, 80], color: "#2563eb" },
         ]
       },
       {
@@ -74,9 +75,9 @@ export const BuildToolbar = () => {
         icon: ShoppingBag01Icon,
         label: "Commercial",
         subTypes: [
-          { id: "com_cafe", label: "Cafe", size: [10, 40], color: "#fb923c" },
-          { id: "com_shop", label: "Boutique", size: [20, 40], color: "#f97316" },
-          { id: "com_cinema", label: "Cinema", size: [40, 80], color: "#ea580c" },
+          { id: "commercial-small-bakery", label: "Bakery", size: [10, 40], color: "#fb923c" },
+          { id: "commercial-medium-boutique", label: "Boutique", size: [20, 40], color: "#f97316" },
+          { id: "commercial-large-cinema", label: "Cinema", size: [40, 80], color: "#ea580c" },
         ]
       },
       {
@@ -118,7 +119,10 @@ export const BuildToolbar = () => {
                     {cat.subTypes.map((sub) => (
                       <button
                         key={sub.id}
-                        onClick={() => setActiveTool(sub.type || cat.id as any)}
+                        onClick={() => {
+                          setActiveTool(sub.type || cat.id as any);
+                          setActiveModuleId(sub.id);
+                        }}
                         className="whitespace-nowrap px-4 py-2 text-[11px] font-medium text-text/70 hover:text-primary hover:bg-primary/10 rounded-xl transition-colors flex items-center gap-3 border border-transparent hover:border-primary/20"
                       >
                         <div className="w-1.5 h-1.5 rounded-full" style={{ background: sub.color || 'var(--primary)' }} />

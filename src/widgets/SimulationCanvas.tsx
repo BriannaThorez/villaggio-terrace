@@ -572,10 +572,13 @@ const CanvasScene = () => {
     }, 100);
 
     const id = `room_${Math.random().toString(36).substring(2, 9)}`;
+    const activeModuleId = useSimulationStore.getState().activeModuleId;
+
     addShape(
       {
         id,
         type: activeTool as any,
+        metadataId: activeModuleId || undefined,
         position,
         size: nodeSize,
         vertices,

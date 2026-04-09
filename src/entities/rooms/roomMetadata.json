@@ -3,7 +3,7 @@
     "id": "office-small-insurance",
     "category": "Office",
     "name": "Small Insurance",
-    "price": 140,
+    "price": 140000,
     "dimensions": {
       "width": 4,
       "height": 1
@@ -14,8 +14,8 @@
       "variant": "Insurance",
       "width": 4,
       "height": 1,
-      "build_cost": 140,
-      "average_rent": 90,
+      "build_cost": 140000,
+      "average_rent": 9000,
       "rent/space": "=G2/(D2*E2)",
       "likes_art": null,
       "preferred_floor": null,
@@ -61,13 +61,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "Premium professional environments optimized for high-performance corporate operations.",
+    "specificDescription": "A high-efficiency insurance module engineered for professional insurance results."
   },
   {
     "id": "office-small-accounting",
     "category": "Office",
     "name": "Small Accounting",
-    "price": 165,
+    "price": 165000,
     "dimensions": {
       "width": 4,
       "height": 1
@@ -78,8 +80,8 @@
       "variant": "Accounting",
       "width": 4,
       "height": 1,
-      "build_cost": 165,
-      "average_rent": 130,
+      "build_cost": 165000,
+      "average_rent": 13000,
       "rent/space": "=G3/(D3*E3)",
       "likes_art": null,
       "preferred_floor": null,
@@ -125,13 +127,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "Premium professional environments optimized for high-performance corporate operations.",
+    "specificDescription": "A high-efficiency accounting module engineered for professional accounting results."
   },
   {
     "id": "office-small-legal",
     "category": "Office",
     "name": "Small Legal",
-    "price": 165,
+    "price": 165000,
     "dimensions": {
       "width": 4,
       "height": 1
@@ -142,8 +146,8 @@
       "variant": "Legal",
       "width": 4,
       "height": 1,
-      "build_cost": 165,
-      "average_rent": 160,
+      "build_cost": 165000,
+      "average_rent": 16000,
       "rent/space": "=G4/(D4*E4)",
       "likes_art": null,
       "preferred_floor": null,
@@ -189,13 +193,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "Premium professional environments optimized for high-performance corporate operations.",
+    "specificDescription": "A high-efficiency legal module engineered for professional legal results."
   },
   {
     "id": "office-small-creative",
     "category": "Office",
     "name": "Small Creative",
-    "price": 190,
+    "price": 190000,
     "dimensions": {
       "width": 4,
       "height": 1
@@ -206,8 +212,8 @@
       "variant": "Creative",
       "width": 4,
       "height": 1,
-      "build_cost": 190,
-      "average_rent": 170,
+      "build_cost": 190000,
+      "average_rent": 17000,
       "rent/space": "=G5/(D5*E5)",
       "likes_art": null,
       "preferred_floor": null,
@@ -253,13 +259,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "Premium professional environments optimized for high-performance corporate operations.",
+    "specificDescription": "A high-efficiency creative module engineered for professional creative results."
   },
   {
     "id": "office-medium-medical",
     "category": "Office",
     "name": "Medium Medical",
-    "price": 340,
+    "price": 340000,
     "dimensions": {
       "width": 10,
       "height": 1
@@ -270,8 +278,8 @@
       "variant": "Medical",
       "width": 10,
       "height": 1,
-      "build_cost": 340,
-      "average_rent": 350,
+      "build_cost": 340000,
+      "average_rent": 35000,
       "rent/space": "=G6/(D6*E6)",
       "likes_art": null,
       "preferred_floor": "Lower",
@@ -317,13 +325,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "Premium professional environments optimized for high-performance corporate operations.",
+    "specificDescription": "A high-efficiency medical module engineered for professional medical results."
   },
   {
     "id": "office-medium-creative-and-technical",
     "category": "Office",
     "name": "Medium Creative and Technical",
-    "price": 340,
+    "price": 340000,
     "dimensions": {
       "width": 10,
       "height": 1
@@ -334,8 +344,8 @@
       "variant": "Creative and Technical",
       "width": 10,
       "height": 1,
-      "build_cost": 340,
-      "average_rent": 430,
+      "build_cost": 340000,
+      "average_rent": 43000,
       "rent/space": "=G7/(D7*E7)",
       "likes_art": null,
       "preferred_floor": "Upper",
@@ -381,13 +391,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "Premium professional environments optimized for high-performance corporate operations.",
+    "specificDescription": "A high-efficiency creative and technical module engineered for professional creative and technical results."
   },
   {
     "id": "office-medium-legal",
     "category": "Office",
     "name": "Medium Legal",
-    "price": 340,
+    "price": 340000,
     "dimensions": {
       "width": 10,
       "height": 1
@@ -398,8 +410,8 @@
       "variant": "Legal",
       "width": 10,
       "height": 1,
-      "build_cost": 340,
-      "average_rent": 380,
+      "build_cost": 340000,
+      "average_rent": 38000,
       "rent/space": "=G8/(D8*E8)",
       "likes_art": null,
       "preferred_floor": "Upper",
@@ -445,13 +457,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "Premium professional environments optimized for high-performance corporate operations.",
+    "specificDescription": "A high-efficiency legal module engineered for professional legal results."
   },
   {
     "id": "office-medium-financial",
     "category": "Office",
     "name": "Medium Financial",
-    "price": 365,
+    "price": 365000,
     "dimensions": {
       "width": 10,
       "height": 1
@@ -462,8 +476,8 @@
       "variant": "Financial",
       "width": 10,
       "height": 1,
-      "build_cost": 365,
-      "average_rent": 500,
+      "build_cost": 365000,
+      "average_rent": 50000,
       "rent/space": "=G9/(D9*E9)",
       "likes_art": null,
       "preferred_floor": "Upper",
@@ -509,13 +523,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "Premium professional environments optimized for high-performance corporate operations.",
+    "specificDescription": "A high-efficiency financial module engineered for professional financial results."
   },
   {
     "id": "office-large-financial",
     "category": "Office",
     "name": "Large Financial",
-    "price": 700,
+    "price": 700000,
     "dimensions": {
       "width": 15,
       "height": 1
@@ -526,8 +542,8 @@
       "variant": "Financial",
       "width": 15,
       "height": 1,
-      "build_cost": 700,
-      "average_rent": 950,
+      "build_cost": 700000,
+      "average_rent": 95000,
       "rent/space": "=G10/(D10*E10)",
       "likes_art": null,
       "preferred_floor": "Upper",
@@ -573,13 +589,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "Premium professional environments optimized for high-performance corporate operations.",
+    "specificDescription": "A high-efficiency financial module engineered for professional financial results."
   },
   {
     "id": "office-large-engineering",
     "category": "Office",
     "name": "Large Engineering",
-    "price": 700,
+    "price": 700000,
     "dimensions": {
       "width": 15,
       "height": 1
@@ -590,8 +608,8 @@
       "variant": "Engineering",
       "width": 15,
       "height": 1,
-      "build_cost": 700,
-      "average_rent": 770,
+      "build_cost": 700000,
+      "average_rent": 77000,
       "rent/space": "=G11/(D11*E11)",
       "likes_art": null,
       "preferred_floor": "Upper",
@@ -637,13 +655,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "Premium professional environments optimized for high-performance corporate operations.",
+    "specificDescription": "A high-efficiency engineering module engineered for professional engineering results."
   },
   {
     "id": "office-large-creative",
     "category": "Office",
     "name": "Large Creative",
-    "price": 700,
+    "price": 700000,
     "dimensions": {
       "width": 15,
       "height": 1
@@ -654,8 +674,8 @@
       "variant": "Creative",
       "width": 15,
       "height": 1,
-      "build_cost": 700,
-      "average_rent": 1030,
+      "build_cost": 700000,
+      "average_rent": 103000,
       "rent/space": "=G12/(D12*E12)",
       "likes_art": "x",
       "preferred_floor": "Upper",
@@ -701,13 +721,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "Premium professional environments optimized for high-performance corporate operations.",
+    "specificDescription": "A high-efficiency creative module engineered for professional creative results."
   },
   {
     "id": "office-large-tech",
     "category": "Office",
     "name": "Large Tech",
-    "price": 700,
+    "price": 700000,
     "dimensions": {
       "width": 15,
       "height": 1
@@ -718,8 +740,8 @@
       "variant": "Tech",
       "width": 15,
       "height": 1,
-      "build_cost": 700,
-      "average_rent": 770,
+      "build_cost": 700000,
+      "average_rent": 77000,
       "rent/space": "=G13/(D13*E13)",
       "likes_art": null,
       "preferred_floor": "Upper",
@@ -765,13 +787,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "Premium professional environments optimized for high-performance corporate operations.",
+    "specificDescription": "A high-efficiency tech module engineered for professional tech results."
   },
   {
     "id": "office-large-medical",
     "category": "Office",
     "name": "Large Medical",
-    "price": 650,
+    "price": 650000,
     "dimensions": {
       "width": 15,
       "height": 1
@@ -782,8 +806,8 @@
       "variant": "Medical",
       "width": 15,
       "height": 1,
-      "build_cost": 650,
-      "average_rent": 470,
+      "build_cost": 650000,
+      "average_rent": 47000,
       "rent/space": "=G14/(D14*E14)",
       "likes_art": null,
       "preferred_floor": "Lower",
@@ -829,13 +853,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "Premium professional environments optimized for high-performance corporate operations.",
+    "specificDescription": "A high-efficiency medical module engineered for professional medical results."
   },
   {
     "id": "office-hq-suite-tech-company-hqs",
     "category": "Office",
     "name": "HQ Suite Tech Company HQs",
-    "price": 1550,
+    "price": 1550000,
     "dimensions": {
       "width": 10,
       "height": 2
@@ -846,8 +872,8 @@
       "variant": "Tech Company HQs",
       "width": 10,
       "height": 2,
-      "build_cost": 1550,
-      "average_rent": 1300,
+      "build_cost": 1550000,
+      "average_rent": 130000,
       "rent/space": "=G15/(D15*E15)",
       "likes_art": "x",
       "preferred_floor": "Upper",
@@ -893,13 +919,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "Premium professional environments optimized for high-performance corporate operations.",
+    "specificDescription": "A high-efficiency tech company hqs module engineered for professional tech company hqs results."
   },
   {
     "id": "office-hq-suite-broadcasting-studios",
     "category": "Office",
     "name": "HQ Suite Broadcasting Studios",
-    "price": 1550,
+    "price": 1550000,
     "dimensions": {
       "width": 10,
       "height": 2
@@ -910,8 +938,8 @@
       "variant": "Broadcasting Studios",
       "width": 10,
       "height": 2,
-      "build_cost": 1550,
-      "average_rent": 1250,
+      "build_cost": 1550000,
+      "average_rent": 125000,
       "rent/space": "=G16/(D16*E16)",
       "likes_art": null,
       "preferred_floor": "Upper",
@@ -957,13 +985,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "Premium professional environments optimized for high-performance corporate operations.",
+    "specificDescription": "A high-efficiency broadcasting studios module engineered for professional broadcasting studios results."
   },
   {
     "id": "office-hq-suite-government-offices",
     "category": "Office",
     "name": "HQ Suite Government Offices",
-    "price": 1550,
+    "price": 1550000,
     "dimensions": {
       "width": 10,
       "height": 2
@@ -974,8 +1004,8 @@
       "variant": "Government Offices",
       "width": 10,
       "height": 2,
-      "build_cost": 1550,
-      "average_rent": 1030,
+      "build_cost": 1550000,
+      "average_rent": 103000,
       "rent/space": "=G17/(D17*E17)",
       "likes_art": null,
       "preferred_floor": "Lower",
@@ -1021,13 +1051,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "Premium professional environments optimized for high-performance corporate operations.",
+    "specificDescription": "A high-efficiency government offices module engineered for professional government offices results."
   },
   {
     "id": "office-hq-suite-bank-headquarters",
     "category": "Office",
     "name": "HQ Suite Bank Headquarters",
-    "price": 1550,
+    "price": 1550000,
     "dimensions": {
       "width": 10,
       "height": 2
@@ -1038,8 +1070,8 @@
       "variant": "Bank Headquarters",
       "width": 10,
       "height": 2,
-      "build_cost": 1550,
-      "average_rent": 1370,
+      "build_cost": 1550000,
+      "average_rent": 137000,
       "rent/space": "=G18/(D18*E18)",
       "likes_art": "x",
       "preferred_floor": "Upper",
@@ -1085,13 +1117,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "Premium professional environments optimized for high-performance corporate operations.",
+    "specificDescription": "A high-efficiency bank headquarters module engineered for professional bank headquarters results."
   },
   {
     "id": "apartment-studio-basic",
     "category": "Apartment",
     "name": "Studio Basic",
-    "price": 145,
+    "price": 145000,
     "dimensions": {
       "width": 6,
       "height": 1
@@ -1102,8 +1136,8 @@
       "variant": "Basic",
       "width": 6,
       "height": 1,
-      "build_cost": 145,
-      "average_rent": 180,
+      "build_cost": 145000,
+      "average_rent": 18000,
       "rent/space": "=G19/(D19*E19)",
       "likes_art": null,
       "preferred_floor": "Upper",
@@ -1149,13 +1183,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency basic module engineered for professional basic results."
   },
   {
     "id": "apartment-studio-deluxe",
     "category": "Apartment",
     "name": "Studio Deluxe",
-    "price": 220,
+    "price": 220000,
     "dimensions": {
       "width": 6,
       "height": 1
@@ -1166,8 +1202,8 @@
       "variant": "Deluxe",
       "width": 6,
       "height": 1,
-      "build_cost": 220,
-      "average_rent": 240,
+      "build_cost": 220000,
+      "average_rent": 24000,
       "rent/space": "=G20/(D20*E20)",
       "likes_art": null,
       "preferred_floor": "Upper",
@@ -1213,13 +1249,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency deluxe module engineered for professional deluxe results."
   },
   {
     "id": "apartment-studio-luxury",
     "category": "Apartment",
     "name": "Studio Luxury",
-    "price": 320,
+    "price": 320000,
     "dimensions": {
       "width": 6,
       "height": 1
@@ -1230,8 +1268,8 @@
       "variant": "Luxury",
       "width": 6,
       "height": 1,
-      "build_cost": 320,
-      "average_rent": 360,
+      "build_cost": 320000,
+      "average_rent": 36000,
       "rent/space": "=G21/(D21*E21)",
       "likes_art": null,
       "preferred_floor": "Upper",
@@ -1277,13 +1315,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency luxury module engineered for professional luxury results."
   },
   {
     "id": "apartment-one-bedroom-basic",
     "category": "Apartment",
     "name": "One-Bedroom Basic",
-    "price": 295,
+    "price": 295000,
     "dimensions": {
       "width": 8,
       "height": 1
@@ -1294,8 +1334,8 @@
       "variant": "Basic",
       "width": 8,
       "height": 1,
-      "build_cost": 295,
-      "average_rent": 220,
+      "build_cost": 295000,
+      "average_rent": 22000,
       "rent/space": "=G22/(D22*E22)",
       "likes_art": null,
       "preferred_floor": "Upper",
@@ -1341,13 +1381,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency basic module engineered for professional basic results."
   },
   {
     "id": "apartment-one-bedroom-deluxe",
     "category": "Apartment",
     "name": "One-Bedroom Deluxe",
-    "price": 345,
+    "price": 345000,
     "dimensions": {
       "width": 8,
       "height": 1
@@ -1358,8 +1400,8 @@
       "variant": "Deluxe",
       "width": 8,
       "height": 1,
-      "build_cost": 345,
-      "average_rent": 320,
+      "build_cost": 345000,
+      "average_rent": 32000,
       "rent/space": "=G23/(D23*E23)",
       "likes_art": null,
       "preferred_floor": "Upper",
@@ -1405,13 +1447,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency deluxe module engineered for professional deluxe results."
   },
   {
     "id": "apartment-one-bedroom-luxury",
     "category": "Apartment",
     "name": "One-Bedroom Luxury",
-    "price": 420,
+    "price": 420000,
     "dimensions": {
       "width": 8,
       "height": 1
@@ -1422,8 +1466,8 @@
       "variant": "Luxury",
       "width": 8,
       "height": 1,
-      "build_cost": 420,
-      "average_rent": 410,
+      "build_cost": 420000,
+      "average_rent": 41000,
       "rent/space": "=G24/(D24*E24)",
       "likes_art": null,
       "preferred_floor": "Upper",
@@ -1469,13 +1513,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency luxury module engineered for professional luxury results."
   },
   {
     "id": "apartment-small-two-bedroom-basic",
     "category": "Apartment",
     "name": "Small Two-Bedroom Basic",
-    "price": 485,
+    "price": 485000,
     "dimensions": {
       "width": 10,
       "height": 1
@@ -1486,8 +1532,8 @@
       "variant": "Basic",
       "width": 10,
       "height": 1,
-      "build_cost": 485,
-      "average_rent": 490,
+      "build_cost": 485000,
+      "average_rent": 49000,
       "rent/space": "=G25/(D25*E25)",
       "likes_art": null,
       "preferred_floor": "Upper",
@@ -1533,13 +1579,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency basic module engineered for professional basic results."
   },
   {
     "id": "apartment-small-two-bedroom-luxury",
     "category": "Apartment",
     "name": "Small Two-Bedroom Luxury",
-    "price": 535,
+    "price": 535000,
     "dimensions": {
       "width": 10,
       "height": 1
@@ -1550,8 +1598,8 @@
       "variant": "Luxury",
       "width": 10,
       "height": 1,
-      "build_cost": 535,
-      "average_rent": 580,
+      "build_cost": 535000,
+      "average_rent": 58000,
       "rent/space": "=G26/(D26*E26)",
       "likes_art": "x",
       "preferred_floor": "Upper",
@@ -1597,13 +1645,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency luxury module engineered for professional luxury results."
   },
   {
     "id": "apartment-large-two-bedroom-large",
     "category": "Apartment",
     "name": "Large Two-Bedroom Large",
-    "price": 580,
+    "price": 580000,
     "dimensions": {
       "width": 16,
       "height": 1
@@ -1614,8 +1664,8 @@
       "variant": "Large",
       "width": 16,
       "height": 1,
-      "build_cost": 580,
-      "average_rent": 935,
+      "build_cost": 580000,
+      "average_rent": 93500,
       "rent/space": "=G27/(D27*E27)",
       "likes_art": null,
       "preferred_floor": "Upper",
@@ -1661,13 +1711,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency large module engineered for professional large results."
   },
   {
     "id": "apartment-large-two-bedroom-fancy",
     "category": "Apartment",
     "name": "Large Two-Bedroom Fancy",
-    "price": 680,
+    "price": 680000,
     "dimensions": {
       "width": 16,
       "height": 1
@@ -1678,8 +1730,8 @@
       "variant": "Fancy",
       "width": 16,
       "height": 1,
-      "build_cost": 680,
-      "average_rent": 1045,
+      "build_cost": 680000,
+      "average_rent": 104500,
       "rent/space": "=G28/(D28*E28)",
       "likes_art": null,
       "preferred_floor": "Upper",
@@ -1725,13 +1777,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency fancy module engineered for professional fancy results."
   },
   {
     "id": "apartment-duplex-two-bedroom-large",
     "category": "Apartment",
     "name": "Duplex Two-Bedroom Large",
-    "price": 1085,
+    "price": 1085000,
     "dimensions": {
       "width": 10,
       "height": 2
@@ -1742,8 +1796,8 @@
       "variant": "Large",
       "width": 10,
       "height": 2,
-      "build_cost": 1085,
-      "average_rent": 1130,
+      "build_cost": 1085000,
+      "average_rent": 113000,
       "rent/space": "=G29/(D29*E29)",
       "likes_art": "x",
       "preferred_floor": "Upper",
@@ -1789,13 +1843,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency large module engineered for professional large results."
   },
   {
     "id": "apartment-loft-bi-level",
     "category": "Apartment",
     "name": "Loft Bi-Level",
-    "price": 1585,
+    "price": 1585000,
     "dimensions": {
       "width": 15,
       "height": 2
@@ -1806,8 +1862,8 @@
       "variant": "Bi-Level",
       "width": 15,
       "height": 2,
-      "build_cost": 1585,
-      "average_rent": 1835,
+      "build_cost": 1585000,
+      "average_rent": 183500,
       "rent/space": "=G30/(D30*E30)",
       "likes_art": null,
       "preferred_floor": "Upper",
@@ -1853,13 +1909,15 @@
       "yoga_services": null,
       "home_decor_services": "x",
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency bi-level module engineered for professional bi-level results."
   },
   {
     "id": "apartment-loft-luxury",
     "category": "Apartment",
     "name": "Loft Luxury",
-    "price": 2085,
+    "price": 2085000,
     "dimensions": {
       "width": 15,
       "height": 2
@@ -1870,8 +1928,8 @@
       "variant": "Luxury",
       "width": 15,
       "height": 2,
-      "build_cost": 2085,
-      "average_rent": 2035,
+      "build_cost": 2085000,
+      "average_rent": 203500,
       "rent/space": "=G31/(D31*E31)",
       "likes_art": null,
       "preferred_floor": "Upper",
@@ -1917,13 +1975,15 @@
       "yoga_services": "x",
       "home_decor_services": "x",
       "wealth_adviser_services": "x"
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency luxury module engineered for professional luxury results."
   },
   {
     "id": "restaurant-small-food-courts",
     "category": "Restaurant",
     "name": "Small Food Courts",
-    "price": 170,
+    "price": 170000,
     "dimensions": {
       "width": 4,
       "height": 1
@@ -1934,8 +1994,8 @@
       "variant": "Food Courts",
       "width": 4,
       "height": 1,
-      "build_cost": 170,
-      "average_rent": 100,
+      "build_cost": 170000,
+      "average_rent": 10000,
       "rent/space": "=G32/(D32*E32)",
       "likes_art": null,
       "preferred_floor": null,
@@ -1981,13 +2041,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency food courts module engineered for professional food courts results."
   },
   {
     "id": "restaurant-small-cafes",
     "category": "Restaurant",
     "name": "Small Cafes",
-    "price": 170,
+    "price": 170000,
     "dimensions": {
       "width": 4,
       "height": 1
@@ -1998,8 +2060,8 @@
       "variant": "Cafes",
       "width": 4,
       "height": 1,
-      "build_cost": 170,
-      "average_rent": 120,
+      "build_cost": 170000,
+      "average_rent": 12000,
       "rent/space": "=G33/(D33*E33)",
       "likes_art": null,
       "preferred_floor": null,
@@ -2045,13 +2107,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency cafes module engineered for professional cafes results."
   },
   {
     "id": "restaurant-medium-fast-food",
     "category": "Restaurant",
     "name": "Medium Fast Food",
-    "price": 440,
+    "price": 440000,
     "dimensions": {
       "width": 8,
       "height": 1
@@ -2062,8 +2126,8 @@
       "variant": "Fast Food",
       "width": 8,
       "height": 1,
-      "build_cost": 440,
-      "average_rent": 220,
+      "build_cost": 440000,
+      "average_rent": 22000,
       "rent/space": "=G34/(D34*E34)",
       "likes_art": null,
       "preferred_floor": null,
@@ -2109,13 +2173,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency fast food module engineered for professional fast food results."
   },
   {
     "id": "restaurant-medium-diners",
     "category": "Restaurant",
     "name": "Medium Diners",
-    "price": 440,
+    "price": 440000,
     "dimensions": {
       "width": 8,
       "height": 1
@@ -2126,8 +2192,8 @@
       "variant": "Diners",
       "width": 8,
       "height": 1,
-      "build_cost": 440,
-      "average_rent": 220,
+      "build_cost": 440000,
+      "average_rent": 22000,
       "rent/space": "=G35/(D35*E35)",
       "likes_art": null,
       "preferred_floor": null,
@@ -2173,13 +2239,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency diners module engineered for professional diners results."
   },
   {
     "id": "restaurant-medium-sandwich-shops",
     "category": "Restaurant",
     "name": "Medium Sandwich Shops",
-    "price": 440,
+    "price": 440000,
     "dimensions": {
       "width": 8,
       "height": 1
@@ -2190,8 +2258,8 @@
       "variant": "Sandwich Shops",
       "width": 8,
       "height": 1,
-      "build_cost": 440,
-      "average_rent": 220,
+      "build_cost": 440000,
+      "average_rent": 22000,
       "rent/space": "=G36/(D36*E36)",
       "likes_art": null,
       "preferred_floor": null,
@@ -2237,13 +2305,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency sandwich shops module engineered for professional sandwich shops results."
   },
   {
     "id": "restaurant-medium-salad-and-hot-bars",
     "category": "Restaurant",
     "name": "Medium Salad and Hot Bars",
-    "price": 440,
+    "price": 440000,
     "dimensions": {
       "width": 8,
       "height": 1
@@ -2254,8 +2324,8 @@
       "variant": "Salad and Hot Bars",
       "width": 8,
       "height": 1,
-      "build_cost": 440,
-      "average_rent": 200,
+      "build_cost": 440000,
+      "average_rent": 20000,
       "rent/space": "=G37/(D37*E37)",
       "likes_art": null,
       "preferred_floor": null,
@@ -2301,13 +2371,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency salad and hot bars module engineered for professional salad and hot bars results."
   },
   {
     "id": "restaurant-medium-pizza-places",
     "category": "Restaurant",
     "name": "Medium Pizza Places",
-    "price": 440,
+    "price": 440000,
     "dimensions": {
       "width": 8,
       "height": 1
@@ -2318,8 +2390,8 @@
       "variant": "Pizza Places",
       "width": 8,
       "height": 1,
-      "build_cost": 440,
-      "average_rent": 220,
+      "build_cost": 440000,
+      "average_rent": 22000,
       "rent/space": "=G38/(D38*E38)",
       "likes_art": null,
       "preferred_floor": null,
@@ -2365,13 +2437,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency pizza places module engineered for professional pizza places results."
   },
   {
     "id": "restaurant-large-sports-bars",
     "category": "Restaurant",
     "name": "Large Sports Bars",
-    "price": 1045,
+    "price": 1045000,
     "dimensions": {
       "width": 16,
       "height": 1
@@ -2382,8 +2456,8 @@
       "variant": "Sports Bars",
       "width": 16,
       "height": 1,
-      "build_cost": 1045,
-      "average_rent": 560,
+      "build_cost": 1045000,
+      "average_rent": 56000,
       "rent/space": "=G39/(D39*E39)",
       "likes_art": null,
       "preferred_floor": null,
@@ -2429,13 +2503,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency sports bars module engineered for professional sports bars results."
   },
   {
     "id": "restaurant-large-italian",
     "category": "Restaurant",
     "name": "Large Italian",
-    "price": 1045,
+    "price": 1045000,
     "dimensions": {
       "width": 16,
       "height": 1
@@ -2446,8 +2522,8 @@
       "variant": "Italian",
       "width": 16,
       "height": 1,
-      "build_cost": 1045,
-      "average_rent": 560,
+      "build_cost": 1045000,
+      "average_rent": 56000,
       "rent/space": "=G40/(D40*E40)",
       "likes_art": null,
       "preferred_floor": null,
@@ -2493,13 +2569,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency italian module engineered for professional italian results."
   },
   {
     "id": "restaurant-large-mexican",
     "category": "Restaurant",
     "name": "Large Mexican",
-    "price": 1045,
+    "price": 1045000,
     "dimensions": {
       "width": 16,
       "height": 1
@@ -2510,8 +2588,8 @@
       "variant": "Mexican",
       "width": 16,
       "height": 1,
-      "build_cost": 1045,
-      "average_rent": 560,
+      "build_cost": 1045000,
+      "average_rent": 56000,
       "rent/space": "=G41/(D41*E41)",
       "likes_art": null,
       "preferred_floor": null,
@@ -2557,13 +2635,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency mexican module engineered for professional mexican results."
   },
   {
     "id": "restaurant-large-brunch-spots",
     "category": "Restaurant",
     "name": "Large Brunch Spots",
-    "price": 1045,
+    "price": 1045000,
     "dimensions": {
       "width": 16,
       "height": 1
@@ -2574,8 +2654,8 @@
       "variant": "Brunch Spots",
       "width": 16,
       "height": 1,
-      "build_cost": 1045,
-      "average_rent": 570,
+      "build_cost": 1045000,
+      "average_rent": 57000,
       "rent/space": "=G42/(D42*E42)",
       "likes_art": null,
       "preferred_floor": null,
@@ -2621,13 +2701,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency brunch spots module engineered for professional brunch spots results."
   },
   {
     "id": "restaurant-large-family-restaurants",
     "category": "Restaurant",
     "name": "Large Family Restaurants",
-    "price": 1045,
+    "price": 1045000,
     "dimensions": {
       "width": 16,
       "height": 1
@@ -2638,8 +2720,8 @@
       "variant": "Family Restaurants",
       "width": 16,
       "height": 1,
-      "build_cost": 1045,
-      "average_rent": 570,
+      "build_cost": 1045000,
+      "average_rent": 57000,
       "rent/space": "=G43/(D43*E43)",
       "likes_art": null,
       "preferred_floor": null,
@@ -2685,13 +2767,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency family restaurants module engineered for professional family restaurants results."
   },
   {
     "id": "restaurant-gourmet-chinese",
     "category": "Restaurant",
     "name": "Gourmet Chinese",
-    "price": 2540,
+    "price": 2540000,
     "dimensions": {
       "width": 14,
       "height": 1
@@ -2702,8 +2786,8 @@
       "variant": "Chinese",
       "width": 14,
       "height": 1,
-      "build_cost": 2540,
-      "average_rent": 740,
+      "build_cost": 2540000,
+      "average_rent": 74000,
       "rent/space": "=G44/(D44*E44)",
       "likes_art": "x",
       "preferred_floor": null,
@@ -2749,13 +2833,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency chinese module engineered for professional chinese results."
   },
   {
     "id": "restaurant-gourmet-indian",
     "category": "Restaurant",
     "name": "Gourmet Indian",
-    "price": 2540,
+    "price": 2540000,
     "dimensions": {
       "width": 14,
       "height": 1
@@ -2766,8 +2852,8 @@
       "variant": "Indian",
       "width": 14,
       "height": 1,
-      "build_cost": 2540,
-      "average_rent": 910,
+      "build_cost": 2540000,
+      "average_rent": 91000,
       "rent/space": "=G45/(D45*E45)",
       "likes_art": "x",
       "preferred_floor": null,
@@ -2813,13 +2899,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency indian module engineered for professional indian results."
   },
   {
     "id": "restaurant-gourmet-seafood",
     "category": "Restaurant",
     "name": "Gourmet Seafood",
-    "price": 2540,
+    "price": 2540000,
     "dimensions": {
       "width": 14,
       "height": 1
@@ -2830,8 +2918,8 @@
       "variant": "Seafood",
       "width": 14,
       "height": 1,
-      "build_cost": 2540,
-      "average_rent": 740,
+      "build_cost": 2540000,
+      "average_rent": 74000,
       "rent/space": "=G46/(D46*E46)",
       "likes_art": "x",
       "preferred_floor": null,
@@ -2877,13 +2965,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency seafood module engineered for professional seafood results."
   },
   {
     "id": "restaurant-gourmet-thai",
     "category": "Restaurant",
     "name": "Gourmet Thai",
-    "price": 2540,
+    "price": 2540000,
     "dimensions": {
       "width": 14,
       "height": 1
@@ -2894,8 +2984,8 @@
       "variant": "Thai",
       "width": 14,
       "height": 1,
-      "build_cost": 2540,
-      "average_rent": 910,
+      "build_cost": 2540000,
+      "average_rent": 91000,
       "rent/space": "=G47/(D47*E47)",
       "likes_art": "x",
       "preferred_floor": null,
@@ -2941,13 +3031,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency thai module engineered for professional thai results."
   },
   {
     "id": "restaurant-gourmet-japanese",
     "category": "Restaurant",
     "name": "Gourmet Japanese",
-    "price": 2540,
+    "price": 2540000,
     "dimensions": {
       "width": 14,
       "height": 1
@@ -2958,8 +3050,8 @@
       "variant": "Japanese",
       "width": 14,
       "height": 1,
-      "build_cost": 2540,
-      "average_rent": 890,
+      "build_cost": 2540000,
+      "average_rent": 89000,
       "rent/space": "=G48/(D48*E48)",
       "likes_art": "x",
       "preferred_floor": null,
@@ -3005,13 +3097,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency japanese module engineered for professional japanese results."
   },
   {
     "id": "restaurant-gourmet-french",
     "category": "Restaurant",
     "name": "Gourmet French",
-    "price": 2540,
+    "price": 2540000,
     "dimensions": {
       "width": 14,
       "height": 1
@@ -3022,8 +3116,8 @@
       "variant": "French",
       "width": 14,
       "height": 1,
-      "build_cost": 2540,
-      "average_rent": 900,
+      "build_cost": 2540000,
+      "average_rent": 90000,
       "rent/space": "=G49/(D49*E49)",
       "likes_art": "x",
       "preferred_floor": null,
@@ -3069,13 +3163,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency french module engineered for professional french results."
   },
   {
     "id": "store-small-food-and-beverages",
     "category": "Store",
     "name": "Small Food and Beverages",
-    "price": 435,
+    "price": 435000,
     "dimensions": {
       "width": 7,
       "height": 1
@@ -3086,8 +3182,8 @@
       "variant": "Food and Beverages",
       "width": 7,
       "height": 1,
-      "build_cost": 435,
-      "average_rent": 210,
+      "build_cost": 435000,
+      "average_rent": 21000,
       "rent/space": "=G50/(D50*E50)",
       "likes_art": null,
       "preferred_floor": null,
@@ -3133,13 +3229,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency food and beverages module engineered for professional food and beverages results."
   },
   {
     "id": "store-small-portable-electronics",
     "category": "Store",
     "name": "Small Portable Electronics",
-    "price": 435,
+    "price": 435000,
     "dimensions": {
       "width": 7,
       "height": 1
@@ -3150,8 +3248,8 @@
       "variant": "Portable Electronics",
       "width": 7,
       "height": 1,
-      "build_cost": 435,
-      "average_rent": 270,
+      "build_cost": 435000,
+      "average_rent": 27000,
       "rent/space": "=G51/(D51*E51)",
       "likes_art": null,
       "preferred_floor": null,
@@ -3197,13 +3295,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency portable electronics module engineered for professional portable electronics results."
   },
   {
     "id": "store-small-books,-news,-etc.",
     "category": "Store",
     "name": "Small Books, News, etc.",
-    "price": 435,
+    "price": 435000,
     "dimensions": {
       "width": 7,
       "height": 1
@@ -3214,8 +3314,8 @@
       "variant": "Books, News, etc.",
       "width": 7,
       "height": 1,
-      "build_cost": 435,
-      "average_rent": 210,
+      "build_cost": 435000,
+      "average_rent": 21000,
       "rent/space": "=G52/(D52*E52)",
       "likes_art": null,
       "preferred_floor": null,
@@ -3261,13 +3361,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency books, news, etc. module engineered for professional books, news, etc. results."
   },
   {
     "id": "store-small-drugstores",
     "category": "Store",
     "name": "Small Drugstores",
-    "price": 435,
+    "price": 435000,
     "dimensions": {
       "width": 7,
       "height": 1
@@ -3278,8 +3380,8 @@
       "variant": "Drugstores",
       "width": 7,
       "height": 1,
-      "build_cost": 435,
-      "average_rent": 270,
+      "build_cost": 435000,
+      "average_rent": 27000,
       "rent/space": "=G53/(D53*E53)",
       "likes_art": null,
       "preferred_floor": null,
@@ -3325,13 +3427,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency drugstores module engineered for professional drugstores results."
   },
   {
     "id": "store-small-flower-stores",
     "category": "Store",
     "name": "Small Flower Stores",
-    "price": 435,
+    "price": 435000,
     "dimensions": {
       "width": 7,
       "height": 1
@@ -3342,8 +3446,8 @@
       "variant": "Flower Stores",
       "width": 7,
       "height": 1,
-      "build_cost": 435,
-      "average_rent": 210,
+      "build_cost": 435000,
+      "average_rent": 21000,
       "rent/space": "=G54/(D54*E54)",
       "likes_art": null,
       "preferred_floor": null,
@@ -3389,13 +3493,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency flower stores module engineered for professional flower stores results."
   },
   {
     "id": "store-small-wine-and-spirits",
     "category": "Store",
     "name": "Small Wine and Spirits",
-    "price": 435,
+    "price": 435000,
     "dimensions": {
       "width": 7,
       "height": 1
@@ -3406,8 +3512,8 @@
       "variant": "Wine and Spirits",
       "width": 7,
       "height": 1,
-      "build_cost": 435,
-      "average_rent": 210,
+      "build_cost": 435000,
+      "average_rent": 21000,
       "rent/space": "=G55/(D55*E55)",
       "likes_art": null,
       "preferred_floor": null,
@@ -3453,13 +3559,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency wine and spirits module engineered for professional wine and spirits results."
   },
   {
     "id": "store-medium-clothing",
     "category": "Store",
     "name": "Medium Clothing",
-    "price": 835,
+    "price": 835000,
     "dimensions": {
       "width": 12,
       "height": 1
@@ -3470,8 +3578,8 @@
       "variant": "Clothing",
       "width": 12,
       "height": 1,
-      "build_cost": 835,
-      "average_rent": 320,
+      "build_cost": 835000,
+      "average_rent": 32000,
       "rent/space": "=G56/(D56*E56)",
       "likes_art": null,
       "preferred_floor": null,
@@ -3517,13 +3625,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency clothing module engineered for professional clothing results."
   },
   {
     "id": "store-medium-electronics",
     "category": "Store",
     "name": "Medium Electronics",
-    "price": 835,
+    "price": 835000,
     "dimensions": {
       "width": 12,
       "height": 1
@@ -3534,8 +3644,8 @@
       "variant": "Electronics",
       "width": 12,
       "height": 1,
-      "build_cost": 835,
-      "average_rent": 500,
+      "build_cost": 835000,
+      "average_rent": 50000,
       "rent/space": "=G57/(D57*E57)",
       "likes_art": null,
       "preferred_floor": null,
@@ -3581,13 +3691,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency electronics module engineered for professional electronics results."
   },
   {
     "id": "store-medium-shoes",
     "category": "Store",
     "name": "Medium Shoes",
-    "price": 835,
+    "price": 835000,
     "dimensions": {
       "width": 12,
       "height": 1
@@ -3598,8 +3710,8 @@
       "variant": "Shoes",
       "width": 12,
       "height": 1,
-      "build_cost": 835,
-      "average_rent": 330,
+      "build_cost": 835000,
+      "average_rent": 33000,
       "rent/space": "=G58/(D58*E58)",
       "likes_art": null,
       "preferred_floor": null,
@@ -3645,13 +3757,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency shoes module engineered for professional shoes results."
   },
   {
     "id": "store-medium-bags-and-briefcases",
     "category": "Store",
     "name": "Medium Bags and Briefcases",
-    "price": 835,
+    "price": 835000,
     "dimensions": {
       "width": 12,
       "height": 1
@@ -3662,8 +3776,8 @@
       "variant": "Bags and Briefcases",
       "width": 12,
       "height": 1,
-      "build_cost": 835,
-      "average_rent": 370,
+      "build_cost": 835000,
+      "average_rent": 37000,
       "rent/space": "=G59/(D59*E59)",
       "likes_art": null,
       "preferred_floor": null,
@@ -3709,13 +3823,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency bags and briefcases module engineered for professional bags and briefcases results."
   },
   {
     "id": "store-medium-appliances",
     "category": "Store",
     "name": "Medium Appliances",
-    "price": 835,
+    "price": 835000,
     "dimensions": {
       "width": 12,
       "height": 1
@@ -3726,8 +3842,8 @@
       "variant": "Appliances",
       "width": 12,
       "height": 1,
-      "build_cost": 835,
-      "average_rent": 330,
+      "build_cost": 835000,
+      "average_rent": 33000,
       "rent/space": "=G60/(D60*E60)",
       "likes_art": null,
       "preferred_floor": null,
@@ -3773,13 +3889,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency appliances module engineered for professional appliances results."
   },
   {
     "id": "store-large-department-stores",
     "category": "Store",
     "name": "Large Department Stores",
-    "price": 1285,
+    "price": 1285000,
     "dimensions": {
       "width": 12,
       "height": 2
@@ -3790,8 +3908,8 @@
       "variant": "Department Stores",
       "width": 12,
       "height": 2,
-      "build_cost": 1285,
-      "average_rent": 790,
+      "build_cost": 1285000,
+      "average_rent": 79000,
       "rent/space": "=G61/(D61*E61)",
       "likes_art": "x",
       "preferred_floor": null,
@@ -3837,13 +3955,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency department stores module engineered for professional department stores results."
   },
   {
     "id": "store-large-furniture",
     "category": "Store",
     "name": "Large Furniture",
-    "price": 1285,
+    "price": 1285000,
     "dimensions": {
       "width": 12,
       "height": 2
@@ -3854,8 +3974,8 @@
       "variant": "Furniture",
       "width": 12,
       "height": 2,
-      "build_cost": 1285,
-      "average_rent": 790,
+      "build_cost": 1285000,
+      "average_rent": 79000,
       "rent/space": "=G62/(D62*E62)",
       "likes_art": "x",
       "preferred_floor": null,
@@ -3901,13 +4021,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency furniture module engineered for professional furniture results."
   },
   {
     "id": "store-large-big-box-electronics",
     "category": "Store",
     "name": "Large Big Box Electronics",
-    "price": 1285,
+    "price": 1285000,
     "dimensions": {
       "width": 12,
       "height": 2
@@ -3918,8 +4040,8 @@
       "variant": "Big Box Electronics",
       "width": 12,
       "height": 2,
-      "build_cost": 1285,
-      "average_rent": 790,
+      "build_cost": 1285000,
+      "average_rent": 79000,
       "rent/space": "=G63/(D63*E63)",
       "likes_art": "x",
       "preferred_floor": null,
@@ -3965,13 +4087,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency big box electronics module engineered for professional big box electronics results."
   },
   {
     "id": "store-large-fancy-grocery-stores",
     "category": "Store",
     "name": "Large Fancy Grocery Stores",
-    "price": 1285,
+    "price": 1285000,
     "dimensions": {
       "width": 12,
       "height": 2
@@ -3982,8 +4106,8 @@
       "variant": "Fancy Grocery Stores",
       "width": 12,
       "height": 2,
-      "build_cost": 1285,
-      "average_rent": 790,
+      "build_cost": 1285000,
+      "average_rent": 79000,
       "rent/space": "=G64/(D64*E64)",
       "likes_art": "x",
       "preferred_floor": null,
@@ -4029,13 +4153,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency fancy grocery stores module engineered for professional fancy grocery stores results."
   },
   {
     "id": "store-luxury-goods-china-shops",
     "category": "Store",
     "name": "Luxury Goods China Shops",
-    "price": 1880,
+    "price": 1880000,
     "dimensions": {
       "width": 8,
       "height": 1
@@ -4046,8 +4172,8 @@
       "variant": "China Shops",
       "width": 8,
       "height": 1,
-      "build_cost": 1880,
-      "average_rent": 790,
+      "build_cost": 1880000,
+      "average_rent": 79000,
       "rent/space": "=G65/(D65*E65)",
       "likes_art": "x",
       "preferred_floor": null,
@@ -4093,13 +4219,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency china shops module engineered for professional china shops results."
   },
   {
     "id": "store-luxury-goods-cosmetics-boutiques",
     "category": "Store",
     "name": "Luxury Goods Cosmetics Boutiques",
-    "price": 1880,
+    "price": 1880000,
     "dimensions": {
       "width": 8,
       "height": 1
@@ -4110,8 +4238,8 @@
       "variant": "Cosmetics Boutiques",
       "width": 8,
       "height": 1,
-      "build_cost": 1880,
-      "average_rent": 770,
+      "build_cost": 1880000,
+      "average_rent": 77000,
       "rent/space": "=G66/(D66*E66)",
       "likes_art": "x",
       "preferred_floor": null,
@@ -4157,13 +4285,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency cosmetics boutiques module engineered for professional cosmetics boutiques results."
   },
   {
     "id": "store-luxury-goods-jewelers",
     "category": "Store",
     "name": "Luxury Goods Jewelers",
-    "price": 1880,
+    "price": 1880000,
     "dimensions": {
       "width": 8,
       "height": 1
@@ -4174,8 +4304,8 @@
       "variant": "Jewelers",
       "width": 8,
       "height": 1,
-      "build_cost": 1880,
-      "average_rent": 780,
+      "build_cost": 1880000,
+      "average_rent": 78000,
       "rent/space": "=G67/(D67*E67)",
       "likes_art": "x",
       "preferred_floor": null,
@@ -4221,13 +4351,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency jewelers module engineered for professional jewelers results."
   },
   {
     "id": "store-luxury-goods-fine-art-stores",
     "category": "Store",
     "name": "Luxury Goods Fine Art Stores",
-    "price": 1880,
+    "price": 1880000,
     "dimensions": {
       "width": 8,
       "height": 1
@@ -4238,8 +4370,8 @@
       "variant": "Fine Art Stores",
       "width": 8,
       "height": 1,
-      "build_cost": 1880,
-      "average_rent": 800,
+      "build_cost": 1880000,
+      "average_rent": 80000,
       "rent/space": "=G68/(D68*E68)",
       "likes_art": "x",
       "preferred_floor": null,
@@ -4285,13 +4417,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency fine art stores module engineered for professional fine art stores results."
   },
   {
     "id": "store-luxury-goods-antique-books",
     "category": "Store",
     "name": "Luxury Goods Antique Books",
-    "price": 1880,
+    "price": 1880000,
     "dimensions": {
       "width": 8,
       "height": 1
@@ -4302,8 +4436,8 @@
       "variant": "Antique Books",
       "width": 8,
       "height": 1,
-      "build_cost": 1880,
-      "average_rent": 790,
+      "build_cost": 1880000,
+      "average_rent": 79000,
       "rent/space": "=G69/(D69*E69)",
       "likes_art": "x",
       "preferred_floor": null,
@@ -4349,13 +4483,15 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency antique books module engineered for professional antique books results."
   },
   {
     "id": "store-luxury-goods-fine-wine-merchants",
     "category": "Store",
     "name": "Luxury Goods Fine Wine Merchants",
-    "price": 1880,
+    "price": 1880000,
     "dimensions": {
       "width": 8,
       "height": 1
@@ -4366,8 +4502,8 @@
       "variant": "Fine Wine Merchants",
       "width": 8,
       "height": 1,
-      "build_cost": 1880,
-      "average_rent": 790,
+      "build_cost": 1880000,
+      "average_rent": 79000,
       "rent/space": "=G70/(D70*E70)",
       "likes_art": "x",
       "preferred_floor": null,
@@ -4413,7 +4549,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A high-efficiency fine wine merchants module engineered for professional fine wine merchants results."
   },
   {
     "id": "courier-services-none-none",
@@ -4477,7 +4615,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile courier services unit optimized for flexible architectural integration."
   },
   {
     "id": "office-supply-services-none-none",
@@ -4541,7 +4681,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile office supply services unit optimized for flexible architectural integration."
   },
   {
     "id": "bottled-water-services-none-none",
@@ -4605,7 +4747,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile bottled water services unit optimized for flexible architectural integration."
   },
   {
     "id": "janitorial-services-none-none",
@@ -4669,7 +4813,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile janitorial services unit optimized for flexible architectural integration."
   },
   {
     "id": "copy-services-none-none",
@@ -4733,7 +4879,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile copy services unit optimized for flexible architectural integration."
   },
   {
     "id": "computer-and-it-services-none-none",
@@ -4797,7 +4945,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile computer and it services unit optimized for flexible architectural integration."
   },
   {
     "id": "commercial-printing-services-none-none",
@@ -4861,7 +5011,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile commercial printing services unit optimized for flexible architectural integration."
   },
   {
     "id": "file-storage-services-none-none",
@@ -4925,7 +5077,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile file storage services unit optimized for flexible architectural integration."
   },
   {
     "id": "catering-services-none-none",
@@ -4989,7 +5143,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile catering services unit optimized for flexible architectural integration."
   },
   {
     "id": "professional-auditing-services-none-none",
@@ -5053,7 +5209,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile professional auditing services unit optimized for flexible architectural integration."
   },
   {
     "id": "corporate-communication-services-none-none",
@@ -5117,7 +5275,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile corporate communication services unit optimized for flexible architectural integration."
   },
   {
     "id": "temporary-staffing-services-none-none",
@@ -5181,7 +5341,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile temporary staffing services unit optimized for flexible architectural integration."
   },
   {
     "id": "security-services-none-none",
@@ -5245,7 +5407,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile security services unit optimized for flexible architectural integration."
   },
   {
     "id": "fitness-&-health-services-none-none",
@@ -5309,7 +5473,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile fitness & health services unit optimized for flexible architectural integration."
   },
   {
     "id": "executive-club-none-none",
@@ -5373,7 +5539,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile executive club unit optimized for flexible architectural integration."
   },
   {
     "id": "helicopter-charters-none-none",
@@ -5437,7 +5605,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile helicopter charters unit optimized for flexible architectural integration."
   },
   {
     "id": "limousine-services-none-none",
@@ -5501,7 +5671,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile limousine services unit optimized for flexible architectural integration."
   },
   {
     "id": "handyman-services-none-none",
@@ -5565,7 +5737,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile handyman services unit optimized for flexible architectural integration."
   },
   {
     "id": "plumber-none-none",
@@ -5629,7 +5803,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile plumber unit optimized for flexible architectural integration."
   },
   {
     "id": "laundromat-none-none",
@@ -5693,7 +5869,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile laundromat unit optimized for flexible architectural integration."
   },
   {
     "id": "dog-walking-services-none-none",
@@ -5757,7 +5935,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile dog walking services unit optimized for flexible architectural integration."
   },
   {
     "id": "housekeeping-services-none-none",
@@ -5821,7 +6001,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile housekeeping services unit optimized for flexible architectural integration."
   },
   {
     "id": "dry-cleaning-services-none-none",
@@ -5885,7 +6067,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile dry cleaning services unit optimized for flexible architectural integration."
   },
   {
     "id": "floral-arrangement-services-none-none",
@@ -5949,7 +6133,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile floral arrangement services unit optimized for flexible architectural integration."
   },
   {
     "id": "tailoring-services-none-none",
@@ -6013,7 +6199,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile tailoring services unit optimized for flexible architectural integration."
   },
   {
     "id": "daycare-center-none-none",
@@ -6077,7 +6265,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile daycare center unit optimized for flexible architectural integration."
   },
   {
     "id": "dog-sitting-services-none-none",
@@ -6141,7 +6331,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile dog sitting services unit optimized for flexible architectural integration."
   },
   {
     "id": "personal-training-services-none-none",
@@ -6205,7 +6397,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile personal training services unit optimized for flexible architectural integration."
   },
   {
     "id": "yoga-services-none-none",
@@ -6269,7 +6463,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile yoga services unit optimized for flexible architectural integration."
   },
   {
     "id": "home-decor-services-none-none",
@@ -6333,7 +6529,9 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile home decor services unit optimized for flexible architectural integration."
   },
   {
     "id": "wealth-adviser-services-none-none",
@@ -6397,6 +6595,8 @@
       "yoga_services": null,
       "home_decor_services": null,
       "wealth_adviser_services": null
-    }
+    },
+    "categoryDescription": "A premium architectural asset.",
+    "specificDescription": "A versatile wealth adviser services unit optimized for flexible architectural integration."
   }
 ]

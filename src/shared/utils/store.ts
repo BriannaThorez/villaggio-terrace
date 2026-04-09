@@ -82,6 +82,7 @@ export interface Link {
 export interface SimulationNode {
   id: string;
   type: SimulationNodeType;
+  metadataId?: string; // Links to roomMetadata.json
   position: [number, number];
   size: [number, number];
   vertices: [number, number][]; // Relative to position
@@ -120,6 +121,7 @@ export interface SimulationState {
   | "utility"
   | "lobby"
   | "elevator";
+  activeModuleId: string | null; // The specific ID from roomMetadata.json
   selectedId: string | null;
   editingId: string | null;
   isDragging: boolean;
@@ -152,6 +154,7 @@ export interface SimulationState {
   placeModule: (x: number, y: number, moduleId: string) => void;
   removeModule: (x: number, y: number) => void;
   setActiveTool: (tool: SimulationState["activeTool"]) => void;
+  setActiveModuleId: (id: string | null) => void;
   setSelectedId: (id: string | null) => void;
   setEditingId: (id: string | null) => void;
   setIsDragging: (isDragging: boolean) => void;
@@ -328,6 +331,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     spendableMoney: initialSpendableMoney,
     towerGrid: new Map(),
     activeTool: "select",
+    activeModuleId: null,
     selectedId: null,
     editingId: null,
     isDragging: false,
@@ -807,6 +811,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       });
     },
     setActiveTool: (tool) => set({ activeTool: tool }),
+    setActiveModuleId: (id) => set({ activeModuleId: id }),
     setSelectedId: (id) => {
       set({ selectedId: id });
     },
