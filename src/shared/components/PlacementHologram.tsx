@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { Line } from '@react-three/drei';
 import * as THREE from 'three';
-import { GRID_SIZE_X } from '../../../shared/utils/store';
-import { RoomPlacementGrid } from '../domain/types';
+import { GRID_SIZE_X } from "@/src/shared/utils/store";
+import { RoomPlacementGrid } from "@/src/shared/types/interiorPlacement";
 
 interface PlacementHologramProps {
     grid: RoomPlacementGrid;

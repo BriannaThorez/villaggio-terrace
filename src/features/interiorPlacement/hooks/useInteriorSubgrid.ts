@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { GRID_SIZE_X, getFloorBaseY } from '../../../shared/utils/store';
-import { RoomPlacementGrid, SubAtomPrecision } from '../domain/types';
+import { RoomPlacementGrid, SubAtomPrecision } from "@/src/shared/types/interiorPlacement";
 
 /**
  * Procedurally generates the Atom placement grid mapping for a room node.

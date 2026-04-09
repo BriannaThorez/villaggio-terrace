@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import { useThree } from "@react-three/fiber";
 import { ResidentialRoom } from "../features/roomPlacement/residential/base/ResidentialRoom";
-import { RoomMeshCSG } from "../features/roomPlacement/visuals/RoomMeshCSG";
+import { RoomMeshCSG } from "./rooms/visuals/RoomMeshCSG";
 import { SelectionIndicator } from "../features/ui/world_ui/SelectionIndicator";
 import { useFrame } from "@react-three/fiber";
 import { useSimulationStore, SimulationNode } from "../shared/utils/store";

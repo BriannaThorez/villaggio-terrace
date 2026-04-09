@@ -1,5 +1,3 @@
-
-
 /**
  * Interface for CSG cutout definitions
  */

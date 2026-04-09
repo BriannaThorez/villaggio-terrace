@@ -1,5 +1,5 @@
-import { RoomPlacementGrid } from './types';
-import { GRID_SIZE_X } from '../../../shared/utils/store';
+import { RoomPlacementGrid } from "@/src/shared/types/interiorPlacement";
+import { GRID_SIZE_X } from "@/src/shared/utils/store";
 
 /**
  * Translates a sub-Atom coordinate into a deterministic world positional offset 

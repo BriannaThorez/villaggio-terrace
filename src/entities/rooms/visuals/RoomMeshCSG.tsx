@@ -23,7 +23,6 @@ const scaleBoxUVs = (geo: THREE.BoxGeometry) => {
     for (let i = 0; i < uv.count; i++) {
         const nx = Math.abs(norm.getX(i));
         const ny = Math.abs(norm.getY(i));
-        // nz is dominant if others aren't
 
         const x = pos.getX(i);
         const y = pos.getY(i);
@@ -52,7 +51,6 @@ const RoomMeshCSGInner: React.FC<RoomMeshCSGProps> = ({
     hasBackWall = true,
     cutouts = []
 }) => {
-    // ... same baseBox and effectiveSubWidth code ...
     const baseBox = useMemo(() => scaleBoxUVs(new THREE.BoxGeometry(width, height, depth)), [width, height, depth]);
 
     const effectiveSubWidth = useMemo(() => {
@@ -72,7 +70,7 @@ const RoomMeshCSGInner: React.FC<RoomMeshCSGProps> = ({
     const subBox = useMemo(() =>
         scaleBoxUVs(new THREE.BoxGeometry(
             effectiveSubWidth,
-            height - (wallThickness + 0.55), // Standard structural floor (1.1) + thin ceiling (0.55)
+            height - (wallThickness + 0.55),
             hasBackWall ? depth - wallThickness : depth + 10
         )),
         [effectiveSubWidth, height, depth, wallThickness, hasBackWall]
@@ -83,10 +81,8 @@ const RoomMeshCSGInner: React.FC<RoomMeshCSGProps> = ({
             <mesh material={material} castShadow receiveShadow>
                 <Geometry computeVertexNormals>
                     <Base geometry={baseBox} />
-                    {/* Main Interior Hollowing - Offset upwards to preserve floor slab */}
                     <Subtraction geometry={subBox} position={[subXOffset, (wallThickness - 0.55) / 2, hasBackWall ? wallThickness : 0]} />
 
-                    {/* Architectural Window/Entrance Cutouts */}
                     {cutouts.map((c, i) => (
                         <Subtraction
                             key={`cutout-${i}`}
@@ -101,11 +97,6 @@ const RoomMeshCSGInner: React.FC<RoomMeshCSGProps> = ({
     );
 };
 
-/**
- * Memoized CSG room shell renderer.
- * Custom comparator prevents re-computation when parent re-renders
- * without changing structural geometry props.
- */
 export const RoomMeshCSG = React.memo(RoomMeshCSGInner, (prev, next) => {
     return (
         prev.width === next.width &&
@@ -116,7 +107,6 @@ export const RoomMeshCSG = React.memo(RoomMeshCSGInner, (prev, next) => {
         prev.hasLeftWall === next.hasLeftWall &&
         prev.hasRightWall === next.hasRightWall &&
         prev.hasBackWall === next.hasBackWall &&
-        prev.cutouts === next.cutouts // Reference equality — parents must stabilize via useMemo
+        prev.cutouts === next.cutouts
     );
 });
-

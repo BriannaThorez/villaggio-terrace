@@ -1,12 +1,10 @@
 import React, { useMemo } from "react";
-import * as THREE from "three";
-import { getLobbyMaterials } from "../../../engine/MaterialParser";
-import { RoomMeshCSG } from "../visuals/RoomMeshCSG";
 import {
     STRUCTURE_WALL_THICKNESS,
     STRUCTURE_FLOOR_THICKNESS,
     STRUCTURE_CEILING_THICKNESS,
-} from "../constants/structuralConstants";
+} from "@/src/entities/rooms/constants/structuralConstants";
+import { Lobby1 } from "@/src/entities/rooms";
 
 interface LobbyRoomProps {
     position: [number, number, number];
@@ -23,7 +21,8 @@ interface LobbyRoomProps {
 
 /**
  * LobbyRoom: Renders the entry point of the tower.
- * Features Grey Cartago Tiles and Painted Plaster walls.
+ * 
+ * Orchestrates placement and delegates visuals to the Lobby1 modular entity.
  */
 export const LobbyRoom: React.FC<LobbyRoomProps> = ({
     position,
@@ -59,10 +58,6 @@ export const LobbyRoom: React.FC<LobbyRoomProps> = ({
         ];
     }, [position, hasLeftWall, hasRightWall]);
 
-    const materials = useMemo(() => {
-        return getLobbyMaterials(color);
-    }, [color]);
-
     return (
         <group
             position={roomPosition}
@@ -70,14 +65,13 @@ export const LobbyRoom: React.FC<LobbyRoomProps> = ({
             onPointerDown={onPointerDown}
             onDoubleClick={onDoubleClick}
         >
-            <RoomMeshCSG
+            <Lobby1
                 width={insetWidth}
                 height={insetHeight}
                 depth={insetDepth}
-                material={materials}
+                color={color}
                 hasLeftWall={hasLeftWall}
                 hasRightWall={hasRightWall}
-                hasBackWall={true}
             />
         </group>
     );
