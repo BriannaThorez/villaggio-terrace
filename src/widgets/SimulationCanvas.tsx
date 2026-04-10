@@ -398,20 +398,27 @@ const CanvasScene = () => {
   }, [editingId, selectedId, deleteShape, setSelectedId]);
 
   const handleClick = (event: any, forceStamp?: boolean) => {
-    if (
+    const shouldIgnoreClick =
       !forceStamp &&
       (wasLinkingRef.current ||
         wasDraggingRef.current ||
         wasPanningRef.current ||
-        isClickMovedRef.current)
-    ) {
+        isClickMovedRef.current);
+    if (shouldIgnoreClick) {
       wasLinkingRef.current = false;
       wasDraggingRef.current = false;
       wasPanningRef.current = false;
       pointerDownPos.current = null;
-      if (event.stopPropagation) event.stopPropagation();
       isClickMovedRef.current = false;
-      return;
+
+      const blockingTool =
+        activeTool === "select" ||
+        activeTool === "link" ||
+        activeTool === "vertex";
+      if (blockingTool) {
+        if (event.stopPropagation) event.stopPropagation();
+        return;
+      }
     }
 
     if (editingId) {

@@ -247,6 +247,13 @@ export const SimulationNodes = () => {
     () => new Map(renderedShapes.map((shape) => [shape.id, shape])),
     [renderedShapes],
   );
+  const shapeIndexById = useMemo(() => {
+    const map = new Map<string, number>();
+    renderedShapes.forEach((shape, index) => {
+      map.set(shape.id, index);
+    });
+    return map;
+  }, [renderedShapes]);
 
   // PRE-CALCULATE Foundation/Room Relationship (Industry Leading O(N) Speedup)
   const roomByFoundationId = useMemo(() => {
@@ -468,7 +475,7 @@ export const SimulationNodes = () => {
       colorArray[i * 3 + 2] = tempColor.current.b;
 
       shapeTypeArray[i] = getShapeType(shape.type);
-      isSelectedArray[i] = selectedId === shape.id ? 1.0 : 0.0;
+      isSelectedArray[i] = 0;
       sizeArray[i * 2] = shape.size[0] + 12;
       sizeArray[i * 2 + 1] = shape.size[1] + 12;
       opacityArray[i] = shape.type === "text" || isRoom ? 0.0 : 1.0;
@@ -493,7 +500,6 @@ export const SimulationNodes = () => {
   }, [
     renderedShapes,
     themeName,
-    selectedId,
     colorArray,
     shapeTypeArray,
     isSelectedArray,
@@ -501,6 +507,36 @@ export const SimulationNodes = () => {
     opacityArray,
     materialArray,
   ]);
+
+  // Selection toggles should not re-run the full geometry refresh; only the selection flag needs flipping.
+  const previousSelectedId = useRef<string | null>(null);
+  useEffect(() => {
+    const mesh = meshRef.current;
+    if (!mesh) return;
+    const attribute = mesh.geometry.attributes.aIsSelected as THREE.BufferAttribute | undefined;
+    if (!attribute) return;
+
+    const data = attribute.array as Float32Array;
+    const prevId = previousSelectedId.current;
+    if (prevId) {
+      const prevIndex = shapeIndexById.get(prevId);
+      if (prevIndex !== undefined) {
+        isSelectedArray[prevIndex] = 0;
+        data[prevIndex] = 0;
+      }
+    }
+
+    if (selectedId) {
+      const currentIndex = shapeIndexById.get(selectedId);
+      if (currentIndex !== undefined) {
+        isSelectedArray[currentIndex] = 1;
+        data[currentIndex] = 1;
+      }
+    }
+
+    attribute.needsUpdate = true;
+    previousSelectedId.current = selectedId;
+  }, [selectedId, shapeIndexById, isSelectedArray]);
 
   const handleNodePointerDown = (e: any, id: string) => {
     // Only stop propagation for left-click (Button 0) to allow right-click (Button 2) 

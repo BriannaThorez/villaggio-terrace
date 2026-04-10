@@ -29,26 +29,14 @@ export const validatePlacement = (
     isForce = false,
     index?: FloorBucketIndex
 ): PlacementResult => {
-    // 1. Structural Integrity Check (Overhang)
-    // Industry Standard Rule: Max 5 cell cantilever overhang without foundational support below.
-    const structuralResult = checkStructuralIntegrity(x, y, width, allShapes, type, undefined, index);
-    if (!structuralResult.isValid) {
-        return {
-            isValid: false,
-            error: "structural",
-            overhang: structuralResult.overhang
-        };
-    }
-
-    // 2. Collision Check
-    // Uses spatial index when available: only check same-floor nodes.
-    // Foundation Scaffolds (type: "structure") are exempt from collision blocks.
+    // 1. Collision Check — keep this fast by checking overlaps before large structural traversal.
+    //    We can skip the structural overhang work for clearly invalid overlaps (invalid builds over existing rooms).
     const candidates = index ? index.getFloorNodes(y) : allShapes;
 
     for (const s2 of candidates) {
         if (s2.id === ignoreId) continue;
         if (s2.type === "structure") continue;
-        if (type !== 'empty_floor' && s2.type === "empty_floor") continue;
+        if (type !== "empty_floor" && s2.type === "empty_floor") continue;
 
         const w2 = s2.size[0];
         const h2 = s2.size[1];
@@ -64,6 +52,17 @@ export const validatePlacement = (
                 return { isValid: false, error: "collision", collidingId: s2.id };
             }
         }
+    }
+
+    // 2. Structural Integrity Check (Overhang)
+    //    Run this only once we’ve established there are no instant collisions.
+    const structuralResult = checkStructuralIntegrity(x, y, width, allShapes, type, undefined, index);
+    if (!structuralResult.isValid) {
+        return {
+            isValid: false,
+            error: "structural",
+            overhang: structuralResult.overhang,
+        };
     }
 
     return { isValid: true };

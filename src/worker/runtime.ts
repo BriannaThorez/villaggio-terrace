@@ -540,6 +540,8 @@ export const getWorkerRuntimeState = () => ({
   fallbackVersion: runtimeFallbackVersion,
 });
 
+const WORKER_RUNTIME_PROFILER_THRESHOLD_MS = 50;
+
 export const initWorkerRuntime = (options: WorkerRuntimeOptions = {}) => {
   // Detect role from URL if available
   if (globalScope && globalScope.location.search) {
@@ -574,15 +576,26 @@ export const initWorkerRuntime = (options: WorkerRuntimeOptions = {}) => {
   ).addEventListener.bind(globalScope);
 
   addMessageListener("message", (event: MessageEvent<unknown>) => {
-    const envelope = event.data;
-    if (!isSharedWorkerEnvelope(envelope)) {
-      for (const handler of extensionHandlers) {
-        handler(event);
+    const startMs = performance.now();
+    try {
+      const envelope = event.data;
+      if (!isSharedWorkerEnvelope(envelope)) {
+        for (const handler of extensionHandlers) {
+          handler(event);
+        }
+        return;
       }
-      return;
-    }
 
-    handleEnvelope(envelope as WorkerEnvelope);
+      handleEnvelope(envelope as WorkerEnvelope);
+    } finally {
+      const duration = performance.now() - startMs;
+      if (duration >= WORKER_RUNTIME_PROFILER_THRESHOLD_MS) {
+        const kind = (event.data as WorkerEnvelope | undefined)?.kind ?? "unknown";
+        console.warn(
+          `[WorkerRuntimeProfiler] message handler (${kind}) took ${duration.toFixed(1)}ms`,
+        );
+      }
+    }
   });
 
   emitReady();

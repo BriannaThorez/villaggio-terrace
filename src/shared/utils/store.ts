@@ -456,18 +456,23 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           }, skipHistory);
 
           if (shape.type !== 'structure' && shape.type !== 'empty_floor') {
-            const myLeft = newCenterX - newWidth / 2;
-            const myRight = newCenterX + newWidth / 2;
-            const myTop = snappedY + prime.size[1] / 2;
-            const myBottom = snappedY - prime.size[1] / 2;
+           const roomLeft = shape.position[0] - shape.size[0] / 2;
+           const roomRight = shape.position[0] + shape.size[0] / 2;
+           const roomTop = shape.position[1] + shape.size[1] / 2;
+           const roomBottom = shape.position[1] - shape.size[1] / 2;
 
-            const toDelete = state.shapes.filter(s => {
-              if (s.type !== 'empty_floor') return false;
-              const sLeft = s.position[0] - s.size[0] / 2;
-              const sRight = s.position[0] + s.size[0] / 2;
-              const sTop = s.position[1] + s.size[1] / 2;
-              const sBottom = s.position[1] - s.size[1] / 2;
-              return (sLeft < myRight - 0.1 && sRight > myLeft + 0.1 && sBottom < myTop - 0.1 && sTop > myBottom + 0.1);
+           const toDelete = state.shapes.filter(s => {
+             if (s.type !== 'empty_floor') return false;
+             const sLeft = s.position[0] - s.size[0] / 2;
+             const sRight = s.position[0] + s.size[0] / 2;
+             const sTop = s.position[1] + s.size[1] / 2;
+             const sBottom = s.position[1] - s.size[1] / 2;
+              return (
+                sLeft < roomRight - 0.1 &&
+                sRight > roomLeft + 0.1 &&
+                sBottom < roomTop - 0.1 &&
+                sTop > roomBottom + 0.1
+              );
             });
             toDelete.forEach(o => state.deleteShape(o.id, true));
           }

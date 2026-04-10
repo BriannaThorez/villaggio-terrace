@@ -35,6 +35,34 @@ import {
   isWorkerEnvelope as isSharedWorkerEnvelope,
 } from "../shared/worker/protocol";
 
+const WORKER_PROFILER_THRESHOLD_MS = 5;
+
+const ensureProfilerLogStore = () => {
+  if (typeof window === "undefined") return;
+  const globalAny = window as any;
+  if (!globalAny.__workerProfilerLogs__) {
+    globalAny.__workerProfilerLogs__ = [];
+  }
+};
+
+const pushProfilerLog = (entry: {
+  duration: number;
+  kind: string;
+  taskType?: string;
+  requestId?: string;
+}) => {
+  if (typeof window === "undefined") return;
+  ensureProfilerLogStore();
+  const globalAny = window as any;
+  globalAny.__workerProfilerLogs__.push({
+    timestamp: Date.now(),
+    ...entry,
+  });
+  if (globalAny.__workerProfilerLogs__.length > 40) {
+    globalAny.__workerProfilerLogs__.shift();
+  }
+};
+
 type TaskTerminalStatus = "completed" | "cancelled" | "stale" | "failed";
 
 const markTerminalOnce = <T extends PendingTaskRecord>(
@@ -411,57 +439,87 @@ export class WorkerPoolCoordinator {
     };
 
     worker.onmessage = (event: MessageEvent<WorkerEnvelope>) => {
-      const envelope = event.data;
-      if (!isWorkerEnvelope(envelope)) return;
+      const startMs = performance.now();
+      try {
+        const envelope = event.data;
+        if (!isWorkerEnvelope(envelope)) return;
 
-      if (envelope.kind === WORKER_MESSAGE_KIND.Ready) {
-        const readyEnvelope = envelope as WorkerReadyEnvelope;
-        record.lastReadyAt = Date.now();
-        record.supportedRoles = readyEnvelope.roles as WorkerRole[];
-        record.capabilities = {
-          ...record.capabilities,
-          supportedKinds: readyEnvelope.capabilities as any,
-        };
-        record.healthy = true;
-        this.dispatch();
-        return;
-      }
+        if (envelope.kind === WORKER_MESSAGE_KIND.Ready) {
+          const readyEnvelope = envelope as WorkerReadyEnvelope;
+          record.lastReadyAt = Date.now();
+          record.supportedRoles = readyEnvelope.roles as WorkerRole[];
+          record.capabilities = {
+            ...record.capabilities,
+            supportedKinds: readyEnvelope.capabilities as any,
+          };
+          record.healthy = true;
+          this.dispatch();
+          return;
+        }
 
-      if (envelope.kind === WORKER_MESSAGE_KIND.Pong) {
-        record.lastPingAt = Date.now();
-        record.healthy = true;
-        return;
-      }
+        if (envelope.kind === WORKER_MESSAGE_KIND.Pong) {
+          record.lastPingAt = Date.now();
+          record.healthy = true;
+          return;
+        }
 
-      if (envelope.kind === WORKER_MESSAGE_KIND.Result) {
-        const resultEnvelope = envelope as WorkerResultEnvelope;
-        this.handleResult(record, resultEnvelope);
-        return;
-      }
+        if (envelope.kind === WORKER_MESSAGE_KIND.Result) {
+          const resultEnvelope = envelope as WorkerResultEnvelope;
+          this.handleResult(record, resultEnvelope);
+          return;
+        }
 
-      if (envelope.kind === WORKER_MESSAGE_KIND.Error) {
-        const errorEnvelope = envelope as WorkerTaskErrorEnvelope;
-        this.handleFailure(
-          record,
-          errorEnvelope.error.requestId,
-          normalizeWorkerError(errorEnvelope.error.error),
-        );
-        return;
-      }
+        if (envelope.kind === WORKER_MESSAGE_KIND.Error) {
+          const errorEnvelope = envelope as WorkerTaskErrorEnvelope;
+          this.handleFailure(
+            record,
+            errorEnvelope.error.requestId,
+            normalizeWorkerError(errorEnvelope.error.error),
+          );
+          return;
+        }
 
-      if (envelope.kind === WORKER_MESSAGE_KIND.Cancelled) {
-        const cancelledEnvelope = envelope as WorkerTaskCancelledEnvelope;
-        this.handleCancellation(cancelledEnvelope.cancelled.requestId);
-        return;
-      }
+        if (envelope.kind === WORKER_MESSAGE_KIND.Cancelled) {
+          const cancelledEnvelope = envelope as WorkerTaskCancelledEnvelope;
+          this.handleCancellation(cancelledEnvelope.cancelled.requestId);
+          return;
+        }
 
-      if (envelope.kind === WORKER_MESSAGE_KIND.Stale) {
-        const staleEnvelope = envelope as WorkerTaskStaleEnvelope;
-        this.handleStale(
-          staleEnvelope.stale.requestId,
-          staleEnvelope.stale.reason,
-        );
-        return;
+        if (envelope.kind === WORKER_MESSAGE_KIND.Stale) {
+          const staleEnvelope = envelope as WorkerTaskStaleEnvelope;
+          this.handleStale(
+            staleEnvelope.stale.requestId,
+            staleEnvelope.stale.reason,
+          );
+          return;
+        }
+      } finally {
+        const duration = performance.now() - startMs;
+        if (duration >= WORKER_PROFILER_THRESHOLD_MS) {
+          const envelope = event.data as WorkerEnvelope | undefined;
+          const kindName = envelope?.kind ?? "unknown";
+          const requestId =
+            (envelope as WorkerResultEnvelope | undefined)?.result?.requestId ??
+            (envelope as WorkerTaskErrorEnvelope | undefined)?.error?.requestId ??
+            undefined;
+          const taskType =
+            (envelope as WorkerResultEnvelope | undefined)?.result?.taskType ??
+            (envelope as WorkerTaskRequestEnvelope | undefined)?.type ??
+            (envelope as WorkerRequestEnvelope | undefined)?.type ??
+            undefined;
+          console.warn(
+            `[WorkerProfiler] ${kindName} handler took ${duration.toFixed(
+              1,
+            )}ms`,
+            { requestId, taskType },
+          );
+          pushProfilerLog({
+            duration,
+            kind: kindName.toString(),
+            requestId,
+            taskType,
+          });
+        }
       }
     };
 
