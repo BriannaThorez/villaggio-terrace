@@ -20,17 +20,22 @@ import { generateSVG } from "../../../shared/utils/svgExport";
 import React, { useState, createElement } from "react";
 import themes from "../../../shared/themes/color_palettes.json";
 
-const GUI_SPACING_REM = 0.375;
+const GUI_SPACING_SCALE = 0.85;
+const HEADER_VERTICAL_SCALE = 0.9;
+
+const GUI_SPACING_REM = 0.375 * GUI_SPACING_SCALE;
 const GUI_CONTAINER_PADDING_REM = GUI_SPACING_REM * 2;
-const GUI_BUTTON_PADDING_REM = 0.44;
-const RESOURCE_ICON_NUMBER_GAP_REM = 0.25;
-const RESOURCE_HORIZONTAL_PADDING_REM = 0.55;
-const RESOURCE_VERTICAL_PADDING_REM = 0.22;
-const RESOURCE_CONTAINER_GAP_REM = 0.15;
-const MONEY_BUTTON_PADDING_REM = 0.45;
-const MONEY_BUTTON_GAP_REM = 0.45;
+const GUI_BUTTON_PADDING_REM = 0.44 * GUI_SPACING_SCALE;
+const RESOURCE_ICON_NUMBER_GAP_REM = 0.25 * GUI_SPACING_SCALE;
+const RESOURCE_HORIZONTAL_PADDING_REM = 0.55 * GUI_SPACING_SCALE;
+const RESOURCE_VERTICAL_PADDING_REM = 0.22 * GUI_SPACING_SCALE;
+const RESOURCE_CONTAINER_GAP_REM = 0.15 * GUI_SPACING_SCALE;
+const MONEY_BUTTON_PADDING_REM = 0.45 * GUI_SPACING_SCALE;
+const MONEY_BUTTON_GAP_REM = 0.45 * GUI_SPACING_SCALE;
 const GUI_ICON_SIZE = 28;
 const GUI_ICON_STROKE = 1.5;
+const HEADER_VERTICAL_GAP_REM = 1.5;
+const HEADER_PADDING_BOTTOM_REM = 0.5;
 
 const toolbarButtonClass = "rounded-xl transition-all duration-300 flex items-center justify-center";
 const toolbarButtonStyle = { padding: `${GUI_BUTTON_PADDING_REM}rem` };
@@ -40,7 +45,7 @@ const idleButtonClasses = "text-text/40 hover:text-primary hover:bg-primary/5";
 
 const separatorStyle = {
   width: "1px",
-  height: "32px",
+  height: `${32 * GUI_SPACING_SCALE}px`,
   backgroundColor: "var(--text)",
   opacity: 0.2,
 };

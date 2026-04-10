@@ -18,6 +18,21 @@ import { SmartTooltip } from "../../../shared/components/SmartTooltip";
 import roomMetadata from "../../../entities/rooms/roomMetadata.json";
 import { resolveTraitsByCategory, getIconComponent } from "../../../shared/utils/metadataUtils";
 
+const TOOL_ALIASES: Record<string, string> = {
+  studio: "residential",
+  apartment: "residential",
+  residential: "residential",
+  office: "office",
+  commercial: "commercial",
+  lobby: "lobby",
+  structure: "structure",
+};
+
+const normalizeToolType = (rawType?: string, fallback?: string) => {
+  const candidate = (rawType || fallback || "").toLowerCase();
+  return TOOL_ALIASES[candidate] ?? candidate;
+};
+
 // Shared Icon Registry
 const ICON_REGISTRY: Record<string, any> = {
   Select: Cursor01Icon,
@@ -49,6 +64,15 @@ const COLOR_REGISTRY: Record<string, string> = {
   Unknown: "#ef4444"
 };
 
+const GUI_SPACING_SCALE = 0.85;
+const BUILD_PADDING_HORIZONTAL_REM = 1 * GUI_SPACING_SCALE;
+const BUILD_PADDING_VERTICAL_REM = 0.75 * GUI_SPACING_SCALE;
+const BUILD_TOOLBAR_GAP_REM = 0.75 * GUI_SPACING_SCALE;
+const BUILD_ICON_GAP_REM = 1 * GUI_SPACING_SCALE;
+const HEADER_VERTICAL_SCALE = 0.9;
+const HEADER_VERTICAL_GAP_REM = 1.5;
+const HEADER_PADDING_BOTTOM_REM = 0.5;
+
 const RoomInfoTooltip = ({ metadata }: { metadata: any }) => {
   if (!metadata) return null;
   const { utilities, services } = resolveTraitsByCategory(metadata.metadata);
@@ -59,7 +83,13 @@ const RoomInfoTooltip = ({ metadata }: { metadata: any }) => {
 
   return (
     <div className="flex flex-col gap-3 max-w-full">
-      <div className="flex items-center justify-between gap-6 pb-2 border-b border-white/5">
+      <div
+        className="flex items-center justify-between border-b border-white/5"
+        style={{
+          gap: `${HEADER_VERTICAL_GAP_REM * HEADER_VERTICAL_SCALE}rem`,
+          paddingBottom: `${HEADER_PADDING_BOTTOM_REM * HEADER_VERTICAL_SCALE}rem`,
+        }}
+      >
         <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-emerald-400">
           <Coins size={12} className="shrink-0" />
           ${metadata.metadata?.average_rent?.toLocaleString()}/mo
@@ -121,7 +151,7 @@ export const BuildToolbar = () => {
         ...r,
         label: r.name,
         color: COLOR_REGISTRY[r.class] || "#ffffff",
-        type: r.metadata.type?.toLowerCase() || r.class.toLowerCase(),
+        type: normalizeToolType(r.metadata.type?.toLowerCase(), r.class.toLowerCase()),
       });
     }
 
@@ -164,19 +194,25 @@ export const BuildToolbar = () => {
       const lastSelectedId = memoryState[cat.id] || cat.subTypes[0].id;
       const sub = cat.subTypes.find((s: any) => s.id === lastSelectedId);
       if (sub) {
-        setActiveTool(sub.type || cat.id);
+        setActiveTool(normalizeToolType(sub.type, cat.id));
         setActiveModuleId(sub.id);
       }
     } else {
-      setActiveTool(cat.id);
+      setActiveTool(normalizeToolType(undefined, cat.id));
       setActiveModuleId(null);
     }
   };
 
   return (
     <div className="absolute inset-x-0 bottom-4 flex justify-center z-50 pointer-events-none">
-      <div className="inline-flex flex-col items-center bg-background/80 backdrop-blur-2xl px-4 py-3 rounded-[2.5rem] border border-white/10 shadow-[0_32px_64px_rgba(0,0,0,0.5)] gap-3 pointer-events-auto">
-        <div className="flex items-center gap-4">
+      <div
+        className="inline-flex flex-col items-center bg-background/80 backdrop-blur-2xl rounded-[2.5rem] border border-white/10 shadow-[0_32px_64px_rgba(0,0,0,0.5)] pointer-events-auto"
+        style={{
+          padding: `${BUILD_PADDING_VERTICAL_REM}rem ${BUILD_PADDING_HORIZONTAL_REM}rem`,
+          gap: `${BUILD_TOOLBAR_GAP_REM}rem`,
+        }}
+      >
+        <div className="flex items-center" style={{ gap: `${BUILD_ICON_GAP_REM}rem` }}>
           {categories.map((cat: any) => {
             const Icon = cat.icon;
             const isExpanded = expandedCategory === cat.id;
@@ -195,14 +231,15 @@ export const BuildToolbar = () => {
                         position="right"
                         width="308px"
                       >
-                        <button
-                          onClick={() => {
-                            setActiveTool(sub.type || cat.id);
-                            setActiveModuleId(sub.id);
-                            setExpandedCategory(null);
-                          }}
-                          className={`whitespace-nowrap px-4 py-1 text-[10.5px] font-semibold rounded-xl transition-all flex items-center justify-between gap-4 border ${activeModuleId === sub.id ? 'bg-primary/20 text-primary border-primary/30' : 'text-text/70 hover:text-text hover:bg-white/5 border-transparent'}`}
-                        >
+                         <button
+                           onClick={() => {
+                             setActiveTool(normalizeToolType(sub.type, cat.id));
+                             setActiveModuleId(sub.id);
+                             setExpandedCategory(null);
+                           }}
+                           className={`whitespace-nowrap px-4 py-1 text-[10.5px] font-semibold rounded-xl transition-all flex items-center justify-between border ${activeModuleId === sub.id ? 'bg-primary/20 text-primary border-primary/30' : 'text-text/70 hover:text-text hover:bg-white/5 border-transparent'}`}
+                           style={{ gap: `${BUILD_ICON_GAP_REM}rem` }}
+                         >
                           <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 rounded-full" style={{ background: sub.color, boxShadow: `0 0 8px ${sub.color}` }} />
                             {sub.label}

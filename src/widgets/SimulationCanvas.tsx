@@ -39,9 +39,47 @@ import { useRef, useEffect, useMemo, useState } from "react";
 
 const PlacementIndicator = () => {
   const activeTool = useSimulationStore((state) => state.activeTool);
+  const activeModuleId = useSimulationStore((state) => state.activeModuleId);
   const themeName = useSimulationStore((state) => state.themeName);
   const currentTheme = useMemo(() => (themes as any)[themeName], [themeName]);
 
+  const platformMetadata = useMemo(() => {
+    if (!activeModuleId) return null;
+    return (roomMetadata.rooms as any[]).find((r) => r.id === activeModuleId) ?? null;
+  }, [activeModuleId]);
+
+  const indicatorWidth = useMemo(() => {
+    if (platformMetadata) {
+      return platformMetadata.dimensions.width * GRID_SIZE_X;
+    }
+    if (activeTool === "office") return 50;
+    if (
+      ["lobby", "elevator", "utility", "structure"].includes(activeTool)
+    )
+      return 10;
+    if (activeTool === "text") return 20;
+    return 40;
+  }, [activeTool, platformMetadata]);
+
+  const indicatorHeight = useMemo(() => {
+    if (platformMetadata) {
+      return platformMetadata.dimensions.height * GRID_SIZE_Y;
+    }
+    if (activeTool === "office") return 40;
+    if (activeTool === "text") return 5;
+    return 40;
+  }, [activeTool, platformMetadata]);
+
+    const indicatorDepth = useMemo(() => {
+      if (platformMetadata && platformMetadata.dimensions.depth) {
+        return platformMetadata.dimensions.depth * GRID_SIZE_X;
+      }
+      // Fall back to one structural cell (40 units) so the box always remains a proper depth
+      return GRID_SIZE_Y;
+    }, [platformMetadata]);
+
+  const indicatorSize: [number, number] = [indicatorWidth, indicatorHeight];
+  const groundSize: [number, number] = [indicatorWidth, indicatorDepth];
   const groupRef = useRef<THREE.Group>(null);
   const materialRef1 = useRef<THREE.MeshBasicMaterial>(null);
   const materialRef2 = useRef<THREE.MeshBasicMaterial>(null);
@@ -68,18 +106,7 @@ const PlacementIndicator = () => {
 
     if (intersectPoint) {
       groupRef.current.visible = true;
-      let clashSize: [number, number] = [40, 40];
-      const tool = activeTool;
-      if (tool === "residential") clashSize = [40, 40];
-      else if (tool === "office") clashSize = [50, 40];
-      else if (
-        tool === "lobby" ||
-        tool === "elevator" ||
-        tool === "utility" ||
-        tool === "structure"
-      ) {
-        clashSize = [10, 40];
-      } else if (tool === "text") clashSize = [20, 5];
+      const clashSize = indicatorSize;
 
       const snappedX = snapX(intersectPoint.x, clashSize[0]);
       const snappedY =
@@ -120,22 +147,17 @@ const PlacementIndicator = () => {
     return null;
   }
 
-  let nodeSize: [number, number] = [40, 40];
-  if (activeTool === "residential") nodeSize = [40, 40];
-  else if (activeTool === "office") nodeSize = [50, 40];
-  else if (
-    activeTool === "lobby" ||
-    activeTool === "elevator" ||
-    activeTool === "utility" ||
-    activeTool === "structure"
-  ) {
-    nodeSize = [10, 40];
-  } else if (activeTool === "text") nodeSize = [20, 5];
+    const verticalHeight = indicatorHeight;
+    const verticalHalf = verticalHeight / 2;
+    const groundWidth = groundSize[0];
+    const groundDepth = groundSize[1];
+    const ghostCenterZ = -groundDepth / 2;
+    const frontFaceZ = ghostCenterZ + groundDepth / 2 + 0.05;
 
   return (
     <group ref={groupRef} visible={false}>
-      <mesh position={[0, nodeSize[1] / 2, 0]}>
-        <planeGeometry args={[nodeSize[0] + 2, nodeSize[1] + 2]} />
+      <mesh position={[0, verticalHalf, frontFaceZ]}>
+        <planeGeometry args={[groundWidth + 2, verticalHeight + 2]} />
         <meshBasicMaterial
           ref={materialRef1}
           color={currentTheme.accent}
@@ -143,14 +165,20 @@ const PlacementIndicator = () => {
           opacity={0.3}
         />
       </mesh>
-      <mesh position={[0, nodeSize[1] / 2, 0]} rotation={[0, 0, Math.PI / 4]} castShadow receiveShadow>
-        <ringGeometry args={[nodeSize[0] / 2 - 1, nodeSize[0] / 2, 4]} />
-        <meshBasicMaterial ref={materialRef2} color={currentTheme.accent} />
-      </mesh>
+      <lineSegments position={[0, verticalHalf, frontFaceZ]}>
+        <edgesGeometry
+          args={[new THREE.PlaneGeometry(groundWidth - 2, verticalHeight - 2)]}
+        />
+        <lineBasicMaterial
+          ref={materialRef2}
+          color={currentTheme.accent}
+          linewidth={2}
+        />
+      </lineSegments>
 
       {/* 3D Ghost Mesh */}
-      <mesh position={[0, nodeSize[1] / 2, -20]} castShadow receiveShadow>
-        <boxGeometry args={[nodeSize[0], nodeSize[1], 40]} />
+      <mesh position={[0, verticalHalf, ghostCenterZ]} castShadow receiveShadow>
+        <boxGeometry args={[groundWidth, verticalHeight, groundDepth]} />
         <meshBasicMaterial
           ref={materialRef3}
           color={currentTheme.accent}
@@ -160,8 +188,10 @@ const PlacementIndicator = () => {
         />
       </mesh>
 
-      <lineSegments position={[0, nodeSize[1] / 2, -20]}>
-        <edgesGeometry args={[new THREE.BoxGeometry(nodeSize[0], nodeSize[1], 40)]} />
+      <lineSegments position={[0, verticalHalf, ghostCenterZ]}>
+          <edgesGeometry
+            args={[new THREE.BoxGeometry(groundWidth, verticalHeight, groundDepth)]}
+          />
         <lineBasicMaterial
           ref={materialRef4}
           color={currentTheme.accent}
