@@ -7,6 +7,7 @@ import {
 import { motion } from "framer-motion";
 import { useSimulationStore } from "../../../shared/utils/store";
 import roomMetadata from "../../../entities/rooms/roomMetadata.json";
+import { resolveTraitsByCategory, getIconComponent } from "../../../shared/utils/metadataUtils";
 
 export const SelectionPanel = () => {
     const selectedId = useSimulationStore((state) => state.selectedId);
@@ -21,8 +22,12 @@ export const SelectionPanel = () => {
 
     const metadata = useMemo(() => {
         if (!shape?.metadataId) return null;
-        return roomMetadata.find(m => m.id === shape.metadataId);
+        return (roomMetadata.rooms as any[]).find(m => m.id === shape.metadataId);
     }, [shape?.metadataId]);
+
+    const { preferences, utilities, services } = useMemo(() => {
+        return resolveTraitsByCategory(metadata?.metadata);
+    }, [metadata]);
 
     useEffect(() => {
         if (shape) {
@@ -47,8 +52,12 @@ export const SelectionPanel = () => {
 
     const income = metadata?.metadata?.average_rent;
     const incomeText = income ? `+$${income.toLocaleString()}/mo` : "";
+
+    // Resolve combined description from library + variant
+    const classInfo = metadata ? (roomMetadata.classLibrary as any)[metadata.class] : null;
+    const categoryDesc = classInfo?.description || "";
     const description = metadata
-        ? `${metadata.categoryDescription} ${metadata.specificDescription}`
+        ? `${categoryDesc} ${metadata.specificDescription}`
         : "Standard architectural implementation.";
 
     return (
@@ -62,7 +71,7 @@ export const SelectionPanel = () => {
             {/* Top Accent Bar */}
             <div className="h-1 bg-gradient-to-r from-accent/50 via-accent to-accent/50 w-full" />
 
-            <div className="p-4 flex flex-col gap-3">
+            <div className="p-4 flex flex-col gap-4">
                 {/* [Name] - Editable Header */}
                 <div className="relative group">
                     <input
@@ -82,7 +91,7 @@ export const SelectionPanel = () => {
                 <div className="flex items-center gap-2 flex-wrap">
                     <div className="flex items-center gap-1.5 px-2 py-0.5 bg-accent/10 border border-accent/20 rounded-md">
                         <span className="text-[10px] font-mono font-bold text-accent uppercase tracking-wider">
-                            {metadata?.metadata?.class || "Standard"} {metadata?.metadata?.type || shape.type}
+                            {metadata?.class || "Standard"} {metadata?.metadata?.type || shape.type}
                         </span>
                     </div>
                     {incomeText && (
@@ -100,6 +109,43 @@ export const SelectionPanel = () => {
                         {description}
                     </p>
                 </div>
+
+                {/* Utilities (Icons) */}
+                {utilities.length > 0 && (
+                    <div className="flex flex-col gap-2">
+                        <span className="text-[9px] font-bold text-text/30 uppercase tracking-[0.2em]">Required Utilities</span>
+                        <div className="flex items-center gap-3">
+                            {utilities.map(util => {
+                                const Icon = getIconComponent(util.icon);
+                                return (
+                                    <div key={util.key} className="group/util relative">
+                                        <div className="p-2 bg-white/5 border border-white/10 rounded-lg text-text/60 hover:text-primary hover:border-primary/50 transition-all">
+                                            {Icon && <Icon size={16} strokeWidth={1.5} />}
+                                        </div>
+                                        {/* Tooltip on tiny icons */}
+                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-background border border-white/10 rounded text-[9px] opacity-0 group-hover/util:opacity-100 pointer-events-none whitespace-nowrap transition-opacity">
+                                            {util.label}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {/* Services (Pills) */}
+                {services.length > 0 && (
+                    <div className="flex flex-col gap-2">
+                        <span className="text-[9px] font-bold text-text/30 uppercase tracking-[0.2em]">Mandatory Services</span>
+                        <div className="flex flex-wrap gap-1.5">
+                            {services.map(service => (
+                                <div key={service.key} className="px-2 py-1 bg-primary/5 border border-primary/20 rounded-full">
+                                    <span className="text-[10px] font-medium text-primary/80">{service.label}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Subtle ID Footer */}
                 <div className="mt-1 pt-2 border-t border-white/5 flex items-center justify-between text-[8px] font-mono text-text/20 uppercase tracking-widest">

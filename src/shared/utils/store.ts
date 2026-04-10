@@ -4,6 +4,7 @@ import { getWorkerPool } from "../../worker/client";
 import { SIMULATION_TASK_TYPE, type CheckPlacementPayload, type CheckPlacementResult } from "../worker/protocol";
 import { validatePlacement } from "../../features/roomPlacement/constraints/placementRules";
 import { FloorBucketIndex } from "../../features/roomPlacement/constraints/spatialIndex";
+import simulationSettings from "@/src/simulationSettings.json";
 
 const globalHash = new SpatialHash(100);
 
@@ -69,6 +70,36 @@ export const snapY = (y: number, _height?: number) => {
   return getFloorBaseY(y);
 };
 
+const overlapsAABB = (a: SimulationNode, b: SimulationNode) => {
+  const aLeft = a.position[0] - a.size[0] / 2;
+  const aRight = a.position[0] + a.size[0] / 2;
+  const aTop = a.position[1] + a.size[1] / 2;
+  const aBottom = a.position[1] - a.size[1] / 2;
+
+  const bLeft = b.position[0] - b.size[0] / 2;
+  const bRight = b.position[0] + b.size[0] / 2;
+  const bTop = b.position[1] + b.size[1] / 2;
+  const bBottom = b.position[1] - b.size[1] / 2;
+
+  return (
+    Math.abs(a.position[1] - b.position[1]) < 1 &&
+    aLeft < bRight - 0.1 &&
+    aRight > bLeft + 0.1 &&
+    aBottom < bTop - 0.1 &&
+    aTop > bBottom + 0.1
+  );
+};
+
+const purgeOverlappingEmptyFloors = (
+  shapes: SimulationNode[],
+  room: SimulationNode,
+) => {
+  return shapes.filter((shape) => {
+    if (shape.type !== "empty_floor") return true;
+    return !overlapsAABB(shape, room);
+  });
+};
+
 export type PortType = "top" | "bottom" | "left" | "right";
 
 export interface Link {
@@ -104,23 +135,17 @@ export interface Resources {
   internet: number;
 }
 
+export interface AddShapeOptions {
+  skipSelection?: boolean;
+}
+
 export interface SimulationState {
   shapes: SimulationNode[];
   links: Link[];
   resources: Resources;
   spendableMoney: number;
   towerGrid: Map<string, string>; // "x,y" -> shapeId
-  activeTool:
-  | SimulationNodeType
-  | "link"
-  | "select"
-  | "vertex"
-  | "residential"
-  | "commercial"
-  | "office"
-  | "utility"
-  | "lobby"
-  | "elevator";
+  activeTool: string;
   activeModuleId: string | null; // The specific ID from roomMetadata.json
   selectedId: string | null;
   editingId: string | null;
@@ -138,6 +163,7 @@ export interface SimulationState {
     shape: SimulationNode,
     force?: boolean,
     skipHistory?: boolean,
+    options?: AddShapeOptions,
   ) => void;
   updateShape: (
     id: string,
@@ -155,6 +181,8 @@ export interface SimulationState {
   removeModule: (x: number, y: number) => void;
   setActiveTool: (tool: SimulationState["activeTool"]) => void;
   setActiveModuleId: (id: string | null) => void;
+  lastDeletedNodeType: SimulationNodeType | null;
+  setLastDeletedNodeType: (type: SimulationNodeType | null) => void;
   setSelectedId: (id: string | null) => void;
   setEditingId: (id: string | null) => void;
   setIsDragging: (isDragging: boolean) => void;
@@ -332,6 +360,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     towerGrid: new Map(),
     activeTool: "select",
     activeModuleId: null,
+    lastDeletedNodeType: null,
     selectedId: null,
     editingId: null,
     isDragging: false,
@@ -382,8 +411,9 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       return result.isValid;
     },
 
-    addShape: (shape, force = false, skipHistory = false) => {
+    addShape: (shape, force = false, skipHistory = false, options?: AddShapeOptions) => {
       const state = get();
+      const skipSelection = options?.skipSelection ?? false;
 
       // Modular Merging Logic (Industry Leading Foundation)
       const mergeableTypes: SimulationNodeType[] = ["lobby", "structure", "empty_floor"];
@@ -456,7 +486,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
                 [-newWidth / 2, prime.size[1] / 2],
               ],
               name: "Structural Scaffold",
-            }, true, true);
+            }, true, true, { skipSelection: true });
           }
 
           if (shape.type === 'structure') {
@@ -489,12 +519,14 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
                     [-5, prime.size[1] / 2],
                   ],
                   name: "Empty Floor"
-                }, true, true);
+                }, true, true, { skipSelection: true });
               }
             }
           }
 
-          set({ selectedId: prime.id });
+          if (!skipSelection) {
+            set({ selectedId: prime.id });
+          }
           return;
         }
       }
@@ -554,7 +586,11 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           ...shape,
           name: shape.name || (shape.type.charAt(0).toUpperCase() + shape.type.slice(1))
         }];
-        return { shapes: computeStructuralMetadata(newShapes) };
+        const shouldCleanupEmptyFloors = !["structure", "empty_floor"].includes(shape.type);
+        const cleanedShapes = shouldCleanupEmptyFloors
+          ? purgeOverlappingEmptyFloors(newShapes, shape)
+          : newShapes;
+        return { shapes: computeStructuralMetadata(cleanedShapes) };
       });
 
       // Immediately append invisible permanent scaffold structure
@@ -567,7 +603,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           size: shape.size,
           vertices: shape.vertices,
           name: "Structural Scaffold",
-        }, true, true);
+        }, true, true, { skipSelection: true });
       } else if (shape.type === 'structure') {
         const stateAfter = get();
         // Check structural vacancy using SpatialHash for localized speed
@@ -592,7 +628,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
             size: [...shape.size],
             vertices: [...shape.vertices],
             name: "Empty Floor"
-          }, true, true);
+          }, true, true, { skipSelection: true });
         }
       }
     },
@@ -654,10 +690,21 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       });
     },
     deleteShape: (id, isMerge = false) => {
-      pushToHistory();
       const shapeToDelete = get().shapes.find(s => s.id === id);
-      const isStructure = shapeToDelete?.type === 'structure';
-      const isRoom = shapeToDelete && !isStructure && shapeToDelete.type !== 'empty_floor';
+      if (!shapeToDelete) return;
+
+      if (
+        !isMerge &&
+        shapeToDelete.type === 'empty_floor' &&
+        !simulationSettings.deletable_empty_rooms
+      ) {
+        console.warn("Village: Empty-floor removal is disabled in settings.");
+        return;
+      }
+
+      pushToHistory();
+      const isStructure = shapeToDelete.type === 'structure';
+      const isRoom = !isStructure && shapeToDelete.type !== 'empty_floor';
 
       set((state) => {
         const shape = state.shapes.find(s => s.id === id);
@@ -707,11 +754,13 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           links: nextLinks,
           selectedId: state.selectedId === id ? null : state.selectedId,
           editingId: state.editingId === id ? null : state.editingId,
+          lastDeletedNodeType: shape?.type ?? null,
         };
       });
 
       const stateAfter = get();
-      if (!isMerge) {
+      const deletedWasEmptyFloor = shapeToDelete?.type === 'empty_floor';
+      if (!isMerge && !deletedWasEmptyFloor) {
         // --- INDUSTRY LEADING LOCALIZED VACANCY RESTORATION ---
         const currentShapes = stateAfter.shapes;
 
@@ -725,6 +774,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           Math.abs(s.position[1] - centerY) < 1 &&
           Math.abs(s.position[0] - centerX) <= searchRadiusX
         );
+        let addedEmptyFloorCell = false;
 
         impactedStructures.forEach(str => {
           const strLeft = str.position[0] - str.size[0] / 2;
@@ -765,10 +815,75 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
                   [-5, str.size[1] / 2],
                 ],
                 name: "Empty Floor"
-              }, true, true);
+              }, true, true, { skipSelection: true });
+              addedEmptyFloorCell = true;
             }
           }
         });
+        if (!addedEmptyFloorCell) {
+          const referenceStructure = impactedStructures[0];
+          const fallbackHeight =
+            referenceStructure?.size[1] ??
+            shapeToDelete?.size[1] ??
+            GRID_SIZE_Y;
+          const fallbackY = referenceStructure?.position[1] ?? centerY;
+
+          const fallbackStrLeft = referenceStructure
+            ? referenceStructure.position[0] - referenceStructure.size[0] / 2
+            : centerX - 5;
+          const fallbackStrRight = referenceStructure
+            ? referenceStructure.position[0] + referenceStructure.size[0] / 2
+            : centerX + 5;
+
+          const baseCellCenter = fallbackStrLeft + 5;
+          const candidateIndex = Math.round((centerX - baseCellCenter) / 10);
+          const clampedCx = Math.max(
+            fallbackStrLeft + 5,
+            Math.min(
+              baseCellCenter + candidateIndex * 10,
+              fallbackStrRight - 5,
+            ),
+          );
+
+          const candidateNode: SimulationNode = {
+            id: "fallback_empty_floor",
+            type: "empty_floor",
+            position: [clampedCx, fallbackY],
+            size: [10, fallbackHeight],
+            vertices: [
+              [-5, -fallbackHeight / 2],
+              [5, -fallbackHeight / 2],
+              [5, fallbackHeight / 2],
+              [-5, fallbackHeight / 2],
+            ],
+          };
+
+          const finalShapes = get().shapes;
+          const hasRoomNow = finalShapes.some(s =>
+            s.type !== "structure" &&
+            s.type !== "empty_floor" &&
+            overlapsAABB(s, candidateNode),
+          );
+          const alreadyEmpty = finalShapes.some(s =>
+            s.type === "empty_floor" && overlapsAABB(s, candidateNode),
+          );
+
+          if (!hasRoomNow && !alreadyEmpty) {
+            stateAfter.addShape({
+              id: `empty_floor_${Math.random().toString(36).substring(2, 9)}`,
+              type: 'empty_floor',
+              position: [clampedCx, fallbackY],
+              size: [10, fallbackHeight],
+              vertices: [
+                [-5, -fallbackHeight / 2],
+                [5, -fallbackHeight / 2],
+                [5, fallbackHeight / 2],
+                [-5, fallbackHeight / 2],
+              ],
+              name: "Empty Floor"
+            }, true, true, { skipSelection: true });
+          }
+        }
       }
     },
     addLink: (from, to, fromPort, toPort) => {
@@ -812,6 +927,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     },
     setActiveTool: (tool) => set({ activeTool: tool }),
     setActiveModuleId: (id) => set({ activeModuleId: id }),
+    setLastDeletedNodeType: (type) => set({ lastDeletedNodeType: type }),
     setSelectedId: (id) => {
       set({ selectedId: id });
     },
@@ -894,7 +1010,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
             [-5, 20],
           ],
           name: "Lobby Entry",
-        }, true, true);
+        }, true, true, { skipSelection: true });
       }
 
       // Final structural registration audit to catch any HMR artifacts

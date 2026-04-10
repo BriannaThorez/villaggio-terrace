@@ -25,10 +25,13 @@ import { GrassField } from "../features/environment/components/GrassField";
 import { SimulationLinks } from "../entities/SimulationLinks";
 import {
   useSimulationStore,
+  GRID_SIZE_X,
+  GRID_SIZE_Y,
   snapX,
   getPlacementCenterY,
   getFloorBaseY,
 } from "../shared/utils/store";
+import roomMetadata from "../entities/rooms/roomMetadata.json";
 import * as THREE from "three";
 import { useRef, useEffect, useMemo, useState } from "react";
 
@@ -460,8 +463,21 @@ const CanvasScene = () => {
       "structure",
     ];
     const isRoom = roomTypes.includes(activeTool);
+    const activeModuleId = useSimulationStore.getState().activeModuleId;
+    const metadata = activeModuleId ? (roomMetadata.rooms as any[]).find(r => r.id === activeModuleId) : null;
 
-    if (activeTool === "text") {
+    if (metadata) {
+      // Dynamic Targeting Using Centralized Data
+      const halfW = (metadata.dimensions.width * GRID_SIZE_X) / 2;
+      const halfH = (metadata.dimensions.height * GRID_SIZE_Y) / 2;
+      nodeSize = [metadata.dimensions.width * GRID_SIZE_X, metadata.dimensions.height * GRID_SIZE_Y];
+      vertices = [
+        [-halfW, -halfH],
+        [halfW, -halfH],
+        [halfW, halfH],
+        [-halfW, halfH],
+      ];
+    } else if (activeTool === "text") {
       nodeSize = [20, 5];
       vertices = [
         [-10, -2.5],
@@ -572,7 +588,6 @@ const CanvasScene = () => {
     }, 100);
 
     const id = `room_${Math.random().toString(36).substring(2, 9)}`;
-    const activeModuleId = useSimulationStore.getState().activeModuleId;
 
     addShape(
       {

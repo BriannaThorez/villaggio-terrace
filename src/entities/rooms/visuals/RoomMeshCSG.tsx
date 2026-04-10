@@ -79,7 +79,7 @@ const RoomMeshCSGInner: React.FC<RoomMeshCSGProps> = ({
     return (
         <group position={[0, height / 2, -depth / 2]}>
             <mesh material={material} castShadow receiveShadow>
-                <Geometry computeVertexNormals>
+                <Geometry key={cutouts.length} computeVertexNormals>
                     <Base geometry={baseBox} />
                     <Subtraction geometry={subBox} position={[subXOffset, (wallThickness - 0.55) / 2, hasBackWall ? wallThickness : 0]} />
 

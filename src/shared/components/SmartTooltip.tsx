@@ -14,9 +14,10 @@ import themes from "../themes/color_palettes.json";
 interface SmartTooltipProps {
   children: React.ReactNode;
   content: string;
-  description?: string;
+  description?: React.ReactNode;
   shortcut?: string;
   position?: "top" | "bottom" | "left" | "right";
+  width?: string;
 }
 
 export const SmartTooltip: React.FC<SmartTooltipProps> = ({
@@ -25,6 +26,7 @@ export const SmartTooltip: React.FC<SmartTooltipProps> = ({
   description,
   shortcut,
   position = "right",
+  width,
 }) => {
   const id = useId();
   const activeTooltipId = useSimulationStore((state) => state.activeTooltipId);
@@ -55,50 +57,51 @@ export const SmartTooltip: React.FC<SmartTooltipProps> = ({
       );
 
       // Measure or fallback
-      const tooltipWidth = tooltipRef.current?.offsetWidth || 260;
-      const tooltipHeight = tooltipRef.current?.offsetHeight || 160;
+      const tooltipWidth = tooltipRef.current?.offsetWidth || (width ? parseInt(width) : 260);
+      const tooltipHeight = tooltipRef.current?.offsetHeight || 180;
 
       let targetPos = position;
 
       const calculateCoords = (pos: typeof position) => {
         let tx = 0;
         let ty = 0;
+        const offset = 6;
+        
         switch (pos) {
           case "right":
-            tx = rect.right + 12;
+            tx = rect.right + offset;
             ty = rect.top + rect.height / 2;
             break;
           case "left":
-            tx = rect.left - 12;
+            tx = rect.left - offset;
             ty = rect.top + rect.height / 2;
             break;
           case "top":
             tx = rect.left + rect.width / 2;
-            ty = rect.top - 12;
+            ty = rect.top - offset;
             break;
           case "bottom":
             tx = rect.left + rect.width / 2;
-            ty = rect.bottom + 12;
+            ty = rect.bottom + offset;
             break;
         }
         return { tx, ty };
       };
 
-      let { tx, ty } = calculateCoords(targetPos);
+      const originalCoords = calculateCoords(targetPos);
+      let tx = originalCoords.tx;
+      let ty = originalCoords.ty;
 
-      // Flip logic with more buffer
-      if (targetPos === "right" && tx + tooltipWidth > viewportWidth - padding)
-        targetPos = "left";
-      else if (targetPos === "left" && tx - tooltipWidth < padding)
-        targetPos = "right";
-
-      if (
-        targetPos === "bottom" &&
-        ty + tooltipHeight > viewportHeight - padding
-      )
-        targetPos = "top";
-      else if (targetPos === "top" && ty - tooltipHeight < padding)
-        targetPos = "bottom";
+      // Position Flipping Strategy (with hysteresis)
+      if (targetPos === "right") {
+        const overflow = tx + tooltipWidth > viewportWidth - padding;
+        const spaceOnLeft = rect.left - tooltipWidth - padding > padding;
+        if (overflow && spaceOnLeft) targetPos = "left";
+      } else if (targetPos === "left") {
+        const overflow = tx - tooltipWidth < padding;
+        const spaceOnRight = rect.right + tooltipWidth + padding < viewportWidth;
+        if (overflow && spaceOnRight) targetPos = "right";
+      }
 
       if (targetPos !== position) {
         const flipped = calculateCoords(targetPos);
@@ -106,49 +109,35 @@ export const SmartTooltip: React.FC<SmartTooltipProps> = ({
         ty = flipped.ty;
       }
 
-      // Strict Clamping based on actual position
+      // Final Clamping (Stay in View)
       if (targetPos === "right" || targetPos === "left") {
         const hh = tooltipHeight / 2;
-        ty = Math.max(
-          padding + hh,
-          Math.min(ty, viewportHeight - padding - hh),
-        );
+        ty = Math.max(padding + hh, Math.min(ty, viewportHeight - padding - hh));
+        
         if (targetPos === "right") {
-          tx = Math.max(
-            padding,
-            Math.min(tx, viewportWidth - padding - tooltipWidth),
-          );
+          tx = Math.max(padding, Math.min(tx, viewportWidth - padding - tooltipWidth));
         } else {
-          tx = Math.max(
-            padding + tooltipWidth,
-            Math.min(tx, viewportWidth - padding),
-          );
+          tx = Math.max(padding + tooltipWidth, Math.min(tx, viewportWidth - padding));
         }
       } else {
         const hw = tooltipWidth / 2;
         tx = Math.max(padding + hw, Math.min(tx, viewportWidth - padding - hw));
         if (targetPos === "bottom") {
-          ty = Math.max(
-            padding,
-            Math.min(ty, viewportHeight - padding - tooltipHeight),
-          );
+          ty = Math.max(padding, Math.min(ty, viewportHeight - padding - tooltipHeight));
         } else {
-          ty = Math.max(
-            padding + tooltipHeight,
-            Math.min(ty, viewportHeight - padding),
-          );
+          ty = Math.max(padding + tooltipHeight, Math.min(ty, viewportHeight - padding));
         }
       }
 
-      // Only update state if values changed significantly to prevent flicker
+      // Only update state if values changed significantly (prevent sub-pixel jitter)
       const dx = Math.abs(tx - lastUpdateRef.current.x);
       const dy = Math.abs(ty - lastUpdateRef.current.y);
       const posChanged = targetPos !== lastUpdateRef.current.pos;
 
-      if (dx > 0.1 || dy > 0.1 || posChanged) {
-        lastUpdateRef.current = { x: tx, y: ty, pos: targetPos };
-        setActualPosition(targetPos);
-        setCoords({ x: tx, y: ty });
+      if (dx > 1 || dy > 1 || posChanged) {
+          lastUpdateRef.current = { x: tx, y: ty, pos: targetPos };
+          setActualPosition(targetPos);
+          setCoords({ x: tx, y: ty });
       }
     });
 
@@ -157,14 +146,15 @@ export const SmartTooltip: React.FC<SmartTooltipProps> = ({
 
   useEffect(() => {
     if (isVisible) {
-      const observer = new ResizeObserver(() => updatePosition());
+      // Use a debounced ResizeObserver or frame-bound one
+      const observer = new ResizeObserver(() => {
+          updatePosition();
+      });
+      
       if (tooltipRef.current) observer.observe(tooltipRef.current);
       if (triggerRef.current) observer.observe(triggerRef.current);
 
-      window.addEventListener("scroll", updatePosition, {
-        passive: true,
-        capture: true,
-      });
+      window.addEventListener("scroll", updatePosition, { passive: true, capture: true });
       window.addEventListener("resize", updatePosition, { passive: true });
       updatePosition();
 
@@ -179,28 +169,23 @@ export const SmartTooltip: React.FC<SmartTooltipProps> = ({
   const variants = {
     initial: {
       opacity: 0,
-      scale: 0.95,
-      x: actualPosition === "right" ? -10 : actualPosition === "left" ? 10 : 0,
-      y: actualPosition === "bottom" ? -10 : actualPosition === "top" ? 10 : 0,
-      filter: "blur(10px)",
+      scale: 0.98,
+      filter: "blur(4px)",
     },
     animate: {
       opacity: 1,
       scale: 1,
-      x: 0,
-      y: 0,
       filter: "blur(0px)",
       transition: {
         type: "spring" as const,
-        stiffness: 400,
-        damping: 25,
+        stiffness: 500,
+        damping: 40,
       },
     },
     exit: {
       opacity: 0,
-      scale: 0.95,
-      filter: "blur(10px)",
-      transition: { duration: 0.15 },
+      scale: 0.98,
+      transition: { duration: 0.1 },
     },
   };
 
@@ -223,6 +208,10 @@ export const SmartTooltip: React.FC<SmartTooltipProps> = ({
                 : "translateX(-50%)",
             zIndex: 99999,
             pointerEvents: "none",
+            willChange: "transform, opacity",
+            // Use fixed width if provided, otherwise max-content for dynamic sizing
+            width: width || "max-content",
+            maxWidth: "calc(100vw - 48px)",
           }}
           className="flex items-center"
         >
@@ -240,11 +229,11 @@ export const SmartTooltip: React.FC<SmartTooltipProps> = ({
             <div className="w-0 h-0 border-x-[6px] border-x-transparent border-b-[8px] border-b-primary/20 mb-[-1px]" />
           )}
 
-          <div className="bg-background/90 backdrop-blur-2xl border border-primary/30 rounded-xl p-3 shadow-[0_20px_50px_rgba(0,0,0,0.4)] min-w-[160px] relative overflow-hidden">
+          <div className="bg-background/90 backdrop-blur-2xl border border-primary/30 rounded-xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.4)] relative overflow-hidden h-max w-full box-border">
             {/* Decorative background glow */}
             <div className="absolute -top-10 -right-10 w-20 h-20 bg-primary/10 blur-3xl rounded-full" />
 
-            <div className="flex flex-col gap-1.5 relative z-10">
+            <div className="flex flex-col gap-2 relative z-10">
               <div className="flex items-center justify-between gap-4">
                 <span className="text-[11px] font-bold text-text tracking-tight uppercase">
                   {content}
@@ -257,9 +246,9 @@ export const SmartTooltip: React.FC<SmartTooltipProps> = ({
               </div>
 
               {description && (
-                <p className="text-[10px] text-text/50 leading-relaxed font-medium max-w-[180px]">
+                <div className="text-[10px] text-text/50 leading-relaxed font-medium">
                   {description}
-                </p>
+                </div>
               )}
             </div>
 

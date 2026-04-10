@@ -236,6 +236,8 @@ export const SimulationNodes = () => {
   const editingId = useSimulationStore((state) => state.editingId);
   const setEditingId = useSimulationStore((state) => state.setEditingId);
   const linkingFrom = useSimulationStore((state) => state.linkingFrom);
+  const lastDeletedNodeType = useSimulationStore((state) => state.lastDeletedNodeType);
+  const setLastDeletedNodeType = useSimulationStore((state) => state.setLastDeletedNodeType);
   const structuralGraph = useMemo(() => buildCellBeamGraph(shapes), [shapes]);
   const renderedShapes = useMemo<RenderShape[]>(
     () => attachStructuralMetadataToShapes(shapes, structuralGraph),
@@ -272,34 +274,79 @@ export const SimulationNodes = () => {
 
   // Ensure all structures have an empty floor or a real room.
   useEffect(() => {
-    if (useSimulationStore.getState().shapes.length === 0) {
-      useSimulationStore.getState().initializeWorld();
+    const store = useSimulationStore.getState();
+    if (store.shapes.length === 0) {
+      store.initializeWorld();
+      return;
     }
-    const unpopulatedStructures = useSimulationStore.getState().shapes.filter(s => {
-      if (s.type !== 'structure') return false;
-      const hasRoom = useSimulationStore.getState().shapes.some(other =>
+
+    if (lastDeletedNodeType === "empty_floor") {
+      setLastDeletedNodeType(null);
+      return;
+    }
+
+    const structureCandidates = store.shapes.filter(s => s.type === 'structure').filter(str => {
+      const strLeft = str.position[0] - str.size[0] / 2;
+      const strRight = str.position[0] + str.size[0] / 2;
+
+      const hasRoom = store.shapes.some(other =>
         other.type !== 'structure' &&
-        Math.abs(other.position[0] - s.position[0]) < 0.1 &&
-        Math.abs(other.position[1] - s.position[1]) < 0.1
+        other.type !== 'empty_floor' &&
+        Math.abs(other.position[1] - str.position[1]) < 1 &&
+        other.position[0] + other.size[0] / 2 > strLeft + 0.1 &&
+        other.position[0] - other.size[0] / 2 < strRight - 0.1
       );
-      return !hasRoom;
+      if (hasRoom) return false;
+
+      const hasEmptyFloor = store.shapes.some(other =>
+        other.type === 'empty_floor' &&
+        Math.abs(other.position[1] - str.position[1]) < 1 &&
+        other.position[0] + other.size[0] / 2 > strLeft + 0.1 &&
+        other.position[0] - other.size[0] / 2 < strRight - 0.1
+      );
+
+      return !hasEmptyFloor;
     });
 
-    if (unpopulatedStructures.length > 0) {
-      setTimeout(() => {
-        unpopulatedStructures.forEach(str => {
-          useSimulationStore.getState().addShape({
-            id: `empty_floor_${Math.random().toString(36).substr(2, 9)}`,
-            type: 'empty_floor',
-            position: [...str.position],
-            size: [...str.size],
-            vertices: [...str.vertices],
-            name: "Empty Floor"
-          }, true, true);
-        });
-      }, 0);
-    }
-  }, []);
+    if (structureCandidates.length === 0) return;
+
+    const tsId = Math.random().toString(36).substr(2, 9);
+    const timer = setTimeout(() => {
+      structureCandidates.forEach((str) => {
+        const fresh = useSimulationStore.getState();
+        const strLeft = str.position[0] - str.size[0] / 2;
+        const strRight = str.position[0] + str.size[0] / 2;
+
+        const hasRoom = fresh.shapes.some(other =>
+          other.type !== 'structure' &&
+          other.type !== 'empty_floor' &&
+          Math.abs(other.position[1] - str.position[1]) < 1 &&
+          other.position[0] + other.size[0] / 2 > strLeft + 0.1 &&
+          other.position[0] - other.size[0] / 2 < strRight - 0.1
+        );
+        if (hasRoom) return;
+
+        const hasEmptyFloor = fresh.shapes.some(other =>
+          other.type === 'empty_floor' &&
+          Math.abs(other.position[1] - str.position[1]) < 1 &&
+          other.position[0] + other.size[0] / 2 > strLeft + 0.1 &&
+          other.position[0] - other.size[0] / 2 < strRight - 0.1
+        );
+        if (hasEmptyFloor) return;
+
+        fresh.addShape({
+          id: `empty_floor_${tsId}_${str.id}`,
+          type: 'empty_floor',
+          position: [...str.position],
+          size: [...str.size],
+          vertices: [...str.vertices],
+          name: "Empty Floor"
+        }, true, true, { skipSelection: true });
+      });
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [shapes.length, lastDeletedNodeType, setLastDeletedNodeType]);
   const themeName = useSimulationStore((state) => state.themeName);
 
   // Reusable THREE objects to avoid GC pressure in hot loops
