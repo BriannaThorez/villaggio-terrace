@@ -74,12 +74,33 @@ import greyCartagoArm from "../../../assets/textures/grey_cartago_tiles/grey_car
 import greyCartagoNor from "../../../assets/textures/grey_cartago_tiles/grey_cartago_03_nor_gl_4k.png";
 import greyCartagoDisp from "../../../assets/textures/grey_cartago_tiles/grey_cartago_03_disp_4k.png";
 
-const ASSET_REGISTRY: Record<string, { diff: string, arm: string, nor: string, disp: string }> = {
+import rockyTerrainDiff from "../../../assets/textures/rocky_terrain_2/rocky_terrain_02_diff_4k.png";
+import rockyTerrainArm from "../../../assets/textures/rocky_terrain_2/rocky_terrain_02_arm_4k.png";
+import rockyTerrainNor from "../../../assets/textures/rocky_terrain_2/rocky_terrain_02_nor_gl_4k.png";
+import rockyTerrainDisp from "../../../assets/textures/rocky_terrain_2/rocky_terrain_02_disp_4k.png";
+import rockyTerrainSpec from "../../../assets/textures/rocky_terrain_2/rocky_terrain_02_spec_4k.png";
+
+interface AssetPaths {
+    diff: string;
+    arm: string;
+    nor: string;
+    disp: string;
+    spec?: string;
+}
+
+const ASSET_REGISTRY: Record<string, AssetPaths> = {
     "wood_floor_1": { diff: woodFloorDiff, arm: woodFloorArm, nor: woodFloorNor, disp: woodFloorDisp },
     "beige_wall_1": { diff: beigeWallDiff, arm: beigeWallArm, nor: beigeWallNor, disp: beigeWallDisp },
     "concrete_floor_1": { diff: paintedConcreteFloorDiff, arm: paintedConcreteFloorArm, nor: paintedConcreteFloorNor, disp: paintedConcreteFloorDisp },
     "concrete_wall_1": { diff: concreteWallDiff, arm: concreteWallArm, nor: concreteWallNor, disp: concreteWallDisp },
     "grey_cartago_tiles": { diff: greyCartagoDiff, arm: greyCartagoArm, nor: greyCartagoNor, disp: greyCartagoDisp },
+    "rocky_terrain_2": {
+        diff: rockyTerrainDiff,
+        arm: rockyTerrainArm,
+        nor: rockyTerrainNor,
+        disp: rockyTerrainDisp,
+        spec: rockyTerrainSpec,
+    },
 };
 
 export const getTextureBundle = (assetName: string): TextureBundle => {
@@ -93,11 +114,15 @@ export const getTextureBundle = (assetName: string): TextureBundle => {
     const normalMap = loadTextureArgs(paths.nor, { name: `${assetName}-normal`, colorSpace: THREE.NoColorSpace, flipY: false });
     const dispMap = loadTextureArgs(paths.disp, { name: `${assetName}-disp`, colorSpace: THREE.NoColorSpace });
 
+    const specMap = paths.spec
+        ? loadTextureArgs(paths.spec, { name: `${assetName}-spec`, colorSpace: THREE.NoColorSpace })
+        : armMap;
+
     const bundle: TextureBundle = {
         albedoMap: diffuseMap,
         aoMap: armMap,
-        roughnessMap: armMap,
-        metalnessMap: armMap,
+        roughnessMap: specMap,
+        metalnessMap: specMap,
         normalMap: normalMap,
         displacementMap: dispMap,
     };

@@ -11,9 +11,9 @@
  *   - DoubleSide rendering for correct silhouettes
  */
 
-import * as THREE from 'three';
-import { shaderMaterial } from '@react-three/drei';
-import { extend } from '@react-three/fiber';
+import * as THREE from "three";
+import { shaderMaterial } from "@react-three/drei";
+import { extend } from "@react-three/fiber";
 
 const GrassMaterial = shaderMaterial(
   {
@@ -114,7 +114,7 @@ const GrassMaterial = shaderMaterial(
     // ── Per-Instance Frustum Culling ──
     vec4 clipPos = projectionMatrix * viewMatrix * vec4(worldRoot + position, 1.0);
     vec3 ndc = clipPos.xyz / clipPos.w;
-    
+
     if (abs(ndc.x) > 1.2 || abs(ndc.y) > 1.2 || clipPos.z < -clipPos.w) {
         gl_Position = vec4(0.0);
         return;
@@ -132,7 +132,7 @@ const GrassMaterial = shaderMaterial(
     for (int i = 0; i < 64; i++) {
         if (i >= cullCount) break;
         vec4 rect = cullRects[i];
-        if (worldRoot.x >= rect.x && worldRoot.x <= rect.z && 
+        if (worldRoot.x >= rect.x && worldRoot.x <= rect.z &&
             worldRoot.z >= rect.y && worldRoot.z <= rect.w) {
             culled = true;
             break;
@@ -155,7 +155,7 @@ const GrassMaterial = shaderMaterial(
     direction = slerp(direction, orientation, frc);
 
     vec3 vPosition = vec3(position.x, position.y + position.y * stretch, position.z);
-    vPosition *= distScale; 
+    vPosition *= distScale;
     vPosition = rotateVectorByQuaternion(vPosition, direction);
 
     float halfAngle = noise * 0.15;

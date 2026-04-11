@@ -7,7 +7,14 @@ import {
   Lightformer,
 } from "@react-three/drei";
 import themes from "../../shared/themes/color_palettes.json";
-import { EffectComposer, Noise, Vignette, Bloom, N8AO, SMAA } from "@react-three/postprocessing";
+import {
+  EffectComposer,
+  Noise,
+  Vignette,
+  Bloom,
+  N8AO,
+  SMAA,
+} from "@react-three/postprocessing";
 import { HolographicFloors } from "../../features/environment/HolographicFloors";
 import { HolographicHeightScale } from "../../features/environment/HolographicHeightScale";
 import { HolographicWidthScale } from "../../features/environment/HolographicWidthScale";
@@ -84,14 +91,28 @@ const PlacementIndicator = () => {
           : getPlacementCenterY(intersectPoint.y, clashSize[1]);
 
       // Spectacular Lerp for Premium Feel
-      groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, snappedX, 0.42);
-      groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, snappedY, 0.42);
+      groupRef.current.position.x = THREE.MathUtils.lerp(
+        groupRef.current.position.x,
+        snappedX,
+        0.42,
+      );
+      groupRef.current.position.y = THREE.MathUtils.lerp(
+        groupRef.current.position.y,
+        snappedY,
+        0.42,
+      );
 
       groupRef.current.position.z = 0.5;
 
       const isValid = useSimulationStore
         .getState()
-        .checkPlacement(snappedX, snappedY, clashSize[0], clashSize[1], activeTool);
+        .checkPlacement(
+          snappedX,
+          snappedY,
+          clashSize[0],
+          clashSize[1],
+          activeTool,
+        );
 
       const color = !isValid ? "#ff4444" : currentTheme.accent;
 
@@ -139,7 +160,12 @@ const PlacementIndicator = () => {
           opacity={0.3}
         />
       </mesh>
-      <mesh position={[0, nodeSize[1] / 2, 0]} rotation={[0, 0, Math.PI / 4]} castShadow receiveShadow>
+      <mesh
+        position={[0, nodeSize[1] / 2, 0]}
+        rotation={[0, 0, Math.PI / 4]}
+        castShadow
+        receiveShadow
+      >
         <ringGeometry args={[nodeSize[0] / 2 - 1, nodeSize[0] / 2, 4]} />
         <meshBasicMaterial ref={materialRef2} color={currentTheme.accent} />
       </mesh>
@@ -157,7 +183,9 @@ const PlacementIndicator = () => {
       </mesh>
 
       <lineSegments position={[0, nodeSize[1] / 2, -20]}>
-        <edgesGeometry args={[new THREE.BoxGeometry(nodeSize[0], nodeSize[1], 40)]} />
+        <edgesGeometry
+          args={[new THREE.BoxGeometry(nodeSize[0], nodeSize[1], 40)]}
+        />
         <lineBasicMaterial
           ref={materialRef4}
           color={currentTheme.accent}
@@ -232,13 +260,13 @@ export const LegacyLightingScene = () => {
   const lastStampedPos = useRef<string | null>(null);
   const isClickMovedRef = useRef(false);
 
-
-
   useEffect(() => {
     if (shouldResetCamera) {
       const { cameraState, cameraRotation } = useSimulationStore.getState();
       targetZoom.current = cameraState.zoom;
-      camera.position.set(...(cameraState.position as [number, number, number]));
+      camera.position.set(
+        ...(cameraState.position as [number, number, number]),
+      );
       (camera as THREE.OrthographicCamera).zoom = cameraState.zoom;
       camera.updateProjectionMatrix();
       if (controls) {
@@ -284,12 +312,14 @@ export const LegacyLightingScene = () => {
     const cam = camera as THREE.OrthographicCamera;
 
     // Detect first interaction to prevent startup drift
-    if (!hasInteractedRef.current && (Math.abs(state.pointer.x) > 0.01 || Math.abs(state.pointer.y) > 0.01)) {
+    if (
+      !hasInteractedRef.current &&
+      (Math.abs(state.pointer.x) > 0.01 || Math.abs(state.pointer.y) > 0.01)
+    ) {
       hasInteractedRef.current = true;
     }
 
     if (Math.abs(cam.zoom - targetZoom.current) > 0.001) {
-
       const oldZoom = cam.zoom;
       cam.zoom = targetZoom.current;
 
@@ -312,11 +342,8 @@ export const LegacyLightingScene = () => {
         }
       }
 
-
       cam.updateProjectionMatrix();
     }
-
-
   });
 
   const placeAtPoint = (point: THREE.Vector3, skipHistory = true) => {
@@ -424,10 +451,7 @@ export const LegacyLightingScene = () => {
       return;
     }
 
-    if (
-      activeTool === "select" ||
-      activeTool === "vertex"
-    ) {
+    if (activeTool === "select" || activeTool === "vertex") {
       return;
     }
 
@@ -548,9 +572,10 @@ export const LegacyLightingScene = () => {
     }
 
     const snappedX = snapX(intersectPoint.x, nodeSize[0]);
-    const snappedY = activeTool === "lobby"
-      ? 0
-      : getPlacementCenterY(intersectPoint.y, nodeSize[1]);
+    const snappedY =
+      activeTool === "lobby"
+        ? 0
+        : getPlacementCenterY(intersectPoint.y, nodeSize[1]);
 
     const position: [number, number] = [snappedX, snappedY];
     const gridKey = `${snappedX},${snappedY}`;
@@ -598,12 +623,12 @@ export const LegacyLightingScene = () => {
       setIsDragging(false);
 
       // Global right-click tool cancellation (Industry leading stability)
-      // This ensures that right-click ALWAYS dismisses the active tool, 
+      // This ensures that right-click ALWAYS dismisses the active tool,
       // even if a sub-component mesh stopped propagation of the Three.js event.
       if (e.button === 2) {
         const currentTool = useSimulationStore.getState().activeTool;
-        if (currentTool !== 'select') {
-          setActiveTool('select');
+        if (currentTool !== "select") {
+          setActiveTool("select");
           setSelectedId(null);
         }
       }
@@ -662,8 +687,14 @@ export const LegacyLightingScene = () => {
     }
 
     if (e.nativeEvent.buttons === 1) {
-      const isStampableTool = activeTool === "lobby" || activeTool === "structure";
-      if (isStampableTool && !currentIsPanning && !currentIsRotating && !currentLinkingFrom) {
+      const isStampableTool =
+        activeTool === "lobby" || activeTool === "structure";
+      if (
+        isStampableTool &&
+        !currentIsPanning &&
+        !currentIsRotating &&
+        !currentLinkingFrom
+      ) {
         // Unify raycasting math for bit-for-bit placement parity (Industry leading finish)
         raycaster.setFromCamera(pointer, camera);
         const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
@@ -674,7 +705,8 @@ export const LegacyLightingScene = () => {
           // Continuous row construction (SimTower style sequential placement)
           // We use a cell key to prevent double-stamping in the same grid spot during the move
           const snappedX = Math.round(intersectPoint.x / 10) * 10;
-          const snappedY = activeTool === "lobby" ? 0 : getFloorBaseY(intersectPoint.y);
+          const snappedY =
+            activeTool === "lobby" ? 0 : getFloorBaseY(intersectPoint.y);
           const cellKey = `${snappedX}:${snappedY}:${activeTool}`;
 
           if (lastStampedCellKey.current !== cellKey) {
@@ -766,14 +798,20 @@ export const LegacyLightingScene = () => {
   };
 
   const gridRef = useRef<any>(null);
-  const groundPlane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), []);
+  const groundPlane = useMemo(
+    () => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0),
+    [],
+  );
   const raycastResult = useMemo(() => new THREE.Vector3(), []);
 
   useFrame((state) => {
     if (gridRef.current) {
       // Find the screen center in world space on the ground plane (y=0)
       state.raycaster.setFromCamera(new THREE.Vector2(0, 0), state.camera);
-      const intersect = state.raycaster.ray.intersectPlane(groundPlane, raycastResult);
+      const intersect = state.raycaster.ray.intersectPlane(
+        groundPlane,
+        raycastResult,
+      );
 
       if (intersect) {
         // Snap the grid center to 10-unit increments to prevent line-shifting
@@ -826,7 +864,12 @@ export const LegacyLightingScene = () => {
 
     if (e.button === 0 && wasStaticClick && activeTool === "select") {
       // Only deselect if we didn't just finished a drag/pan/move
-      if (!wasDraggingRef.current && !wasPanningRef.current && !wasLinkingRef.current && !isClickMovedRef.current) {
+      if (
+        !wasDraggingRef.current &&
+        !wasPanningRef.current &&
+        !wasLinkingRef.current &&
+        !isClickMovedRef.current
+      ) {
         setSelectedId(null); // LEFT CLICK DESELECT ONLY IN SELECT MODE
       }
     }
@@ -859,7 +902,14 @@ export const LegacyLightingScene = () => {
   return (
     <>
       <color attach="background" args={[isDark ? "#0d1117" : "#cbd5e1"]} />
-      <fog attach="fog" args={[isDark ? "#0d1117" : "#cbd5e1", showWeather ? 100 : 500, showWeather ? 1000 : 4000]} />
+      <fog
+        attach="fog"
+        args={[
+          isDark ? "#0d1117" : "#cbd5e1",
+          showWeather ? 100 : 500,
+          showWeather ? 1000 : 4000,
+        ]}
+      />
 
       {/* Modular Atmospheric Simulation */}
       <SolarSystem />
@@ -871,9 +921,27 @@ export const LegacyLightingScene = () => {
       >
         {isDark && (
           <group rotation={[0, 0, 0]}>
-            <Lightformer intensity={3.5} rotation={[Math.PI / 2, 0, 0]} position={[0, 20, -10]} scale={[20, 20, 1]} color="#22d3ee" />
-            <Lightformer intensity={1.5} rotation={[0, Math.PI / 2, 0]} position={[-10, 10, 0]} scale={[20, 10, 1]} color="#a855f7" />
-            <Lightformer intensity={1.5} rotation={[0, -Math.PI / 2, 0]} position={[10, 10, 0]} scale={[20, 10, 1]} color="#3b82f6" />
+            <Lightformer
+              intensity={3.5}
+              rotation={[Math.PI / 2, 0, 0]}
+              position={[0, 20, -10]}
+              scale={[20, 20, 1]}
+              color="#22d3ee"
+            />
+            <Lightformer
+              intensity={1.5}
+              rotation={[0, Math.PI / 2, 0]}
+              position={[-10, 10, 0]}
+              scale={[20, 10, 1]}
+              color="#a855f7"
+            />
+            <Lightformer
+              intensity={1.5}
+              rotation={[0, -Math.PI / 2, 0]}
+              position={[10, 10, 0]}
+              scale={[20, 10, 1]}
+              color="#3b82f6"
+            />
           </group>
         )}
       </Environment>
@@ -886,7 +954,7 @@ export const LegacyLightingScene = () => {
         dampingFactor={0.1}
         enabled={!isDragging && !linkingFrom && !isRotating && !isPanning}
         mouseButtons={{
-          LEFT: activeTool === "select" ? THREE.MOUSE.PAN : undefined as any,
+          LEFT: activeTool === "select" ? THREE.MOUSE.PAN : (undefined as any),
           MIDDLE: THREE.MOUSE.ROTATE,
           RIGHT: THREE.MOUSE.PAN,
         }}
@@ -904,18 +972,18 @@ export const LegacyLightingScene = () => {
             const azimuth = orbit.getAzimuthalAngle();
             const polar = orbit.getPolarAngle();
 
-            const currentSize = (controls as any).object.getState?.().size || size;
+            const currentSize =
+              (controls as any).object.getState?.().size || size;
             setCameraState(
               [cam.position.x, cam.position.y, cam.position.z],
               cam.zoom,
               currentSize.width / cam.zoom,
-              currentSize.height / cam.zoom
+              currentSize.height / cam.zoom,
             );
             setCameraRotation(azimuth, polar);
             lastSyncTimeRef.current = now;
           }
         }}
-
         onEnd={() => {
           setTimeout(() => {
             // Only clear wasPanning if we actually finished a move
@@ -978,8 +1046,6 @@ export const LegacyLightingScene = () => {
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
-
-
       {showWeather && (
         <>
           <RainField isDark={isDark} />
@@ -1023,7 +1089,9 @@ export const LegacySimulationCanvas = () => {
   // We use initial state to bootstrap the camera, but DO NOT subscribe to changes here.
   // Reactive camera updates are handled by OrbitControls and synced back to the store
   // via throttled events to prevent feedback loops and main-thread locking.
-  const [initialCamera] = useState(() => useSimulationStore.getState().cameraState);
+  const [initialCamera] = useState(
+    () => useSimulationStore.getState().cameraState,
+  );
 
   return (
     <Canvas
@@ -1033,7 +1101,7 @@ export const LegacySimulationCanvas = () => {
         zoom: initialCamera.zoom,
         position: initialCamera.position as [number, number, number],
         far: 5000,
-        near: -5000
+        near: -5000,
       }}
       gl={{
         antialias: true,
