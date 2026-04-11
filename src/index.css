@@ -18,11 +18,45 @@
   --accent: #22d3ee;
   --neutral-light: #ffffff;
   --neutral-dark: #050505;
-  
   --background: var(--neutral-dark);
   --text: var(--neutral-light);
   --highlight: var(--accent);
   --gui-spacing-scale: 0.75;
+  --theme-name: neon_teal;
+  --theme-mode: dark;
+  --theme-primary: var(--primary);
+  --theme-secondary: var(--secondary);
+  --theme-accent: var(--accent);
+  --theme-neutral-light: var(--neutral-light);
+  --theme-neutral-dark: var(--neutral-dark);
+  --theme-background: var(--background);
+  --theme-foreground: var(--text);
+  --theme-surface: rgba(12, 12, 12, 0.9);
+  --theme-surface-muted: rgba(12, 12, 12, 0.8);
+  --theme-border: rgba(255, 255, 255, 0.1);
+  --theme-border-subtle: rgba(255, 255, 255, 0.06);
+  --theme-overlay: rgba(0, 0, 0, 0.55);
+  --theme-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  --theme-space-xs: 0.25rem;
+  --theme-space-sm: 0.5rem;
+  --theme-space-md: 0.75rem;
+  --theme-space-lg: 1rem;
+  --theme-space-xl: 1.5rem;
+  --theme-radius-sm: 0.5rem;
+  --theme-radius-md: 0.75rem;
+  --theme-radius-lg: 1rem;
+  --theme-radius-xl: 1.5rem;
+  --theme-radius-pill: 9999px;
+  --theme-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.12);
+  --theme-shadow-md: 0 10px 30px rgba(0, 0, 0, 0.25);
+  --theme-shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.4);
+  --theme-button-padding-x: 0.44rem;
+  --theme-button-padding-y: 0.44rem;
+  --theme-button-icon-size: 28px;
+  --theme-button-radius: 1.5rem;
+  --theme-toolbar-padding: 0.75rem;
+  --theme-toolbar-gap: 0.375rem;
+  --theme-toolbar-radius: 1.5rem;
 }
 
 body {

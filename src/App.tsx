@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { SimulationCanvas } from "./widgets/SimulationCanvas";
 import { MainToolbar } from "./features/ui/toolbars/MainToolbar";
@@ -10,6 +9,12 @@ import { Minimap } from "./features/ui/panels/Minimap";
 import { WeatherPanel } from "./features/weather/ui/WeatherPanel";
 import { useSimulationStore } from "./shared/utils";
 import themes from "./shared/themes/color_palettes.json";
+import {
+  createThemeCSSVariables,
+  getThemeTokens,
+  getMainToolbarThemeStyle,
+  getBuildToolbarThemeStyle,
+} from "./features/ui/themes";
 
 export default function App() {
   const setActiveTool = useSimulationStore((state) => state.setActiveTool);
@@ -34,10 +39,30 @@ export default function App() {
 
   useEffect(() => {
     const theme = (themes as any)[themeName];
-    if (theme) {
-      const root = document.documentElement;
+    const themeTokens = getThemeTokens(
+      theme?.mode === "light" ? "light" : "dark",
+    );
+    const root = document.documentElement;
 
-      // Set the 5 core colors
+    Object.entries(createThemeCSSVariables(themeTokens)).forEach(
+      ([key, value]) => {
+        root.style.setProperty(key, value);
+      },
+    );
+
+    const mainToolbarStyle = getMainToolbarThemeStyle(themeTokens);
+    const buildToolbarStyle = getBuildToolbarThemeStyle(themeTokens);
+    root.style.setProperty(
+      "--theme-main-toolbar-inline-css",
+      mainToolbarStyle.cssText,
+    );
+    root.style.setProperty(
+      "--theme-build-toolbar-inline-css",
+      buildToolbarStyle.cssText,
+    );
+
+    if (theme) {
+      // Set the 5 core colors from the existing theme source of truth
       root.style.setProperty("--primary", theme.primary);
       root.style.setProperty("--secondary", theme.secondary);
       root.style.setProperty("--accent", theme.accent);
