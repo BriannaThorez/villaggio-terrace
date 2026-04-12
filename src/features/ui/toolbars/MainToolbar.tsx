@@ -16,16 +16,7 @@ import { Droplet, Map, DollarSign } from "lucide-react";
 import { SmartTooltip } from "../../../shared/components/SmartTooltip";
 import { generateSVG } from "../../../shared/utils/svgExport";
 import React, { useState, createElement } from "react";
-type PaletteSwatch = {
-  neutral_light: string;
-  neutral_dark: string;
-  primary: string;
-  secondary: string;
-  accent: string;
-};
-
 import themes from "../themes/palettes/color_palettes.json";
-const paletteEntries = themes as Record<string, PaletteSwatch>;
 
 const GUI_SPACING_SCALE = 0.85;
 const HEADER_VERTICAL_SCALE = 0.9;
@@ -41,149 +32,12 @@ const MONEY_BUTTON_PADDING_REM = 0.45 * GUI_SPACING_SCALE;
 const MONEY_BUTTON_GAP_REM = 0.45 * GUI_SPACING_SCALE;
 const GUI_ICON_SIZE = 28;
 const GUI_ICON_STROKE = 1.5;
-const THEME_MAIN_TOOLBAR_PADDING = "var(--theme-main-toolbar-padding)";
-const THEME_MAIN_TOOLBAR_GAP = "var(--theme-main-toolbar-gap)";
-const THEME_MAIN_TOOLBAR_RADIUS = "var(--theme-main-toolbar-radius)";
-const THEME_MAIN_TOOLBAR_BUTTON_RADIUS =
-  "var(--theme-main-toolbar-button-radius)";
-const THEME_MAIN_TOOLBAR_BUTTON_PADDING_X =
-  "var(--theme-main-toolbar-button-padding-x)";
-const THEME_MAIN_TOOLBAR_BUTTON_PADDING_Y =
-  "var(--theme-main-toolbar-button-padding-y)";
-const THEME_MAIN_TOOLBAR_BUTTON_STROKE_WIDTH =
-  "var(--theme-main-toolbar-button-stroke-width)";
-const THEME_MAIN_TOOLBAR_BUTTON_SHADOW =
-  "var(--theme-main-toolbar-button-shadow)";
-const THEME_MAIN_TOOLBAR_BUTTON_ACTIVE_SCALE =
-  "var(--theme-main-toolbar-button-active-scale)";
-const THEME_MAIN_TOOLBAR_BUTTON_IDLE_OPACITY =
-  "var(--theme-main-toolbar-button-idle-opacity)";
-const THEME_MAIN_TOOLBAR_BUTTON_ACTIVE_BACKGROUND =
-  "var(--theme-main-toolbar-button-active-background)";
-const THEME_MAIN_TOOLBAR_BUTTON_ACTIVE_FOREGROUND =
-  "var(--theme-main-toolbar-button-active-foreground)";
-const THEME_MAIN_TOOLBAR_BUTTON_IDLE_FOREGROUND =
-  "var(--theme-main-toolbar-button-idle-foreground)";
-const THEME_MAIN_TOOLBAR_BUTTON_HOVER_BACKGROUND =
-  "var(--theme-main-toolbar-button-hover-background)";
-const THEME_MAIN_TOOLBAR_BUTTON_HOVER_FOREGROUND =
-  "var(--theme-main-toolbar-button-hover-foreground)";
-const THEME_MAIN_TOOLBAR_SEPARATOR_WIDTH =
-  "var(--theme-main-toolbar-separator-width)";
-const THEME_MAIN_TOOLBAR_SEPARATOR_HEIGHT =
-  "var(--theme-main-toolbar-separator-height)";
-const THEME_MAIN_TOOLBAR_SEPARATOR_COLOR =
-  "var(--theme-main-toolbar-separator-color)";
-const THEME_MAIN_TOOLBAR_SEPARATOR_OPACITY =
-  "var(--theme-main-toolbar-separator-opacity)";
-const THEME_MAIN_TOOLBAR_RESOURCE_GAP =
-  "var(--theme-main-toolbar-resource-gap)";
-const THEME_MAIN_TOOLBAR_RESOURCE_PADDING_X =
-  "var(--theme-main-toolbar-resource-padding-x)";
-const THEME_MAIN_TOOLBAR_RESOURCE_PADDING_Y =
-  "var(--theme-main-toolbar-resource-padding-y)";
-const THEME_MAIN_TOOLBAR_RESOURCE_ICON_SIZE =
-  "var(--theme-main-toolbar-resource-icon-size)";
-const THEME_MAIN_TOOLBAR_RESOURCE_TEXT_SIZE =
-  "var(--theme-main-toolbar-resource-text-size)";
-const THEME_MAIN_TOOLBAR_MONEY_PADDING_X =
-  "var(--theme-main-toolbar-money-padding-x)";
-const THEME_MAIN_TOOLBAR_MONEY_PADDING_Y =
-  "var(--theme-main-toolbar-money-padding-y)";
-const THEME_MAIN_TOOLBAR_MONEY_GAP = "var(--theme-main-toolbar-money-gap)";
-const THEME_MAIN_TOOLBAR_MONEY_ICON_SIZE =
-  "var(--theme-main-toolbar-money-icon-size)";
-const THEME_MAIN_TOOLBAR_MONEY_RADIUS =
-  "var(--theme-main-toolbar-money-radius)";
-const THEME_MAIN_TOOLBAR_MONEY_BORDER =
-  "var(--theme-main-toolbar-money-border)";
-const THEME_MAIN_TOOLBAR_MONEY_SHADOW =
-  "var(--theme-main-toolbar-money-shadow)";
-const THEME_MAIN_TOOLBAR_MONEY_BACKGROUND =
-  "var(--theme-main-toolbar-money-background)";
-const THEME_MAIN_TOOLBAR_MONEY_FOREGROUND =
-  "var(--theme-main-toolbar-money-foreground)";
-const THEME_MAIN_TOOLBAR_MONEY_HOVER_SCALE =
-  "var(--theme-main-toolbar-money-hover-scale)";
-const THEME_MAIN_TOOLBAR_MENU_PADDING =
-  "var(--theme-main-toolbar-menu-padding)";
-const THEME_MAIN_TOOLBAR_MENU_MIN_WIDTH =
-  "var(--theme-main-toolbar-menu-min-width)";
-const THEME_MAIN_TOOLBAR_MENU_RADIUS = "var(--theme-main-toolbar-menu-radius)";
-const THEME_MAIN_TOOLBAR_MENU_BACKGROUND =
-  "var(--theme-main-toolbar-menu-background)";
-const THEME_MAIN_TOOLBAR_MENU_BORDER = "var(--theme-main-toolbar-menu-border)";
-const THEME_MAIN_TOOLBAR_MENU_SHADOW = "var(--theme-main-toolbar-menu-shadow)";
-const THEME_MAIN_TOOLBAR_MENU_BACKDROP =
-  "var(--theme-main-toolbar-menu-backdrop)";
-const THEME_MAIN_TOOLBAR_MENU_Z_INDEX =
-  "var(--theme-main-toolbar-menu-z-index)";
-const THEME_MAIN_TOOLBAR_MENU_POSITION_OFFSET =
-  "var(--theme-main-toolbar-menu-position-offset)";
-const THEME_MAIN_TOOLBAR_MENU_HEADER_PADDING_X =
-  "var(--theme-main-toolbar-menu-header-padding-x)";
-const THEME_MAIN_TOOLBAR_MENU_HEADER_PADDING_Y =
-  "var(--theme-main-toolbar-menu-header-padding-y)";
-const THEME_MAIN_TOOLBAR_MENU_HEADER_MARGIN_BOTTOM =
-  "var(--theme-main-toolbar-menu-header-margin-bottom)";
-const THEME_MAIN_TOOLBAR_MENU_HEADER_BORDER_BOTTOM =
-  "var(--theme-main-toolbar-menu-header-border-bottom)";
-const THEME_MAIN_TOOLBAR_MENU_HEADER_TEXT_SIZE =
-  "var(--theme-main-toolbar-menu-header-text-size)";
-const THEME_MAIN_TOOLBAR_MENU_HEADER_FONT_FAMILY =
-  "var(--theme-main-toolbar-menu-header-font-family)";
-const THEME_MAIN_TOOLBAR_MENU_HEADER_FONT_WEIGHT =
-  "var(--theme-main-toolbar-menu-header-font-weight)";
-const THEME_MAIN_TOOLBAR_MENU_HEADER_TEXT_TRANSFORM =
-  "var(--theme-main-toolbar-menu-header-text-transform)";
-const THEME_MAIN_TOOLBAR_MENU_HEADER_TRACKING =
-  "var(--theme-main-toolbar-menu-header-tracking)";
-const THEME_MAIN_TOOLBAR_MENU_HEADER_FOREGROUND =
-  "var(--theme-main-toolbar-menu-header-foreground)";
-const THEME_MAIN_TOOLBAR_MENU_ROW_PADDING_X =
-  "var(--theme-main-toolbar-menu-row-padding-x)";
-const THEME_MAIN_TOOLBAR_MENU_ROW_PADDING_Y =
-  "var(--theme-main-toolbar-menu-row-padding-y)";
-const THEME_MAIN_TOOLBAR_MENU_ROW_GAP =
-  "var(--theme-main-toolbar-menu-row-gap)";
-const THEME_MAIN_TOOLBAR_MENU_ROW_RADIUS =
-  "var(--theme-main-toolbar-menu-row-radius)";
-const THEME_MAIN_TOOLBAR_MENU_ROW_TEXT_SIZE =
-  "var(--theme-main-toolbar-menu-row-text-size)";
-const THEME_MAIN_TOOLBAR_MENU_ROW_FONT_WEIGHT =
-  "var(--theme-main-toolbar-menu-row-font-weight)";
-const THEME_MAIN_TOOLBAR_MENU_ROW_TRANSITION =
-  "var(--theme-main-toolbar-menu-row-transition)";
-const THEME_MAIN_TOOLBAR_MENU_ROW_IDLE_FOREGROUND =
-  "var(--theme-main-toolbar-menu-row-idle-foreground)";
-const THEME_MAIN_TOOLBAR_MENU_ROW_IDLE_BACKGROUND =
-  "var(--theme-main-toolbar-menu-row-idle-background)";
-const THEME_MAIN_TOOLBAR_MENU_ROW_HOVER_FOREGROUND =
-  "var(--theme-main-toolbar-menu-row-hover-foreground)";
-const THEME_MAIN_TOOLBAR_MENU_ROW_HOVER_BACKGROUND =
-  "var(--theme-main-toolbar-menu-row-hover-background)";
-const THEME_MAIN_TOOLBAR_MENU_ROW_ACTIVE_FOREGROUND =
-  "var(--theme-main-toolbar-menu-row-active-foreground)";
-const THEME_MAIN_TOOLBAR_MENU_ROW_ACTIVE_BACKGROUND =
-  "var(--theme-main-toolbar-menu-row-active-background)";
-const THEME_MAIN_TOOLBAR_MENU_ROW_ICON_SIZE =
-  "var(--theme-main-toolbar-menu-row-icon-size)";
-const THEME_MAIN_TOOLBAR_MENU_ROW_ICON_STROKE_WIDTH =
-  "var(--theme-main-toolbar-menu-row-icon-stroke-width)";
-const THEME_MAIN_TOOLBAR_MENU_CHECK_ICON_SIZE =
-  "var(--theme-main-toolbar-menu-check-icon-size)";
-const THEME_MAIN_TOOLBAR_MENU_CHECK_ICON_FOREGROUND =
-  "var(--theme-main-toolbar-menu-check-icon-foreground)";
 const HEADER_VERTICAL_GAP_REM = 1.5;
 const HEADER_PADDING_BOTTOM_REM = 0.5;
 
 const toolbarButtonClass =
-  "transition-all duration-300 flex items-center justify-center";
-const toolbarButtonStyle = {
-  padding: `${GUI_BUTTON_PADDING_REM}rem`,
-  borderRadius: THEME_MAIN_TOOLBAR_BUTTON_RADIUS,
-  boxShadow: THEME_MAIN_TOOLBAR_BUTTON_SHADOW,
-};
+  "rounded-xl transition-all duration-300 flex items-center justify-center";
+const toolbarButtonStyle = { padding: `${GUI_BUTTON_PADDING_REM}rem` };
 const activeButtonClasses =
   "bg-primary text-background shadow-[0_0_15px_var(--primary)] scale-110";
 const idleButtonClasses = "text-text/40 hover:text-primary hover:bg-primary/5";
@@ -196,18 +50,13 @@ const separatorStyle = {
 };
 
 const resourceBadgeStyle = {
-  gap: THEME_MAIN_TOOLBAR_RESOURCE_GAP,
-  padding: `${THEME_MAIN_TOOLBAR_RESOURCE_PADDING_Y} ${THEME_MAIN_TOOLBAR_RESOURCE_PADDING_X}`,
+  gap: `${RESOURCE_ICON_NUMBER_GAP_REM}rem`,
+  padding: `${RESOURCE_VERTICAL_PADDING_REM}rem ${RESOURCE_HORIZONTAL_PADDING_REM}rem`,
 };
 
 const moneyIndicatorButtonStyle = {
-  padding: `${THEME_MAIN_TOOLBAR_MONEY_PADDING_Y} ${THEME_MAIN_TOOLBAR_MONEY_PADDING_X}`,
-  gap: THEME_MAIN_TOOLBAR_MONEY_GAP,
-  borderRadius: THEME_MAIN_TOOLBAR_MONEY_RADIUS,
-  border: THEME_MAIN_TOOLBAR_MONEY_BORDER,
-  boxShadow: THEME_MAIN_TOOLBAR_MONEY_SHADOW,
-  background: THEME_MAIN_TOOLBAR_MONEY_BACKGROUND,
-  color: THEME_MAIN_TOOLBAR_MONEY_FOREGROUND,
+  padding: `${MONEY_BUTTON_PADDING_REM}rem ${MONEY_BUTTON_PADDING_REM * 2}rem`,
+  gap: `${MONEY_BUTTON_GAP_REM}rem`,
 };
 
 const moneyFormatter = new Intl.NumberFormat("en-US", {
@@ -228,12 +77,8 @@ export const MainToolbar = () => {
 
   const showControls = useSimulationStore((state) => state.showControls);
   const setShowControls = useSimulationStore((state) => state.setShowControls);
-  const showWeatherPanel = useSimulationStore(
-    (state) => state.showWeatherPanel,
-  );
-  const setShowWeatherPanel = useSimulationStore(
-    (state) => state.setShowWeatherPanel,
-  );
+  const showWeather = useSimulationStore((state) => state.showWeather);
+  const setShowWeather = useSimulationStore((state) => state.setShowWeather);
   const showPlacementGrid = useSimulationStore(
     (state) => state.showPlacementGrid,
   );
@@ -243,6 +88,12 @@ export const MainToolbar = () => {
 
   const showMinimap = useSimulationStore((state) => state.showMinimap);
   const setShowMinimap = useSimulationStore((state) => state.setShowMinimap);
+  const showWeatherPanel = useSimulationStore(
+    (state) => state.showWeatherPanel,
+  );
+  const setShowWeatherPanel = useSimulationStore(
+    (state) => state.setShowWeatherPanel,
+  );
 
   const handleExport = () => {
     const state = useSimulationStore.getState();
@@ -267,7 +118,7 @@ export const MainToolbar = () => {
     <SmartTooltip content="Spendable Money">
       <button
         type="button"
-        className="inline-flex items-center justify-center text-[0.75rem] font-semibold transition-all"
+        className="inline-flex items-center justify-center rounded-full border border-primary/30 bg-primary/5 text-[0.75rem] font-semibold text-primary shadow-[0_10px_30px_rgba(37,99,235,0.35)] transition-all hover:scale-[1.02]"
         style={moneyIndicatorButtonStyle}
       >
         <DollarSign size={18} strokeWidth={1.5} />
@@ -318,52 +169,24 @@ export const MainToolbar = () => {
       {showMainMenu && (
         <div
           onMouseLeave={() => setShowMainMenu(false)}
-          className="absolute flex flex-col bg-white border border-black/10 rounded-[1.5rem] shadow-[0_16px_40px_rgba(0,0,0,0.16)] backdrop-blur-2xl"
-          style={{
-            insetBlockStart: "var(--theme-main-toolbar-menu-position-offset)",
-            insetInlineStart: 0,
-            padding: "0.375rem",
-            minWidth: "180px",
-            zIndex: THEME_MAIN_TOOLBAR_MENU_Z_INDEX as any,
-            gap: "0.25rem",
-          }}
+          className="absolute top-full mt-2 left-0 bg-background/90 backdrop-blur-2xl border border-primary/10 rounded-xl shadow-2xl flex flex-col gap-1 z-[100]"
+          style={{ padding: `${GUI_SPACING_REM}rem`, minWidth: "180px" }}
         >
-          <div
-            style={{
-              padding: `${THEME_MAIN_TOOLBAR_MENU_HEADER_PADDING_Y} ${THEME_MAIN_TOOLBAR_MENU_HEADER_PADDING_X}`,
-              marginBottom: THEME_MAIN_TOOLBAR_MENU_HEADER_MARGIN_BOTTOM,
-              borderBottom: THEME_MAIN_TOOLBAR_MENU_HEADER_BORDER_BOTTOM,
-            }}
-          >
-            <span
-              style={{
-                fontSize: THEME_MAIN_TOOLBAR_MENU_HEADER_TEXT_SIZE,
-                fontFamily: "monospace",
-                textTransform: "uppercase",
-                letterSpacing: THEME_MAIN_TOOLBAR_MENU_HEADER_TRACKING,
-                color: "var(--theme-main-toolbar-menu-header-foreground)",
-              }}
-            >
+          <div className="px-2 py-1 border-b border-primary/5 mb-1">
+            <span className="text-[8px] font-mono text-text/40 uppercase tracking-widest">
               Settings & HUD
             </span>
           </div>
 
           <button
             onClick={() => setShowControls(!showControls)}
-            className="flex items-center justify-between"
+            className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${
+              showControls
+                ? "bg-primary/20 text-text"
+                : "text-text/60 hover:text-text hover:bg-primary/5"
+            }`}
             style={{
-              padding: `${THEME_MAIN_TOOLBAR_MENU_ROW_PADDING_Y} ${THEME_MAIN_TOOLBAR_MENU_ROW_PADDING_X}`,
-              gap: THEME_MAIN_TOOLBAR_MENU_ROW_GAP,
-              borderRadius: THEME_MAIN_TOOLBAR_MENU_ROW_RADIUS,
-              fontSize: THEME_MAIN_TOOLBAR_MENU_ROW_TEXT_SIZE,
-              fontWeight: THEME_MAIN_TOOLBAR_MENU_ROW_FONT_WEIGHT as any,
-              transitionProperty: THEME_MAIN_TOOLBAR_MENU_ROW_TRANSITION,
-              color: showControls
-                ? "var(--theme-main-toolbar-menu-row-active-foreground)"
-                : "var(--theme-main-toolbar-menu-row-idle-foreground)",
-              background: showControls
-                ? "var(--theme-main-toolbar-menu-row-active-background)"
-                : "var(--theme-main-toolbar-menu-row-idle-background)",
+              padding: `${GUI_SPACING_REM}rem ${GUI_SPACING_REM * 2}rem`,
             }}
           >
             <div className="flex items-center gap-2">
@@ -377,20 +200,13 @@ export const MainToolbar = () => {
 
           <button
             onClick={() => setShowWeatherPanel(!showWeatherPanel)}
-            className="flex items-center justify-between"
+            className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${
+              showWeatherPanel
+                ? "bg-primary/20 text-text"
+                : "text-text/60 hover:text-text hover:bg-primary/5"
+            }`}
             style={{
-              padding: `${THEME_MAIN_TOOLBAR_MENU_ROW_PADDING_Y} ${THEME_MAIN_TOOLBAR_MENU_ROW_PADDING_X}`,
-              gap: THEME_MAIN_TOOLBAR_MENU_ROW_GAP,
-              borderRadius: THEME_MAIN_TOOLBAR_MENU_ROW_RADIUS,
-              fontSize: THEME_MAIN_TOOLBAR_MENU_ROW_TEXT_SIZE,
-              fontWeight: THEME_MAIN_TOOLBAR_MENU_ROW_FONT_WEIGHT as any,
-              transitionProperty: THEME_MAIN_TOOLBAR_MENU_ROW_TRANSITION,
-              color: showWeatherPanel
-                ? "var(--theme-main-toolbar-menu-row-active-foreground)"
-                : "var(--theme-main-toolbar-menu-row-idle-foreground)",
-              background: showWeatherPanel
-                ? "var(--theme-main-toolbar-menu-row-active-background)"
-                : "var(--theme-main-toolbar-menu-row-idle-background)",
+              padding: `${GUI_SPACING_REM}rem ${GUI_SPACING_REM * 2}rem`,
             }}
           >
             <div className="flex items-center gap-2">
@@ -404,20 +220,13 @@ export const MainToolbar = () => {
 
           <button
             onClick={() => setShowPlacementGrid(!showPlacementGrid)}
-            className="flex items-center justify-between"
+            className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${
+              showPlacementGrid
+                ? "bg-primary/20 text-emerald-400"
+                : "text-text/60 hover:text-text hover:bg-primary/5"
+            }`}
             style={{
-              padding: `${THEME_MAIN_TOOLBAR_MENU_ROW_PADDING_Y} ${THEME_MAIN_TOOLBAR_MENU_ROW_PADDING_X}`,
-              gap: THEME_MAIN_TOOLBAR_MENU_ROW_GAP,
-              borderRadius: THEME_MAIN_TOOLBAR_MENU_ROW_RADIUS,
-              fontSize: THEME_MAIN_TOOLBAR_MENU_ROW_TEXT_SIZE,
-              fontWeight: THEME_MAIN_TOOLBAR_MENU_ROW_FONT_WEIGHT as any,
-              transitionProperty: THEME_MAIN_TOOLBAR_MENU_ROW_TRANSITION,
-              color: showPlacementGrid
-                ? "var(--theme-main-toolbar-menu-row-active-foreground)"
-                : "var(--theme-main-toolbar-menu-row-idle-foreground)",
-              background: showPlacementGrid
-                ? "var(--theme-main-toolbar-menu-row-active-background)"
-                : "var(--theme-main-toolbar-menu-row-idle-background)",
+              padding: `${GUI_SPACING_REM}rem ${GUI_SPACING_REM * 2}rem`,
             }}
           >
             <div className="flex items-center gap-2">
@@ -431,20 +240,13 @@ export const MainToolbar = () => {
 
           <button
             onClick={() => setShowMinimap(!showMinimap)}
-            className="flex items-center justify-between"
+            className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${
+              showMinimap
+                ? "bg-primary/20 text-text"
+                : "text-text/60 hover:text-text hover:bg-primary/5"
+            }`}
             style={{
-              padding: `${THEME_MAIN_TOOLBAR_MENU_ROW_PADDING_Y} ${THEME_MAIN_TOOLBAR_MENU_ROW_PADDING_X}`,
-              gap: THEME_MAIN_TOOLBAR_MENU_ROW_GAP,
-              borderRadius: THEME_MAIN_TOOLBAR_MENU_ROW_RADIUS,
-              fontSize: THEME_MAIN_TOOLBAR_MENU_ROW_TEXT_SIZE,
-              fontWeight: THEME_MAIN_TOOLBAR_MENU_ROW_FONT_WEIGHT as any,
-              transitionProperty: THEME_MAIN_TOOLBAR_MENU_ROW_TRANSITION,
-              color: showMinimap
-                ? "var(--theme-main-toolbar-menu-row-active-foreground)"
-                : "var(--theme-main-toolbar-menu-row-idle-foreground)",
-              background: showMinimap
-                ? "var(--theme-main-toolbar-menu-row-active-background)"
-                : "var(--theme-main-toolbar-menu-row-idle-background)",
+              padding: `${GUI_SPACING_REM}rem ${GUI_SPACING_REM * 2}rem`,
             }}
           >
             <div className="flex items-center gap-2">
@@ -469,10 +271,7 @@ export const MainToolbar = () => {
     <SmartTooltip content={label}>
       <div
         className="flex items-center text-sm font-medium text-text/80"
-        style={{
-          gap: `${RESOURCE_ICON_NUMBER_GAP_REM}rem`,
-          padding: `${RESOURCE_VERTICAL_PADDING_REM}rem ${RESOURCE_HORIZONTAL_PADDING_REM}rem`,
-        }}
+        style={resourceBadgeStyle}
       >
         <Icon
           size={20}
@@ -491,11 +290,10 @@ export const MainToolbar = () => {
   return (
     <div className="absolute top-4 left-4 z-[60]">
       <div
-        className="pointer-events-auto relative inline-flex items-center bg-white border border-black/10 rounded-[1.5rem] shadow-[0_16px_40px_rgba(0,0,0,0.16)] overflow-visible"
+        className="inline-flex items-center rounded-2xl border border-text/10 bg-background/90 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.4)]"
         style={{
-          padding: "0.75rem",
-          gap: "0.375rem",
-          backdropFilter: "blur(14px)",
+          padding: `${GUI_CONTAINER_PADDING_REM}rem`,
+          gap: `${GUI_SPACING_REM}rem`,
         }}
       >
         {menuButton}
@@ -584,11 +382,11 @@ export const MainToolbar = () => {
                     <span className="capitalize">{name.replace("_", " ")}</span>
                     <div className="flex gap-1">
                       {[
-                        paletteEntries[name].neutral_light,
-                        paletteEntries[name].neutral_dark,
-                        paletteEntries[name].primary,
-                        paletteEntries[name].secondary,
-                        paletteEntries[name].accent,
+                        palette.neutral_light,
+                        palette.neutral_dark,
+                        palette.primary,
+                        palette.secondary,
+                        palette.accent,
                       ].map((color, i) => (
                         <div
                           key={i}

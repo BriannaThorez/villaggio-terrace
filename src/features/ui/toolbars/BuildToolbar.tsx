@@ -20,7 +20,6 @@ import {
   resolveTraitsByCategory,
   getIconComponent,
 } from "../../../shared/utils/metadataUtils";
-import "../globalStyles.css";
 
 const TOOL_ALIASES: Record<string, string> = {
   studio: "residential",
@@ -37,7 +36,6 @@ const normalizeToolType = (rawType?: string, fallback?: string) => {
   return TOOL_ALIASES[candidate] ?? candidate;
 };
 
-// Shared Icon Registry
 const ICON_REGISTRY: Record<string, any> = {
   Select: Cursor01Icon,
   Structure: Construction,
@@ -53,7 +51,6 @@ const ICON_REGISTRY: Record<string, any> = {
   Settings: Settings01Icon,
 };
 
-// Fallback colors for procedural generation
 const COLOR_REGISTRY: Record<string, string> = {
   Residential: "#4ade80",
   Apartment: "#4ade80",
@@ -68,37 +65,44 @@ const COLOR_REGISTRY: Record<string, string> = {
   Unknown: "#ef4444",
 };
 
-const BUILD_ICON_GAP_REM = 1 * 0.85;
 const HEADER_VERTICAL_SCALE = 0.9;
 const HEADER_VERTICAL_GAP_REM = 1.5;
 const HEADER_PADDING_BOTTOM_REM = 0.5;
+
+const formatDisplayPart = (value?: string) =>
+  (value || "").replace(/\b\w/g, (char) => char.toUpperCase());
+
+const buildRoomDisplayName = (room: any) => {
+  const size = formatDisplayPart(room?.metadata?.size);
+  const specialization = formatDisplayPart(room?.metadata?.specialization);
+  const form = formatDisplayPart(room?.metadata?.form);
+  const quality = formatDisplayPart(room?.metadata?.quality);
+  const className = formatDisplayPart(room?.class);
+
+  const topLine = [size, specialization, form].filter(Boolean).join(" ");
+  const bottomLine = [quality, className].filter(Boolean).join(" ");
+
+  return {
+    topLine,
+    bottomLine,
+  };
+};
 
 const RoomInfoTooltip = ({ metadata }: { metadata: any }) => {
   if (!metadata) return null;
   const { utilities, services } = resolveTraitsByCategory(metadata.metadata);
 
-  const name = metadata.name || "";
-  const type = metadata.metadata?.type || "";
-  const showType = type && !name.toLowerCase().includes(type.toLowerCase());
+  const { topLine, bottomLine } = buildRoomDisplayName(metadata);
 
   return (
-    <div className="flex flex-col gap-3 max-w-full">
-      <div
-        className="flex items-center justify-between border-b border-white/5"
-        style={{
-          gap: `${HEADER_VERTICAL_GAP_REM * HEADER_VERTICAL_SCALE}rem`,
-          paddingBottom: `${HEADER_PADDING_BOTTOM_REM * HEADER_VERTICAL_SCALE}rem`,
-        }}
-      >
-        <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-emerald-400">
-          <Coins size={12} className="shrink-0" />$
-          {metadata.metadata?.average_rent?.toLocaleString()}/mo
-        </div>
-        {showType && (
-          <span className="text-[9px] font-bold text-text/30 uppercase tracking-tighter truncate max-w-[120px]">
-            {type}
-          </span>
-        )}
+    <div className="flex flex-col gap-2 max-w-full">
+      <div className="flex flex-col border-b border-white/5 pb-1.5">
+        <span className="text-[10px] font-mono font-bold text-emerald-400 leading-tight">
+          {topLine}
+        </span>
+        <span className="text-[9px] font-bold text-text/30 uppercase tracking-tighter leading-tight">
+          {bottomLine}
+        </span>
       </div>
 
       <p className="text-[10px] leading-relaxed text-text/60 italic border-l-2 border-primary/20 pl-2">
@@ -132,7 +136,21 @@ const RoomInfoTooltip = ({ metadata }: { metadata: any }) => {
   );
 };
 
-export const BuildToolbarV2 = () => {
+type BuildCategory = {
+  id: string;
+  icon: any;
+  label: string;
+  description?: string;
+  subTypes?: Array<{
+    id: string;
+    label: string;
+    color?: string;
+    type?: string;
+    size?: number[];
+  }>;
+};
+
+export const BuildToolbar = () => {
   const setActiveTool = useSimulationStore((state) => state.setActiveTool);
   const setActiveModuleId = useSimulationStore(
     (state) => state.setActiveModuleId,
@@ -215,7 +233,7 @@ export const BuildToolbarV2 = () => {
     }
   }, [activeTool, activeModuleId, categories]);
 
-  const handleCategoryClick = (cat: any) => {
+  const handleCategoryClick = (cat: BuildCategory) => {
     if (cat.subTypes && cat.subTypes.length > 0) {
       const lastSelectedId = memoryState[cat.id] || cat.subTypes[0].id;
       const sub = cat.subTypes.find((s: any) => s.id === lastSelectedId);
@@ -230,105 +248,81 @@ export const BuildToolbarV2 = () => {
   };
 
   return (
-    <div className="absolute inset-x-0 bottom-6 flex justify-center z-[200] pointer-events-none">
-      <div
-        className="pointer-events-auto relative inline-flex flex-col items-stretch bg-white border border-black/10 rounded-[1.5rem] shadow-[0_16px_40px_rgba(0,0,0,0.16)] overflow-visible"
-        style={{
-          padding: "0.75rem",
-          gap: "0.375rem",
-          backdropFilter: "blur(14px)",
-        }}
-      >
-        <div
-          className="inline-flex items-center"
-          style={{
-            gap: "var(--ui-build-toolbar-v2-row-gap)",
-            padding:
-              "var(--ui-build-toolbar-v2-row-padding-y) var(--ui-build-toolbar-v2-row-padding-x)",
-          }}
-        >
-          {categories.map((cat: any) => {
+    <div className="absolute inset-x-0 bottom-4 flex justify-center z-50 pointer-events-none">
+      <div className="pointer-events-auto inline-flex flex-col items-stretch bg-background/80 backdrop-blur-2xl px-4 py-3 rounded-[2.5rem] border border-white/10 shadow-[0_32px_64px_rgba(0,0,0,0.5)] gap-3 transition-all duration-500">
+        <div className="flex items-center gap-4">
+          {categories.map((cat) => {
             const Icon = cat.icon;
             const isExpanded = expandedCategory === cat.id;
             const isActive =
               activeTool === cat.id ||
-              cat.subTypes?.some((s: any) => s.id === activeModuleId);
+              cat.subTypes?.some((s) => s.id === activeModuleId);
 
             return (
               <div
                 key={cat.id}
-                className="relative"
+                className="relative group"
                 onMouseEnter={() => setExpandedCategory(cat.id)}
                 onMouseLeave={() => setExpandedCategory(null)}
               >
                 {cat.subTypes && (
                   <div
-                    className={`absolute bottom-full left-1/2 -translate-x-1/2 flex flex-col gap-0 p-1.5 bg-white backdrop-blur-2xl border border-black/10 rounded-2xl shadow-2xl transition-all duration-300 origin-bottom pb-6 -mb-4 z-[210] ${isExpanded ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-4 scale-95 pointer-events-none"}`}
-                    style={{
-                      minWidth: "var(--ui-build-toolbar-v2-submenu-min-width)",
-                      borderRadius: "var(--ui-build-toolbar-v2-submenu-radius)",
-                    }}
+                    className={`absolute bottom-full left-1/2 -translate-x-1/2 flex flex-col gap-2 p-3 bg-background/90 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl transition-all duration-300 origin-bottom pb-8 -mb-6 ${isExpanded ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-4 scale-95 pointer-events-none"}`}
                   >
-                    <div className="text-[9px] font-bold text-text/40 uppercase tracking-widest pl-2 mb-1">
-                      {cat.label} Types
-                    </div>
-                    {cat.subTypes.map((sub: any) => (
-                      <SmartTooltip
-                        key={sub.id}
-                        content={sub.label}
-                        description={<RoomInfoTooltip metadata={sub} />}
-                        position="right"
-                        width="308px"
-                      >
-                        <button
-                          onClick={() => {
-                            setActiveTool(normalizeToolType(sub.type, cat.id));
-                            setActiveModuleId(sub.id);
-                            setExpandedCategory(null);
-                          }}
-                          className={`whitespace-nowrap px-4 py-1 text-[10.5px] font-semibold rounded-xl transition-all flex items-center justify-between border ${activeModuleId === sub.id ? "bg-primary/20 text-primary border-primary/30" : "text-text/70 hover:text-text hover:bg-white/5 border-transparent"}`}
-                          style={{
-                            gap: "var(--ui-build-toolbar-v2-submenu-item-gap)",
-                            padding:
-                              "var(--ui-build-toolbar-v2-submenu-item-padding-y) var(--ui-build-toolbar-v2-submenu-item-padding-x)",
-                            borderRadius:
-                              "var(--ui-build-toolbar-v2-button-radius)",
-                          }}
+                    {cat.subTypes.map((sub) => {
+                      const display = buildRoomDisplayName(sub);
+                      return (
+                        <SmartTooltip
+                          key={sub.id}
+                          content={display.topLine}
+                          description={
+                            <div className="flex flex-col gap-1 max-w-full">
+                              <div className="text-[10px] font-mono font-bold text-emerald-400 leading-tight">
+                                {display.topLine}
+                              </div>
+                              <div className="text-[9px] font-bold text-text/30 uppercase tracking-tighter leading-tight">
+                                {display.bottomLine}
+                              </div>
+                            </div>
+                          }
+                          position="right"
+                          width="308px"
                         >
-                          <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              setActiveTool(
+                                normalizeToolType(sub.type, cat.id),
+                              );
+                              setActiveModuleId(sub.id);
+                            }}
+                            className="whitespace-nowrap px-4 py-2 text-[11px] font-medium text-text/70 hover:text-primary hover:bg-primary/10 rounded-xl transition-colors flex items-center gap-3 border border-transparent hover:border-primary/20"
+                          >
                             <div
                               className="w-1.5 h-1.5 rounded-full"
                               style={{
-                                background: sub.color,
-                                boxShadow: `0 0 8px ${sub.color}`,
+                                background: sub.color || "var(--primary)",
                               }}
                             />
-                            {sub.label}
-                          </div>
-                          {activeModuleId === sub.id && (
-                            <CheckmarkCircle01Icon
-                              size={13}
-                              className="text-primary"
-                            />
-                          )}
-                        </button>
-                      </SmartTooltip>
-                    ))}
+                            {display.topLine}
+                          </button>
+                        </SmartTooltip>
+                      );
+                    })}
                   </div>
                 )}
 
                 <button
                   onClick={() => handleCategoryClick(cat)}
-                  className={`relative rounded-xl transition-all duration-500 group ${isActive ? "bg-primary text-background shadow-[0_0_30px_var(--primary)]" : "text-text/50 hover:text-primary hover:bg-primary/10"}`}
-                  data-active={isActive ? "true" : "false"}
-                  style={{
-                    padding: "0.5rem 0.75rem",
-                    borderRadius: "var(--ui-build-toolbar-v2-button-radius)",
-                  }}
+                  className={`relative p-3 rounded-2xl transition-all duration-500 group-hover:scale-110 ${
+                    isActive
+                      ? "bg-primary text-background shadow-[0_0_30px_var(--primary)]"
+                      : "text-text/50 hover:text-primary hover:bg-primary/5"
+                  }`}
                 >
-                  <Icon size={26} strokeWidth={1.5} />
-                  {cat.subTypes && isActive && (
-                    <div className="absolute top-1 right-1 w-2 h-2 bg-background border border-primary rounded-full" />
+                  <Icon size={24} strokeWidth={1.5} />
+
+                  {cat.subTypes && (
+                    <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-primary rounded-full animate-pulse opacity-50" />
                   )}
                 </button>
               </div>

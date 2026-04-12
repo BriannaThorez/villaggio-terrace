@@ -130,10 +130,9 @@
       "metadata": {
         "electricity": "x",
         "copy_services": "x",
-        "size": "Small",
-        "form": "Suite",
-        "specialization": "Insurance",
-        "quality": "Standard",
+        "type": "Small",
+        "variant": "Insurance",
+        "serviceDomain": "Office",
         "average_rent": 90
       },
       "specificDescription": "A high-efficiency insurance office module."
@@ -152,10 +151,9 @@
         "phone": "o",
         "courier_services": "x",
         "copy_services": "x",
-        "size": "Small",
-        "form": "Suite",
-        "specialization": "Accounting",
-        "quality": "Standard",
+        "type": "Small",
+        "variant": "Accounting",
+        "serviceDomain": "Office",
         "average_rent": 130
       },
       "specificDescription": "A high-efficiency accounting office module."
@@ -174,10 +172,9 @@
         "phone": "o",
         "courier_services": "x",
         "copy_services": "x",
-        "size": "Small",
-        "form": "Suite",
-        "specialization": "Legal",
-        "quality": "Standard",
+        "type": "Small",
+        "variant": "Legal",
+        "serviceDomain": "Office",
         "average_rent": 160
       },
       "specificDescription": "A high-efficiency legal office module."
@@ -196,10 +193,9 @@
         "office_supply_services": "o",
         "bottled_water_services": "o",
         "copy_services": "x",
-        "size": "Small",
-        "form": "Studio",
-        "specialization": "Creative",
-        "quality": "Standard",
+        "type": "Small",
+        "variant": "Creative",
+        "serviceDomain": "Office",
         "average_rent": 170
       },
       "specificDescription": "A high-efficiency creative office module."
@@ -222,10 +218,9 @@
         "bottled_water_services": "x",
         "janitorial_services": "x",
         "commercial_printing_services": "x",
-        "size": "Medium",
-        "form": "Suite",
-        "specialization": "Medical",
-        "quality": "Standard",
+        "type": "Medium",
+        "variant": "Medical",
+        "serviceDomain": "Office",
         "average_rent": 350
       },
       "specificDescription": "A high-efficiency medical office module."
@@ -249,10 +244,9 @@
         "office_supply_services": "x",
         "janitorial_services": "x",
         "file_storage_services": "x",
-        "size": "Medium",
-        "form": "Suite",
-        "specialization": "Creative and Technical",
-        "quality": "Standard",
+        "type": "Medium",
+        "variant": "Creative and Technical",
+        "serviceDomain": "Office",
         "average_rent": 430
       },
       "specificDescription": "A high-efficiency creative and technical office module."
@@ -277,10 +271,9 @@
         "copy_services": "o",
         "file_storage_services": "x",
         "catering_services": "x",
-        "size": "Medium",
-        "form": "Suite",
-        "specialization": "Legal",
-        "quality": "Standard",
+        "type": "Medium",
+        "variant": "Legal",
+        "serviceDomain": "Office",
         "average_rent": 380
       },
       "specificDescription": "A high-efficiency legal office module."
@@ -304,10 +297,9 @@
         "copy_services": "x",
         "computer_and_it_services": "x",
         "catering_services": "x",
-        "size": "Medium",
-        "form": "Suite",
-        "specialization": "Financial",
-        "quality": "Standard",
+        "type": "Medium",
+        "variant": "Financial",
+        "serviceDomain": "Office",
         "average_rent": 500
       },
       "specificDescription": "A high-efficiency financial office module."
@@ -332,10 +324,9 @@
         "professional_auditing_services": "x",
         "corporate_communication_services": "x",
         "security_services": "x",
-        "size": "Large",
-        "form": "Suite",
-        "specialization": "Financial",
-        "quality": "Standard",
+        "type": "Large",
+        "variant": "Financial",
+        "serviceDomain": "Office",
         "average_rent": 950
       },
       "specificDescription": "A high-efficiency financial office module."
@@ -361,10 +352,9 @@
         "catering_services": "x",
         "temporary_staffing_services": "x",
         "security_services": "x",
-        "size": "Large",
-        "form": "Suite",
-        "specialization": "Engineering",
-        "quality": "Standard",
+        "type": "Large",
+        "variant": "Engineering",
+        "serviceDomain": "Office",
         "average_rent": 770
       },
       "specificDescription": "A high-efficiency engineering office module."
@@ -389,10 +379,9 @@
         "commercial_printing_services": "x",
         "temporary_staffing_services": "x",
         "security_services": "x",
-        "size": "Large",
-        "form": "Suite",
-        "specialization": "Creative",
-        "quality": "Standard",
+        "type": "Large",
+        "variant": "Creative",
+        "serviceDomain": "Office",
         "average_rent": 1030
       },
       "specificDescription": "A high-efficiency creative office module."
@@ -418,10 +407,9 @@
         "corporate_communication_services": "x",
         "security_services": "x",
         "fitness_and_health_services": "x",
-        "size": "Large",
-        "form": "Suite",
-        "specialization": "Tech",
-        "quality": "Standard",
+        "type": "Large",
+        "variant": "Tech",
+        "serviceDomain": "Office",
         "average_rent": 770
       },
       "specificDescription": "A high-efficiency tech office module."
@@ -444,10 +432,9 @@
         "computer_and_it_services": "x",
         "file_storage_services": "x",
         "security_services": "x",
-        "size": "Large",
-        "form": "Suite",
-        "specialization": "Medical",
-        "quality": "Standard",
+        "type": "Large",
+        "variant": "Medical",
+        "serviceDomain": "Office",
         "average_rent": 470
       },
       "specificDescription": "A high-efficiency medical office module."
@@ -473,10 +460,9 @@
         "security_services": "x",
         "fitness_and_health_services": "x",
         "limousine_services": "x",
-        "size": "XL",
-        "form": "Penthouse Suite",
-        "specialization": "Tech Company HQs",
-        "quality": "Luxury",
+        "type": "HQ Suite",
+        "variant": "Tech Company HQs",
+        "serviceDomain": "Office",
         "average_rent": 1300
       },
       "specificDescription": "A high-efficiency tech company hqs office module."
@@ -503,10 +489,9 @@
         "corporate_communication_services": "x",
         "security_services": "x",
         "helicopter_charters": "x",
-        "size": "XL",
-        "form": "Penthouse Suite",
-        "specialization": "Broadcasting Studios",
-        "quality": "Luxury",
+        "type": "HQ Suite",
+        "variant": "Broadcasting Studios",
+        "serviceDomain": "Office",
         "average_rent": 1250
       },
       "specificDescription": "A high-efficiency broadcasting studios office module."
@@ -531,10 +516,9 @@
         "professional_auditing_services": "x",
         "temporary_staffing_services": "x",
         "security_services": "x",
-        "size": "XL",
-        "form": "Executive Suite",
-        "specialization": "Government Offices",
-        "quality": "Luxury",
+        "type": "HQ Suite",
+        "variant": "Government Offices",
+        "serviceDomain": "Office",
         "average_rent": 1030
       },
       "specificDescription": "A high-efficiency government offices office module."
@@ -561,10 +545,9 @@
         "security_services": "x",
         "helicopter_charters": "x",
         "limousine_services": "x",
-        "size": "XL",
-        "form": "Executive Suite",
-        "specialization": "Bank Headquarters",
-        "quality": "Luxury",
+        "type": "HQ Suite",
+        "variant": "Bank Headquarters",
+        "serviceDomain": "Office",
         "average_rent": 1370
       },
       "specificDescription": "A high-efficiency bank headquarters office module."
@@ -583,10 +566,9 @@
         "electricity": "x",
         "water": "x",
         "trash_bins": "x",
-        "size": "Small",
-        "form": "Studio",
-        "specialization": "Residence",
-        "quality": "Basic",
+        "type": "Studio",
+        "variant": "Basic",
+        "serviceDomain": "Apartment",
         "average_rent": 180
       },
       "specificDescription": "A high-efficiency basic apartment module."
@@ -609,10 +591,9 @@
         "gas": "x",
         "trash_bins": "x",
         "plumber": "x",
-        "size": "Small",
-        "form": "Studio",
-        "specialization": "Residence",
-        "quality": "Deluxe",
+        "type": "Studio",
+        "variant": "Deluxe",
+        "serviceDomain": "Apartment",
         "average_rent": 240
       },
       "specificDescription": "A high-efficiency deluxe apartment module."
@@ -639,10 +620,9 @@
         "handyman_services": "x",
         "plumber": "x",
         "laundromat": "x",
-        "size": "Small",
-        "form": "Studio",
-        "specialization": "Residence",
-        "quality": "Luxury",
+        "type": "Studio",
+        "variant": "Luxury",
+        "serviceDomain": "Apartment",
         "average_rent": 360
       },
       "specificDescription": "A high-efficiency luxury apartment module."
@@ -664,10 +644,9 @@
         "trash_bins": "x",
         "handyman_services": "x",
         "plumber": "x",
-        "size": "Medium",
-        "form": "One-Bedroom",
-        "specialization": "Residence",
-        "quality": "Basic",
+        "type": "One-Bedroom",
+        "variant": "Basic",
+        "serviceDomain": "Apartment",
         "average_rent": 220
       },
       "specificDescription": "A high-efficiency basic apartment module."
@@ -691,10 +670,9 @@
         "recycling_bins": "x",
         "handyman_services": "x",
         "plumber": "x",
-        "size": "Medium",
-        "form": "One-Bedroom",
-        "specialization": "Residence",
-        "quality": "Deluxe",
+        "type": "One-Bedroom",
+        "variant": "Deluxe",
+        "serviceDomain": "Apartment",
         "average_rent": 320
       },
       "specificDescription": "A high-efficiency deluxe apartment module."
@@ -722,10 +700,9 @@
         "plumber": "x",
         "laundromat": "x",
         "housekeeping_services": "x",
-        "size": "Medium",
-        "form": "One-Bedroom",
-        "specialization": "Residence",
-        "quality": "Luxury",
+        "type": "One-Bedroom",
+        "variant": "Luxury",
+        "serviceDomain": "Apartment",
         "average_rent": 410
       },
       "specificDescription": "A high-efficiency luxury apartment module."
@@ -752,10 +729,9 @@
         "plumber": "x",
         "laundromat": "x",
         "housekeeping_services": "x",
-        "size": "Medium",
-        "form": "Two-Bedroom",
-        "specialization": "Residence",
-        "quality": "Basic",
+        "type": "Small Two-Bedroom",
+        "variant": "Basic",
+        "serviceDomain": "Apartment",
         "average_rent": 490
       },
       "specificDescription": "A high-efficiency basic apartment module."
@@ -785,10 +761,9 @@
         "laundromat": "x",
         "dog_walking_services": "x",
         "housekeeping_services": "x",
-        "size": "Medium",
-        "form": "Two-Bedroom",
-        "specialization": "Residence",
-        "quality": "Luxury",
+        "type": "Small Two-Bedroom",
+        "variant": "Luxury",
+        "serviceDomain": "Apartment",
         "average_rent": 580
       },
       "specificDescription": "A high-efficiency luxury apartment module."
@@ -816,10 +791,9 @@
         "housekeeping_services": "x",
         "dry_cleaning_services": "x",
         "daycare_center": "x",
-        "size": "Large",
-        "form": "Two-Bedroom",
-        "specialization": "Residence",
-        "quality": "Basic",
+        "type": "Large Two-Bedroom",
+        "variant": "Large",
+        "serviceDomain": "Apartment",
         "average_rent": 935
       },
       "specificDescription": "A high-efficiency large apartment module."
@@ -851,10 +825,9 @@
         "tailoring_services": "x",
         "daycare_center": "x",
         "personal_training_services": "x",
-        "size": "Large",
-        "form": "Duplex",
-        "specialization": "Residence",
-        "quality": "Luxury",
+        "type": "Large Two-Bedroom",
+        "variant": "Fancy",
+        "serviceDomain": "Apartment",
         "average_rent": 1045
       },
       "specificDescription": "A high-efficiency fancy apartment module."
@@ -890,10 +863,9 @@
         "daycare_center": "x",
         "dog_sitting_services": "x",
         "personal_training_services": "x",
-        "size": "Large",
-        "form": "Duplex",
-        "specialization": "Residence",
-        "quality": "Luxury",
+        "type": "Duplex Two-Bedroom",
+        "variant": "Large",
+        "serviceDomain": "Apartment",
         "average_rent": 1130
       },
       "specificDescription": "A high-efficiency large apartment module."
@@ -922,10 +894,9 @@
         "daycare_center": "x",
         "personal_training_services": "x",
         "home_decor_services": "x",
-        "size": "Large",
-        "form": "Loft",
-        "specialization": "Residence",
-        "quality": "Luxury",
+        "type": "Loft",
+        "variant": "Bi-Level",
+        "serviceDomain": "Apartment",
         "average_rent": 1835
       },
       "specificDescription": "A high-efficiency bi-level apartment module."
@@ -955,10 +926,9 @@
         "yoga_services": "x",
         "home_decor_services": "x",
         "wealth_adviser_services": "x",
-        "size": "Large",
-        "form": "Loft",
-        "specialization": "Residence",
-        "quality": "Luxury",
+        "type": "Loft",
+        "variant": "Luxury",
+        "serviceDomain": "Apartment",
         "average_rent": 2035
       },
       "specificDescription": "A high-efficiency luxury apartment module."
@@ -975,10 +945,9 @@
       "metadata": {
         "preferred_traffic": "High",
         "electricity": "x",
-        "size": "Small",
-        "form": "Counter Service",
-        "specialization": "Food Courts",
-        "quality": "Standard",
+        "type": "Small",
+        "variant": "Food Courts",
+        "serviceDomain": "Restaurant",
         "average_rent": 100
       },
       "specificDescription": "A high-efficiency food courts restaurant module."
@@ -996,10 +965,9 @@
         "preferred_traffic": "High",
         "electricity": "x",
         "water": "o",
-        "size": "Small",
-        "form": "Counter Service",
-        "specialization": "Cafes",
-        "quality": "Standard",
+        "type": "Small",
+        "variant": "Cafes",
+        "serviceDomain": "Restaurant",
         "average_rent": 120
       },
       "specificDescription": "A high-efficiency cafes restaurant module."
@@ -1018,10 +986,9 @@
         "electricity": "x",
         "water": "x",
         "trash_bins": "x",
-        "size": "Medium",
-        "form": "Counter Service",
-        "specialization": "Fast Food",
-        "quality": "Standard",
+        "type": "Medium",
+        "variant": "Fast Food",
+        "serviceDomain": "Restaurant",
         "average_rent": 220
       },
       "specificDescription": "A high-efficiency fast food restaurant module."
@@ -1040,10 +1007,9 @@
         "electricity": "x",
         "water": "x",
         "trash_bins": "x",
-        "size": "Medium",
-        "form": "Counter Service",
-        "specialization": "Diners",
-        "quality": "Standard",
+        "type": "Medium",
+        "variant": "Diners",
+        "serviceDomain": "Restaurant",
         "average_rent": 220
       },
       "specificDescription": "A high-efficiency diners restaurant module."
@@ -1062,10 +1028,9 @@
         "electricity": "x",
         "water": "x",
         "trash_bins": "x",
-        "size": "Medium",
-        "form": "Counter Service",
-        "specialization": "Sandwich Shops",
-        "quality": "Standard",
+        "type": "Medium",
+        "variant": "Sandwich Shops",
+        "serviceDomain": "Restaurant",
         "average_rent": 220
       },
       "specificDescription": "A high-efficiency sandwich shops restaurant module."
@@ -1083,10 +1048,9 @@
         "preferred_traffic": "High",
         "electricity": "x",
         "trash_bins": "x",
-        "size": "Medium",
-        "form": "Counter Service",
-        "specialization": "Salad and Hot Bars",
-        "quality": "Standard",
+        "type": "Medium",
+        "variant": "Salad and Hot Bars",
+        "serviceDomain": "Restaurant",
         "average_rent": 200
       },
       "specificDescription": "A high-efficiency salad and hot bars restaurant module."
@@ -1105,10 +1069,9 @@
         "electricity": "x",
         "water": "x",
         "trash_bins": "x",
-        "size": "Medium",
-        "form": "Dining Hall",
-        "specialization": "Pizza Places",
-        "quality": "Standard",
+        "type": "Medium",
+        "variant": "Pizza Places",
+        "serviceDomain": "Restaurant",
         "average_rent": 220
       },
       "specificDescription": "A high-efficiency pizza places restaurant module."
@@ -1130,10 +1093,9 @@
         "water": "x",
         "gas": "x",
         "trash_bins": "x",
-        "size": "Large",
-        "form": "Dining Hall",
-        "specialization": "Sports Bars",
-        "quality": "Standard",
+        "type": "Large",
+        "variant": "Sports Bars",
+        "serviceDomain": "Restaurant",
         "average_rent": 560
       },
       "specificDescription": "A high-efficiency sports bars restaurant module."
@@ -1154,10 +1116,9 @@
         "water": "x",
         "gas": "x",
         "trash_bins": "x",
-        "size": "Large",
-        "form": "Dining Hall",
-        "specialization": "Italian",
-        "quality": "Standard",
+        "type": "Large",
+        "variant": "Italian",
+        "serviceDomain": "Restaurant",
         "average_rent": 560
       },
       "specificDescription": "A high-efficiency italian restaurant module."
@@ -1178,10 +1139,9 @@
         "water": "x",
         "gas": "x",
         "trash_bins": "x",
-        "size": "Large",
-        "form": "Dining Hall",
-        "specialization": "Mexican",
-        "quality": "Standard",
+        "type": "Large",
+        "variant": "Mexican",
+        "serviceDomain": "Restaurant",
         "average_rent": 560
       },
       "specificDescription": "A high-efficiency mexican restaurant module."
@@ -1200,10 +1160,9 @@
         "water": "x",
         "gas": "x",
         "trash_bins": "x",
-        "size": "Large",
-        "form": "Dining Hall",
-        "specialization": "Brunch Spots",
-        "quality": "Standard",
+        "type": "Large",
+        "variant": "Brunch Spots",
+        "serviceDomain": "Restaurant",
         "average_rent": 570
       },
       "specificDescription": "A high-efficiency brunch spots restaurant module."
@@ -1222,10 +1181,9 @@
         "water": "x",
         "gas": "x",
         "trash_bins": "x",
-        "size": "Large",
-        "form": "Dining Hall",
-        "specialization": "Family Restaurants",
-        "quality": "Standard",
+        "type": "Large",
+        "variant": "Family Restaurants",
+        "serviceDomain": "Restaurant",
         "average_rent": 570
       },
       "specificDescription": "A high-efficiency family restaurants restaurant module."
@@ -1246,10 +1204,9 @@
         "gas": "x",
         "trash_bins": "x",
         "recycling_bins": "x",
-        "size": "Large",
-        "form": "Fine Dining",
-        "specialization": "Chinese",
-        "quality": "Gourmet",
+        "type": "Gourmet",
+        "variant": "Chinese",
+        "serviceDomain": "Restaurant",
         "average_rent": 740
       },
       "specificDescription": "A high-efficiency chinese restaurant module."
@@ -1270,10 +1227,9 @@
         "gas": "x",
         "trash_bins": "x",
         "recycling_bins": "x",
-        "size": "Large",
-        "form": "Fine Dining",
-        "specialization": "Indian",
-        "quality": "Gourmet",
+        "type": "Gourmet",
+        "variant": "Indian",
+        "serviceDomain": "Restaurant",
         "average_rent": 910
       },
       "specificDescription": "A high-efficiency indian restaurant module."
@@ -1294,10 +1250,9 @@
         "gas": "x",
         "trash_bins": "x",
         "recycling_bins": "x",
-        "size": "Large",
-        "form": "Fine Dining",
-        "specialization": "Seafood",
-        "quality": "Gourmet",
+        "type": "Gourmet",
+        "variant": "Seafood",
+        "serviceDomain": "Restaurant",
         "average_rent": 740
       },
       "specificDescription": "A high-efficiency seafood restaurant module."
@@ -1318,10 +1273,9 @@
         "gas": "x",
         "trash_bins": "x",
         "recycling_bins": "x",
-        "size": "Large",
-        "form": "Fine Dining",
-        "specialization": "Thai",
-        "quality": "Gourmet",
+        "type": "Gourmet",
+        "variant": "Thai",
+        "serviceDomain": "Restaurant",
         "average_rent": 910
       },
       "specificDescription": "A high-efficiency thai restaurant module."

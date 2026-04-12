@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { SimulationCanvas } from "./widgets/SimulationCanvas";
 import { MainToolbar } from "./features/ui/toolbars/MainToolbar";
-import { BuildToolbarV2 } from "./features/ui/toolbars/BuildToolbarV2";
+import { BuildToolbar } from "./features/ui/toolbars/BuildToolbar";
 
 import { ControlsHint } from "./features/ui/hud/ControlsHint";
 import { CameraReadout } from "./features/ui/hud/CameraReadout";
@@ -153,7 +153,7 @@ export default function App() {
     <div className="w-full h-screen relative overflow-hidden bg-background">
       <SimulationCanvas />
       <MainToolbar />
-      <BuildToolbarV2 />
+      <BuildToolbar />
       {showControls && <ControlsHint />}
       {selectedId && <SelectionPanel />}
       {showMinimap && <Minimap />}
