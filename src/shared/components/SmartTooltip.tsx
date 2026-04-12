@@ -9,7 +9,7 @@ import React, {
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSimulationStore } from "../utils/store";
-import themes from "../themes/color_palettes.json";
+import themes from "../../features/ui/themes/palettes/color_palettes.json";
 
 interface SmartTooltipProps {
   children: React.ReactNode;
@@ -57,7 +57,8 @@ export const SmartTooltip: React.FC<SmartTooltipProps> = ({
       );
 
       // Measure or fallback
-      const tooltipWidth = tooltipRef.current?.offsetWidth || (width ? parseInt(width) : 260);
+      const tooltipWidth =
+        tooltipRef.current?.offsetWidth || (width ? parseInt(width) : 260);
       const tooltipHeight = tooltipRef.current?.offsetHeight || 180;
 
       let targetPos = position;
@@ -66,7 +67,7 @@ export const SmartTooltip: React.FC<SmartTooltipProps> = ({
         let tx = 0;
         let ty = 0;
         const offset = 6;
-        
+
         switch (pos) {
           case "right":
             tx = rect.right + offset;
@@ -99,7 +100,8 @@ export const SmartTooltip: React.FC<SmartTooltipProps> = ({
         if (overflow && spaceOnLeft) targetPos = "left";
       } else if (targetPos === "left") {
         const overflow = tx - tooltipWidth < padding;
-        const spaceOnRight = rect.right + tooltipWidth + padding < viewportWidth;
+        const spaceOnRight =
+          rect.right + tooltipWidth + padding < viewportWidth;
         if (overflow && spaceOnRight) targetPos = "right";
       }
 
@@ -112,20 +114,35 @@ export const SmartTooltip: React.FC<SmartTooltipProps> = ({
       // Final Clamping (Stay in View)
       if (targetPos === "right" || targetPos === "left") {
         const hh = tooltipHeight / 2;
-        ty = Math.max(padding + hh, Math.min(ty, viewportHeight - padding - hh));
-        
+        ty = Math.max(
+          padding + hh,
+          Math.min(ty, viewportHeight - padding - hh),
+        );
+
         if (targetPos === "right") {
-          tx = Math.max(padding, Math.min(tx, viewportWidth - padding - tooltipWidth));
+          tx = Math.max(
+            padding,
+            Math.min(tx, viewportWidth - padding - tooltipWidth),
+          );
         } else {
-          tx = Math.max(padding + tooltipWidth, Math.min(tx, viewportWidth - padding));
+          tx = Math.max(
+            padding + tooltipWidth,
+            Math.min(tx, viewportWidth - padding),
+          );
         }
       } else {
         const hw = tooltipWidth / 2;
         tx = Math.max(padding + hw, Math.min(tx, viewportWidth - padding - hw));
         if (targetPos === "bottom") {
-          ty = Math.max(padding, Math.min(ty, viewportHeight - padding - tooltipHeight));
+          ty = Math.max(
+            padding,
+            Math.min(ty, viewportHeight - padding - tooltipHeight),
+          );
         } else {
-          ty = Math.max(padding + tooltipHeight, Math.min(ty, viewportHeight - padding));
+          ty = Math.max(
+            padding + tooltipHeight,
+            Math.min(ty, viewportHeight - padding),
+          );
         }
       }
 
@@ -135,9 +152,9 @@ export const SmartTooltip: React.FC<SmartTooltipProps> = ({
       const posChanged = targetPos !== lastUpdateRef.current.pos;
 
       if (dx > 1 || dy > 1 || posChanged) {
-          lastUpdateRef.current = { x: tx, y: ty, pos: targetPos };
-          setActualPosition(targetPos);
-          setCoords({ x: tx, y: ty });
+        lastUpdateRef.current = { x: tx, y: ty, pos: targetPos };
+        setActualPosition(targetPos);
+        setCoords({ x: tx, y: ty });
       }
     });
 
@@ -148,13 +165,16 @@ export const SmartTooltip: React.FC<SmartTooltipProps> = ({
     if (isVisible) {
       // Use a debounced ResizeObserver or frame-bound one
       const observer = new ResizeObserver(() => {
-          updatePosition();
+        updatePosition();
       });
-      
+
       if (tooltipRef.current) observer.observe(tooltipRef.current);
       if (triggerRef.current) observer.observe(triggerRef.current);
 
-      window.addEventListener("scroll", updatePosition, { passive: true, capture: true });
+      window.addEventListener("scroll", updatePosition, {
+        passive: true,
+        capture: true,
+      });
       window.addEventListener("resize", updatePosition, { passive: true });
       updatePosition();
 

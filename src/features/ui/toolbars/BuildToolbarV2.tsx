@@ -20,6 +20,7 @@ import {
   resolveTraitsByCategory,
   getIconComponent,
 } from "../../../shared/utils/metadataUtils";
+import "../globalStyles.css";
 
 const TOOL_ALIASES: Record<string, string> = {
   studio: "residential",
@@ -67,14 +68,7 @@ const COLOR_REGISTRY: Record<string, string> = {
   Unknown: "#ef4444",
 };
 
-const GUI_SPACING_SCALE = 0.85;
-const GUI_SPACING_REM = 0.375 * GUI_SPACING_SCALE;
-const BUILD_ICON_GAP_REM = 1 * GUI_SPACING_SCALE;
-const BUILD_PADDING_HORIZONTAL_REM = 1 * GUI_SPACING_SCALE;
-const BUILD_PADDING_VERTICAL_REM = 0.75 * GUI_SPACING_SCALE;
-const BUILD_TOOLBAR_GAP_REM = 0.75 * GUI_SPACING_SCALE;
-const THEME_BUILD_TOOLBAR_BUTTON_RADIUS =
-  "var(--theme-build-toolbar-button-radius)";
+const BUILD_ICON_GAP_REM = 1 * 0.85;
 const HEADER_VERTICAL_SCALE = 0.9;
 const HEADER_VERTICAL_GAP_REM = 1.5;
 const HEADER_PADDING_BOTTOM_REM = 0.5;
@@ -138,7 +132,7 @@ const RoomInfoTooltip = ({ metadata }: { metadata: any }) => {
   );
 };
 
-export const BuildToolbar = () => {
+export const BuildToolbarV2 = () => {
   const setActiveTool = useSimulationStore((state) => state.setActiveTool);
   const setActiveModuleId = useSimulationStore(
     (state) => state.setActiveModuleId,
@@ -236,17 +230,22 @@ export const BuildToolbar = () => {
   };
 
   return (
-    <div className="absolute inset-x-0 bottom-4 flex justify-center z-50 pointer-events-none">
+    <div className="absolute inset-x-0 bottom-6 flex justify-center z-[200] pointer-events-none">
       <div
-        className="inline-flex flex-col items-center rounded-2xl border border-text/10 bg-background/90 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.4)] pointer-events-auto"
+        className="pointer-events-auto relative inline-flex flex-col items-stretch bg-white border border-black/10 rounded-[1.5rem] shadow-[0_16px_40px_rgba(0,0,0,0.16)] overflow-visible"
         style={{
-          padding: "var(--theme-build-toolbar-padding)",
-          gap: "var(--theme-build-toolbar-gap)",
+          padding: "0.75rem",
+          gap: "0.375rem",
+          backdropFilter: "blur(14px)",
         }}
       >
         <div
-          className="flex items-center"
-          style={{ gap: `${BUILD_ICON_GAP_REM}rem` }}
+          className="inline-flex items-center"
+          style={{
+            gap: "var(--ui-build-toolbar-v2-row-gap)",
+            padding:
+              "var(--ui-build-toolbar-v2-row-padding-y) var(--ui-build-toolbar-v2-row-padding-x)",
+          }}
         >
           {categories.map((cat: any) => {
             const Icon = cat.icon;
@@ -264,7 +263,11 @@ export const BuildToolbar = () => {
               >
                 {cat.subTypes && (
                   <div
-                    className={`absolute bottom-full left-1/2 -translate-x-1/2 flex flex-col gap-0 p-1.5 bg-background/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl transition-all duration-300 origin-bottom pb-6 -mb-4 ${isExpanded ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-4 scale-95 pointer-events-none"}`}
+                    className={`absolute bottom-full left-1/2 -translate-x-1/2 flex flex-col gap-0 p-1.5 bg-white backdrop-blur-2xl border border-black/10 rounded-2xl shadow-2xl transition-all duration-300 origin-bottom pb-6 -mb-4 z-[210] ${isExpanded ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-4 scale-95 pointer-events-none"}`}
+                    style={{
+                      minWidth: "var(--ui-build-toolbar-v2-submenu-min-width)",
+                      borderRadius: "var(--ui-build-toolbar-v2-submenu-radius)",
+                    }}
                   >
                     <div className="text-[9px] font-bold text-text/40 uppercase tracking-widest pl-2 mb-1">
                       {cat.label} Types
@@ -284,7 +287,13 @@ export const BuildToolbar = () => {
                             setExpandedCategory(null);
                           }}
                           className={`whitespace-nowrap px-4 py-1 text-[10.5px] font-semibold rounded-xl transition-all flex items-center justify-between border ${activeModuleId === sub.id ? "bg-primary/20 text-primary border-primary/30" : "text-text/70 hover:text-text hover:bg-white/5 border-transparent"}`}
-                          style={{ gap: `${BUILD_ICON_GAP_REM}rem` }}
+                          style={{
+                            gap: "var(--ui-build-toolbar-v2-submenu-item-gap)",
+                            padding:
+                              "var(--ui-build-toolbar-v2-submenu-item-padding-y) var(--ui-build-toolbar-v2-submenu-item-padding-x)",
+                            borderRadius:
+                              "var(--ui-build-toolbar-v2-button-radius)",
+                          }}
                         >
                           <div className="flex items-center gap-2">
                             <div
@@ -311,9 +320,10 @@ export const BuildToolbar = () => {
                 <button
                   onClick={() => handleCategoryClick(cat)}
                   className={`relative rounded-xl transition-all duration-500 group ${isActive ? "bg-primary text-background shadow-[0_0_30px_var(--primary)]" : "text-text/50 hover:text-primary hover:bg-primary/10"}`}
+                  data-active={isActive ? "true" : "false"}
                   style={{
-                    padding: "0.6375rem 0.85rem",
-                    borderRadius: THEME_BUILD_TOOLBAR_BUTTON_RADIUS,
+                    padding: "0.5rem 0.75rem",
+                    borderRadius: "var(--ui-build-toolbar-v2-button-radius)",
                   }}
                 >
                   <Icon size={26} strokeWidth={1.5} />

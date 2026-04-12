@@ -6,7 +6,7 @@ import {
   ContactShadows,
   Lightformer,
 } from "@react-three/drei";
-import themes from "../../shared/themes/color_palettes.json";
+import themes from "../../features/ui/themes/palettes/color_palettes.json";
 import {
   EffectComposer,
   Noise,
@@ -917,7 +917,7 @@ export const LegacyLightingScene = () => {
       <Environment
         preset={isDark ? "night" : "city"}
         background={false}
-        environmentIntensity={showWeather ? 0.45 : (isDark ? 0.35 : 0.45)} // Lifted to restore PBR material reflections
+        environmentIntensity={showWeather ? 0.45 : isDark ? 0.35 : 0.45} // Lifted to restore PBR material reflections
       >
         {isDark && (
           <group rotation={[0, 0, 0]}>

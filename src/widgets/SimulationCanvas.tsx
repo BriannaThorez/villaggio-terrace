@@ -6,7 +6,7 @@ import {
   ContactShadows,
   Lightformer,
 } from "@react-three/drei";
-import themes from "../shared/themes/color_palettes.json";
+import themes from "../features/ui/themes/palettes/color_palettes.json";
 import { Bloom, Noise, Vignette, N8AO } from "@react-three/postprocessing";
 import { HolographicFloors } from "../features/environment/HolographicFloors";
 import { HolographicHeightScale } from "../features/environment/HolographicHeightScale";
@@ -45,7 +45,9 @@ const PlacementIndicator = () => {
 
   const platformMetadata = useMemo(() => {
     if (!activeModuleId) return null;
-    return (roomMetadata.rooms as any[]).find((r) => r.id === activeModuleId) ?? null;
+    return (
+      (roomMetadata.rooms as any[]).find((r) => r.id === activeModuleId) ?? null
+    );
   }, [activeModuleId]);
 
   const indicatorWidth = useMemo(() => {
@@ -53,9 +55,7 @@ const PlacementIndicator = () => {
       return platformMetadata.dimensions.width * GRID_SIZE_X;
     }
     if (activeTool === "office") return 50;
-    if (
-      ["lobby", "elevator", "utility", "structure"].includes(activeTool)
-    )
+    if (["lobby", "elevator", "utility", "structure"].includes(activeTool))
       return 10;
     if (activeTool === "text") return 20;
     return 40;
@@ -70,13 +70,13 @@ const PlacementIndicator = () => {
     return 40;
   }, [activeTool, platformMetadata]);
 
-    const indicatorDepth = useMemo(() => {
-      if (platformMetadata && platformMetadata.dimensions.depth) {
-        return platformMetadata.dimensions.depth * GRID_SIZE_X;
-      }
-      // Fall back to one structural cell (40 units) so the box always remains a proper depth
-      return GRID_SIZE_Y;
-    }, [platformMetadata]);
+  const indicatorDepth = useMemo(() => {
+    if (platformMetadata && platformMetadata.dimensions.depth) {
+      return platformMetadata.dimensions.depth * GRID_SIZE_X;
+    }
+    // Fall back to one structural cell (40 units) so the box always remains a proper depth
+    return GRID_SIZE_Y;
+  }, [platformMetadata]);
 
   const indicatorSize: [number, number] = [indicatorWidth, indicatorHeight];
   const groundSize: [number, number] = [indicatorWidth, indicatorDepth];
@@ -115,14 +115,28 @@ const PlacementIndicator = () => {
           : getPlacementCenterY(intersectPoint.y, clashSize[1]);
 
       // Spectacular Lerp for Premium Feel
-      groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, snappedX, 0.42);
-      groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, snappedY, 0.42);
+      groupRef.current.position.x = THREE.MathUtils.lerp(
+        groupRef.current.position.x,
+        snappedX,
+        0.42,
+      );
+      groupRef.current.position.y = THREE.MathUtils.lerp(
+        groupRef.current.position.y,
+        snappedY,
+        0.42,
+      );
 
       groupRef.current.position.z = 0.5;
 
       const isValid = useSimulationStore
         .getState()
-        .checkPlacement(snappedX, snappedY, clashSize[0], clashSize[1], activeTool);
+        .checkPlacement(
+          snappedX,
+          snappedY,
+          clashSize[0],
+          clashSize[1],
+          activeTool,
+        );
 
       const color = !isValid ? "#ff4444" : currentTheme.accent;
 
@@ -147,12 +161,12 @@ const PlacementIndicator = () => {
     return null;
   }
 
-    const verticalHeight = indicatorHeight;
-    const verticalHalf = verticalHeight / 2;
-    const groundWidth = groundSize[0];
-    const groundDepth = groundSize[1];
-    const ghostCenterZ = -groundDepth / 2;
-    const frontFaceZ = ghostCenterZ + groundDepth / 2 + 0.05;
+  const verticalHeight = indicatorHeight;
+  const verticalHalf = verticalHeight / 2;
+  const groundWidth = groundSize[0];
+  const groundDepth = groundSize[1];
+  const ghostCenterZ = -groundDepth / 2;
+  const frontFaceZ = ghostCenterZ + groundDepth / 2 + 0.05;
 
   return (
     <group ref={groupRef} visible={false}>
@@ -189,9 +203,11 @@ const PlacementIndicator = () => {
       </mesh>
 
       <lineSegments position={[0, verticalHalf, ghostCenterZ]}>
-          <edgesGeometry
-            args={[new THREE.BoxGeometry(groundWidth, verticalHeight, groundDepth)]}
-          />
+        <edgesGeometry
+          args={[
+            new THREE.BoxGeometry(groundWidth, verticalHeight, groundDepth),
+          ]}
+        />
         <lineBasicMaterial
           ref={materialRef4}
           color={currentTheme.accent}
@@ -266,13 +282,13 @@ const CanvasScene = () => {
   const lastStampedPos = useRef<string | null>(null);
   const isClickMovedRef = useRef(false);
 
-
-
   useEffect(() => {
     if (shouldResetCamera) {
       const { cameraState, cameraRotation } = useSimulationStore.getState();
       targetZoom.current = cameraState.zoom;
-      camera.position.set(...(cameraState.position as [number, number, number]));
+      camera.position.set(
+        ...(cameraState.position as [number, number, number]),
+      );
       (camera as THREE.OrthographicCamera).zoom = cameraState.zoom;
       camera.updateProjectionMatrix();
       if (controls) {
@@ -318,12 +334,14 @@ const CanvasScene = () => {
     const cam = camera as THREE.OrthographicCamera;
 
     // Detect first interaction to prevent startup drift
-    if (!hasInteractedRef.current && (Math.abs(state.pointer.x) > 0.01 || Math.abs(state.pointer.y) > 0.01)) {
+    if (
+      !hasInteractedRef.current &&
+      (Math.abs(state.pointer.x) > 0.01 || Math.abs(state.pointer.y) > 0.01)
+    ) {
       hasInteractedRef.current = true;
     }
 
     if (Math.abs(cam.zoom - targetZoom.current) > 0.001) {
-
       const oldZoom = cam.zoom;
       cam.zoom = targetZoom.current;
 
@@ -346,11 +364,8 @@ const CanvasScene = () => {
         }
       }
 
-
       cam.updateProjectionMatrix();
     }
-
-
   });
 
   const placeAtPoint = (point: THREE.Vector3, skipHistory = true) => {
@@ -465,10 +480,7 @@ const CanvasScene = () => {
       return;
     }
 
-    if (
-      activeTool === "select" ||
-      activeTool === "vertex"
-    ) {
+    if (activeTool === "select" || activeTool === "vertex") {
       return;
     }
 
@@ -501,13 +513,18 @@ const CanvasScene = () => {
     ];
     const isRoom = roomTypes.includes(activeTool);
     const activeModuleId = useSimulationStore.getState().activeModuleId;
-    const metadata = activeModuleId ? (roomMetadata.rooms as any[]).find(r => r.id === activeModuleId) : null;
+    const metadata = activeModuleId
+      ? (roomMetadata.rooms as any[]).find((r) => r.id === activeModuleId)
+      : null;
 
     if (metadata) {
       // Dynamic Targeting Using Centralized Data
       const halfW = (metadata.dimensions.width * GRID_SIZE_X) / 2;
       const halfH = (metadata.dimensions.height * GRID_SIZE_Y) / 2;
-      nodeSize = [metadata.dimensions.width * GRID_SIZE_X, metadata.dimensions.height * GRID_SIZE_Y];
+      nodeSize = [
+        metadata.dimensions.width * GRID_SIZE_X,
+        metadata.dimensions.height * GRID_SIZE_Y,
+      ];
       vertices = [
         [-halfW, -halfH],
         [halfW, -halfH],
@@ -602,9 +619,10 @@ const CanvasScene = () => {
     }
 
     const snappedX = snapX(intersectPoint.x, nodeSize[0]);
-    const snappedY = activeTool === "lobby"
-      ? 0
-      : getPlacementCenterY(intersectPoint.y, nodeSize[1]);
+    const snappedY =
+      activeTool === "lobby"
+        ? 0
+        : getPlacementCenterY(intersectPoint.y, nodeSize[1]);
 
     const position: [number, number] = [snappedX, snappedY];
     const gridKey = `${snappedX},${snappedY}`;
@@ -654,12 +672,12 @@ const CanvasScene = () => {
       setIsDragging(false);
 
       // Global right-click tool cancellation (Industry leading stability)
-      // This ensures that right-click ALWAYS dismisses the active tool, 
+      // This ensures that right-click ALWAYS dismisses the active tool,
       // even if a sub-component mesh stopped propagation of the Three.js event.
       if (e.button === 2) {
         const currentTool = useSimulationStore.getState().activeTool;
-        if (currentTool !== 'select') {
-          setActiveTool('select');
+        if (currentTool !== "select") {
+          setActiveTool("select");
           setSelectedId(null);
         }
       }
@@ -718,8 +736,14 @@ const CanvasScene = () => {
     }
 
     if (e.nativeEvent.buttons === 1) {
-      const isStampableTool = activeTool === "lobby" || activeTool === "structure";
-      if (isStampableTool && !currentIsPanning && !currentIsRotating && !currentLinkingFrom) {
+      const isStampableTool =
+        activeTool === "lobby" || activeTool === "structure";
+      if (
+        isStampableTool &&
+        !currentIsPanning &&
+        !currentIsRotating &&
+        !currentLinkingFrom
+      ) {
         // Unify raycasting math for bit-for-bit placement parity (Industry leading finish)
         raycaster.setFromCamera(pointer, camera);
         const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
@@ -730,7 +754,8 @@ const CanvasScene = () => {
           // Continuous row construction (SimTower style sequential placement)
           // We use a cell key to prevent double-stamping in the same grid spot during the move
           const snappedX = Math.round(intersectPoint.x / 10) * 10;
-          const snappedY = activeTool === "lobby" ? 0 : getFloorBaseY(intersectPoint.y);
+          const snappedY =
+            activeTool === "lobby" ? 0 : getFloorBaseY(intersectPoint.y);
           const cellKey = `${snappedX}:${snappedY}:${activeTool}`;
 
           if (lastStampedCellKey.current !== cellKey) {
@@ -822,14 +847,20 @@ const CanvasScene = () => {
   };
 
   const gridRef = useRef<any>(null);
-  const groundPlane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), []);
+  const groundPlane = useMemo(
+    () => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0),
+    [],
+  );
   const raycastResult = useMemo(() => new THREE.Vector3(), []);
 
   useFrame((state) => {
     if (gridRef.current) {
       // Find the screen center in world space on the ground plane (y=0)
       state.raycaster.setFromCamera(new THREE.Vector2(0, 0), state.camera);
-      const intersect = state.raycaster.ray.intersectPlane(groundPlane, raycastResult);
+      const intersect = state.raycaster.ray.intersectPlane(
+        groundPlane,
+        raycastResult,
+      );
 
       if (intersect) {
         // Snap the grid center to 10-unit increments to prevent line-shifting
@@ -882,7 +913,12 @@ const CanvasScene = () => {
 
     if (e.button === 0 && wasStaticClick && activeTool === "select") {
       // Only deselect if we didn't just finished a drag/pan/move
-      if (!wasDraggingRef.current && !wasPanningRef.current && !wasLinkingRef.current && !isClickMovedRef.current) {
+      if (
+        !wasDraggingRef.current &&
+        !wasPanningRef.current &&
+        !wasLinkingRef.current &&
+        !isClickMovedRef.current
+      ) {
         setSelectedId(null); // LEFT CLICK DESELECT ONLY IN SELECT MODE
       }
     }
@@ -915,7 +951,14 @@ const CanvasScene = () => {
   return (
     <>
       <color attach="background" args={[isDark ? "#0d1117" : "#cbd5e1"]} />
-      <fog attach="fog" args={[isDark ? "#0d1117" : "#cbd5e1", showWeather ? 100 : 500, showWeather ? 1000 : 4000]} />
+      <fog
+        attach="fog"
+        args={[
+          isDark ? "#0d1117" : "#cbd5e1",
+          showWeather ? 100 : 500,
+          showWeather ? 1000 : 4000,
+        ]}
+      />
 
       {/* Modular Atmospheric Simulation */}
       <SolarSystem />
@@ -923,13 +966,31 @@ const CanvasScene = () => {
       <Environment
         preset={isDark ? "night" : "city"}
         background={false}
-        environmentIntensity={showWeather ? 0.45 : (isDark ? 0.35 : 0.45)} // Lifted to restore PBR material reflections
+        environmentIntensity={showWeather ? 0.45 : isDark ? 0.35 : 0.45} // Lifted to restore PBR material reflections
       >
         {isDark && (
           <group rotation={[0, 0, 0]}>
-            <Lightformer intensity={3.5} rotation={[Math.PI / 2, 0, 0]} position={[0, 20, -10]} scale={[20, 20, 1]} color="#22d3ee" />
-            <Lightformer intensity={1.5} rotation={[0, Math.PI / 2, 0]} position={[-10, 10, 0]} scale={[20, 10, 1]} color="#a855f7" />
-            <Lightformer intensity={1.5} rotation={[0, -Math.PI / 2, 0]} position={[10, 10, 0]} scale={[20, 10, 1]} color="#3b82f6" />
+            <Lightformer
+              intensity={3.5}
+              rotation={[Math.PI / 2, 0, 0]}
+              position={[0, 20, -10]}
+              scale={[20, 20, 1]}
+              color="#22d3ee"
+            />
+            <Lightformer
+              intensity={1.5}
+              rotation={[0, Math.PI / 2, 0]}
+              position={[-10, 10, 0]}
+              scale={[20, 10, 1]}
+              color="#a855f7"
+            />
+            <Lightformer
+              intensity={1.5}
+              rotation={[0, -Math.PI / 2, 0]}
+              position={[10, 10, 0]}
+              scale={[20, 10, 1]}
+              color="#3b82f6"
+            />
           </group>
         )}
       </Environment>
@@ -942,7 +1003,7 @@ const CanvasScene = () => {
         dampingFactor={0.1}
         enabled={!isDragging && !linkingFrom && !isRotating && !isPanning}
         mouseButtons={{
-          LEFT: activeTool === "select" ? THREE.MOUSE.PAN : undefined as any,
+          LEFT: activeTool === "select" ? THREE.MOUSE.PAN : (undefined as any),
           MIDDLE: THREE.MOUSE.ROTATE,
           RIGHT: THREE.MOUSE.PAN,
         }}
@@ -960,18 +1021,18 @@ const CanvasScene = () => {
             const azimuth = orbit.getAzimuthalAngle();
             const polar = orbit.getPolarAngle();
 
-            const currentSize = (controls as any).object.getState?.().size || size;
+            const currentSize =
+              (controls as any).object.getState?.().size || size;
             setCameraState(
               [cam.position.x, cam.position.y, cam.position.z],
               cam.zoom,
               currentSize.width / cam.zoom,
-              currentSize.height / cam.zoom
+              currentSize.height / cam.zoom,
             );
             setCameraRotation(azimuth, polar);
             lastSyncTimeRef.current = now;
           }
         }}
-
         onEnd={() => {
           setTimeout(() => {
             // Only clear wasPanning if we actually finished a move
@@ -1034,8 +1095,6 @@ const CanvasScene = () => {
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
-
-
       {showWeather && (
         <>
           <RainField isDark={isDark} />
@@ -1079,7 +1138,9 @@ export const SimulationCanvas = () => {
   // We use initial state to bootstrap the camera, but DO NOT subscribe to changes here.
   // Reactive camera updates are handled by OrbitControls and synced back to the store
   // via throttled events to prevent feedback loops and main-thread locking.
-  const [initialCamera] = useState(() => useSimulationStore.getState().cameraState);
+  const [initialCamera] = useState(
+    () => useSimulationStore.getState().cameraState,
+  );
 
   return (
     <Canvas
@@ -1089,7 +1150,7 @@ export const SimulationCanvas = () => {
         zoom: initialCamera.zoom,
         position: initialCamera.position as [number, number, number],
         far: 5000,
-        near: -5000
+        near: -5000,
       }}
       gl={{
         antialias: true,

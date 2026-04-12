@@ -13,7 +13,7 @@ import {
   ShapeSDFFragmentShader,
 } from "../shared/shaders/ShapeSDFMaterial";
 import { RadialMenu } from "../features/ui/world_ui/RadialMenu";
-import themes from "../shared/themes/color_palettes.json";
+import themes from "../features/ui/themes/palettes/color_palettes.json";
 import { RotateCw } from "lucide-react";
 import * as THREE from "three";
 import CustomShaderMaterial from "three-custom-shader-material";
@@ -55,10 +55,11 @@ const RotateHandle = ({ rotation }: { rotation: number }) => {
         pointerEvents="none"
       >
         <div
-          className={`pointer-events-none w-40 h-40 rounded-full bg-white border-8 text-black flex items-center justify-center transition-all duration-300 ${hovered
-            ? "border-gray-300 scale-110 shadow-[0_0_100px_rgba(255,255,255,0.8)]"
-            : "border-gray-100 shadow-[0_0_80px_rgba(255,255,255,0.4)]"
-            }`}
+          className={`pointer-events-none w-40 h-40 rounded-full bg-white border-8 text-black flex items-center justify-center transition-all duration-300 ${
+            hovered
+              ? "border-gray-300 scale-110 shadow-[0_0_100px_rgba(255,255,255,0.8)]"
+              : "border-gray-100 shadow-[0_0_80px_rgba(255,255,255,0.4)]"
+          }`}
         >
           <div className="scale-[4]">
             <RotateCw
@@ -236,8 +237,12 @@ export const SimulationNodes = () => {
   const editingId = useSimulationStore((state) => state.editingId);
   const setEditingId = useSimulationStore((state) => state.setEditingId);
   const linkingFrom = useSimulationStore((state) => state.linkingFrom);
-  const lastDeletedNodeType = useSimulationStore((state) => state.lastDeletedNodeType);
-  const setLastDeletedNodeType = useSimulationStore((state) => state.setLastDeletedNodeType);
+  const lastDeletedNodeType = useSimulationStore(
+    (state) => state.lastDeletedNodeType,
+  );
+  const setLastDeletedNodeType = useSimulationStore(
+    (state) => state.setLastDeletedNodeType,
+  );
   const structuralGraph = useMemo(() => buildCellBeamGraph(shapes), [shapes]);
   const renderedShapes = useMemo<RenderShape[]>(
     () => attachStructuralMetadataToShapes(shapes, structuralGraph),
@@ -258,16 +263,20 @@ export const SimulationNodes = () => {
   // PRE-CALCULATE Foundation/Room Relationship (Industry Leading O(N) Speedup)
   const roomByFoundationId = useMemo(() => {
     const map = new Map<string, RenderShape>();
-    const rooms = renderedShapes.filter(s => s.type !== "structure" && s.type !== "empty_floor" && s.type !== "text");
-    const structures = renderedShapes.filter(s => s.type === "structure");
+    const rooms = renderedShapes.filter(
+      (s) =>
+        s.type !== "structure" && s.type !== "empty_floor" && s.type !== "text",
+    );
+    const structures = renderedShapes.filter((s) => s.type === "structure");
 
-    structures.forEach(str => {
+    structures.forEach((str) => {
       const myLeft = str.position[0] - str.size[0] / 2;
       const myRight = str.position[0] + str.size[0] / 2;
-      const roomAbove = rooms.find(s =>
-        Math.abs(s.position[1] - str.position[1]) < 5 &&
-        (s.position[0] + s.size[0] / 2 > myLeft + 0.1) &&
-        (s.position[0] - s.size[0] / 2 < myRight - 0.1)
+      const roomAbove = rooms.find(
+        (s) =>
+          Math.abs(s.position[1] - str.position[1]) < 5 &&
+          s.position[0] + s.size[0] / 2 > myLeft + 0.1 &&
+          s.position[0] - s.size[0] / 2 < myRight - 0.1,
       );
       if (roomAbove) map.set(str.id, roomAbove);
     });
@@ -292,28 +301,32 @@ export const SimulationNodes = () => {
       return;
     }
 
-    const structureCandidates = store.shapes.filter(s => s.type === 'structure').filter(str => {
-      const strLeft = str.position[0] - str.size[0] / 2;
-      const strRight = str.position[0] + str.size[0] / 2;
+    const structureCandidates = store.shapes
+      .filter((s) => s.type === "structure")
+      .filter((str) => {
+        const strLeft = str.position[0] - str.size[0] / 2;
+        const strRight = str.position[0] + str.size[0] / 2;
 
-      const hasRoom = store.shapes.some(other =>
-        other.type !== 'structure' &&
-        other.type !== 'empty_floor' &&
-        Math.abs(other.position[1] - str.position[1]) < 1 &&
-        other.position[0] + other.size[0] / 2 > strLeft + 0.1 &&
-        other.position[0] - other.size[0] / 2 < strRight - 0.1
-      );
-      if (hasRoom) return false;
+        const hasRoom = store.shapes.some(
+          (other) =>
+            other.type !== "structure" &&
+            other.type !== "empty_floor" &&
+            Math.abs(other.position[1] - str.position[1]) < 1 &&
+            other.position[0] + other.size[0] / 2 > strLeft + 0.1 &&
+            other.position[0] - other.size[0] / 2 < strRight - 0.1,
+        );
+        if (hasRoom) return false;
 
-      const hasEmptyFloor = store.shapes.some(other =>
-        other.type === 'empty_floor' &&
-        Math.abs(other.position[1] - str.position[1]) < 1 &&
-        other.position[0] + other.size[0] / 2 > strLeft + 0.1 &&
-        other.position[0] - other.size[0] / 2 < strRight - 0.1
-      );
+        const hasEmptyFloor = store.shapes.some(
+          (other) =>
+            other.type === "empty_floor" &&
+            Math.abs(other.position[1] - str.position[1]) < 1 &&
+            other.position[0] + other.size[0] / 2 > strLeft + 0.1 &&
+            other.position[0] - other.size[0] / 2 < strRight - 0.1,
+        );
 
-      return !hasEmptyFloor;
-    });
+        return !hasEmptyFloor;
+      });
 
     if (structureCandidates.length === 0) return;
 
@@ -324,31 +337,38 @@ export const SimulationNodes = () => {
         const strLeft = str.position[0] - str.size[0] / 2;
         const strRight = str.position[0] + str.size[0] / 2;
 
-        const hasRoom = fresh.shapes.some(other =>
-          other.type !== 'structure' &&
-          other.type !== 'empty_floor' &&
-          Math.abs(other.position[1] - str.position[1]) < 1 &&
-          other.position[0] + other.size[0] / 2 > strLeft + 0.1 &&
-          other.position[0] - other.size[0] / 2 < strRight - 0.1
+        const hasRoom = fresh.shapes.some(
+          (other) =>
+            other.type !== "structure" &&
+            other.type !== "empty_floor" &&
+            Math.abs(other.position[1] - str.position[1]) < 1 &&
+            other.position[0] + other.size[0] / 2 > strLeft + 0.1 &&
+            other.position[0] - other.size[0] / 2 < strRight - 0.1,
         );
         if (hasRoom) return;
 
-        const hasEmptyFloor = fresh.shapes.some(other =>
-          other.type === 'empty_floor' &&
-          Math.abs(other.position[1] - str.position[1]) < 1 &&
-          other.position[0] + other.size[0] / 2 > strLeft + 0.1 &&
-          other.position[0] - other.size[0] / 2 < strRight - 0.1
+        const hasEmptyFloor = fresh.shapes.some(
+          (other) =>
+            other.type === "empty_floor" &&
+            Math.abs(other.position[1] - str.position[1]) < 1 &&
+            other.position[0] + other.size[0] / 2 > strLeft + 0.1 &&
+            other.position[0] - other.size[0] / 2 < strRight - 0.1,
         );
         if (hasEmptyFloor) return;
 
-        fresh.addShape({
-          id: `empty_floor_${tsId}_${str.id}`,
-          type: 'empty_floor',
-          position: [...str.position],
-          size: [...str.size],
-          vertices: [...str.vertices],
-          name: "Empty Floor"
-        }, true, true, { skipSelection: true });
+        fresh.addShape(
+          {
+            id: `empty_floor_${tsId}_${str.id}`,
+            type: "empty_floor",
+            position: [...str.position],
+            size: [...str.size],
+            vertices: [...str.vertices],
+            name: "Empty Floor",
+          },
+          true,
+          true,
+          { skipSelection: true },
+        );
       });
     }, 0);
 
@@ -433,12 +453,16 @@ export const SimulationNodes = () => {
     if (!meshRef.current) return;
 
     renderedShapes.forEach((shape, i) => {
-      tempPosition.current.set(shape.position[0], shape.position[1] + shape.size[1] / 2, 0);
+      tempPosition.current.set(
+        shape.position[0],
+        shape.position[1] + shape.size[1] / 2,
+        0,
+      );
       tempEuler.current.set(0, 0, shape.rotation || 0);
       tempRotation.current.setFromEuler(tempEuler.current);
 
-      // STRUCTURAL RENDERING FIX: 
-      // For rooms, we nullify the SDF background scale to prevent Z-fighting 
+      // STRUCTURAL RENDERING FIX:
+      // For rooms, we nullify the SDF background scale to prevent Z-fighting
       // with the 3D CSG shell opening at Z=0.
       const isRoom = [
         "residential",
@@ -513,7 +537,9 @@ export const SimulationNodes = () => {
   useEffect(() => {
     const mesh = meshRef.current;
     if (!mesh) return;
-    const attribute = mesh.geometry.attributes.aIsSelected as THREE.BufferAttribute | undefined;
+    const attribute = mesh.geometry.attributes.aIsSelected as
+      | THREE.BufferAttribute
+      | undefined;
     if (!attribute) return;
 
     const data = attribute.array as Float32Array;
@@ -539,7 +565,7 @@ export const SimulationNodes = () => {
   }, [selectedId, shapeIndexById, isSelectedArray]);
 
   const handleNodePointerDown = (e: any, id: string) => {
-    // Only stop propagation for left-click (Button 0) to allow right-click (Button 2) 
+    // Only stop propagation for left-click (Button 0) to allow right-click (Button 2)
     // to bubble up to the global tool cancellation listener.
     if (e.button === 0) {
       e.stopPropagation();
@@ -553,7 +579,16 @@ export const SimulationNodes = () => {
     if (e.button === 1) return;
 
     // For volumetric room components, rely on mesh intersection rather than 2D SDF UV mapping
-    const isVolumetricRoom = ["residential", "commercial", "office", "utility", "lobby", "elevator", "structure", "empty_floor"].includes(shape.type);
+    const isVolumetricRoom = [
+      "residential",
+      "commercial",
+      "office",
+      "utility",
+      "lobby",
+      "elevator",
+      "structure",
+      "empty_floor",
+    ].includes(shape.type);
     if (!isVolumetricRoom && !isInsideShape(e.uv, shape)) return;
 
     if (editingId && editingId !== id) {
@@ -581,7 +616,16 @@ export const SimulationNodes = () => {
     const shape = renderedShapeById.get(id);
     if (!shape) return;
 
-    const isVolumetricRoom = ["residential", "commercial", "office", "utility", "lobby", "elevator", "structure", "empty_floor"].includes(shape.type);
+    const isVolumetricRoom = [
+      "residential",
+      "commercial",
+      "office",
+      "utility",
+      "lobby",
+      "elevator",
+      "structure",
+      "empty_floor",
+    ].includes(shape.type);
     if (!isVolumetricRoom && !isInsideShape(e.uv, shape)) return;
 
     if (activeTool !== "select") return;
@@ -780,8 +824,6 @@ export const SimulationNodes = () => {
               <SelectionIndicator shape={shape} />
             )}
 
-
-
             {/* Room Rendering */}
             {[
               "residential",
@@ -799,20 +841,30 @@ export const SimulationNodes = () => {
                 // Sole reliance on the high-accuracy Structural Cell-Beam Graph.
                 if (shape.structuralRoom) {
                   const checkWall = (adjacentIds: string[]) => {
-                    const mergableTypes = ["lobby", "elevator", "structure", "empty_floor"];
+                    const mergableTypes = [
+                      "lobby",
+                      "elevator",
+                      "structure",
+                      "empty_floor",
+                    ];
                     const isMergable = mergableTypes.includes(shape.type);
                     if (!isMergable) return true;
 
                     // INDUSTRY LEADING O(1) PERFORMANCE: Use cached structural metadata
-                    const hasNeighbor = shape.structuralMetadata?.adjacencies?.some(id => {
-                      const neighbor = renderedShapeById.get(id);
-                      return neighbor && neighbor.type === shape.type;
-                    });
+                    const hasNeighbor =
+                      shape.structuralMetadata?.adjacencies?.some((id) => {
+                        const neighbor = renderedShapeById.get(id);
+                        return neighbor && neighbor.type === shape.type;
+                      });
                     return !hasNeighbor;
                   };
 
-                  hasLeftWall = checkWall(shape.structuralRoom.canonicalFaces.left.adjacentRoomIds);
-                  hasRightWall = checkWall(shape.structuralRoom.canonicalFaces.right.adjacentRoomIds);
+                  hasLeftWall = checkWall(
+                    shape.structuralRoom.canonicalFaces.left.adjacentRoomIds,
+                  );
+                  hasRightWall = checkWall(
+                    shape.structuralRoom.canonicalFaces.right.adjacentRoomIds,
+                  );
                 }
 
                 if (shape.type === "empty_floor") {
@@ -878,7 +930,9 @@ export const SimulationNodes = () => {
                     material={shape.material}
                     hasLeftWall={hasLeftWall}
                     hasRightWall={hasRightWall}
-                    openings={shape.structuralRoom?.openings.map(o => o.definition)}
+                    openings={shape.structuralRoom?.openings.map(
+                      (o) => o.definition,
+                    )}
                     structuralSettings={(shape as any).structuralSettings}
                     structuralRoom={shape.structuralRoom}
                     frontFaceVisibility="transparent"
@@ -901,56 +955,69 @@ export const SimulationNodes = () => {
               })()}
 
             {/* Background Scaffold Rendering via Unified CSG */}
-            {shape.type === "structure" && (() => {
-              const roomAbove = roomByFoundationId.get(shape.id);
-              const hasRoomAbove = !!roomAbove;
+            {shape.type === "structure" &&
+              (() => {
+                const roomAbove = roomByFoundationId.get(shape.id);
+                const hasRoomAbove = !!roomAbove;
 
-              let baseColor = (themes as any)[themeName].neutral_dark;
-              if (roomAbove) {
-                if (roomAbove.color) {
-                  baseColor = roomAbove.color;
-                } else if (roomAbove.themeColors) {
-                  baseColor = roomAbove.themeColors[themeName] || baseColor;
+                let baseColor = (themes as any)[themeName].neutral_dark;
+                if (roomAbove) {
+                  if (roomAbove.color) {
+                    baseColor = roomAbove.color;
+                  } else if (roomAbove.themeColors) {
+                    baseColor = roomAbove.themeColors[themeName] || baseColor;
+                  }
                 }
-              }
 
-              const darkenedColor = new THREE.Color(baseColor).lerp(new THREE.Color(0x000000), 0.25).getHexString();
+                const darkenedColor = new THREE.Color(baseColor)
+                  .lerp(new THREE.Color(0x000000), 0.25)
+                  .getHexString();
 
-              const scaffoldMat = parseMaterial({
-                albedo: `#${darkenedColor}`,
-                roughness: 0.95,
-                metalness: 0.2
-              });
-              scaffoldMat.polygonOffset = true;
-              scaffoldMat.polygonOffsetFactor = 1; // Slight pushback to ensure room interior renders cleanly if boundaries are perfectly flush
-              scaffoldMat.polygonOffsetUnits = 1;
+                const scaffoldMat = parseMaterial({
+                  albedo: `#${darkenedColor}`,
+                  roughness: 0.95,
+                  metalness: 0.2,
+                });
+                scaffoldMat.polygonOffset = true;
+                scaffoldMat.polygonOffsetFactor = 1; // Slight pushback to ensure room interior renders cleanly if boundaries are perfectly flush
+                scaffoldMat.polygonOffsetUnits = 1;
 
-              return (
-                <group
-                  onPointerDown={(e) => {
-                    e.stopPropagation();
-                    if (hasRoomAbove) return;
-                    handleNodePointerDown(e, shape.id);
-                  }}
-                  onDoubleClick={(e) => {
-                    e.stopPropagation();
-                    if (hasRoomAbove) return;
-                    handleNodeDoubleClick(e, shape.id);
-                  }}
-                >
-                  <RoomMeshCSG
-                    width={shape.size[0]}
-                    height={shape.size[1]}
-                    depth={40}
-                    wallThickness={0.25}
-                    material={scaffoldMat}
-                    hasBackWall={false}
-                    hasLeftWall={shape.structuralRoom ? shape.structuralRoom.canonicalFaces.left.adjacentRoomIds.length === 0 : true}
-                    hasRightWall={shape.structuralRoom ? shape.structuralRoom.canonicalFaces.right.adjacentRoomIds.length === 0 : true}
-                  />
-                </group>
-              );
-            })()}
+                return (
+                  <group
+                    onPointerDown={(e) => {
+                      e.stopPropagation();
+                      if (hasRoomAbove) return;
+                      handleNodePointerDown(e, shape.id);
+                    }}
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      if (hasRoomAbove) return;
+                      handleNodeDoubleClick(e, shape.id);
+                    }}
+                  >
+                    <RoomMeshCSG
+                      width={shape.size[0]}
+                      height={shape.size[1]}
+                      depth={40}
+                      wallThickness={0.25}
+                      material={scaffoldMat}
+                      hasBackWall={false}
+                      hasLeftWall={
+                        shape.structuralRoom
+                          ? shape.structuralRoom.canonicalFaces.left
+                              .adjacentRoomIds.length === 0
+                          : true
+                      }
+                      hasRightWall={
+                        shape.structuralRoom
+                          ? shape.structuralRoom.canonicalFaces.right
+                              .adjacentRoomIds.length === 0
+                          : true
+                      }
+                    />
+                  </group>
+                );
+              })()}
 
             {activeTool === "vertex" &&
               selectedId === shape.id &&

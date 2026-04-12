@@ -1,20 +1,15 @@
 import { useEffect } from "react";
 import { SimulationCanvas } from "./widgets/SimulationCanvas";
 import { MainToolbar } from "./features/ui/toolbars/MainToolbar";
-import { BuildToolbar } from "./features/ui/toolbars/BuildToolbar";
+import { BuildToolbarV2 } from "./features/ui/toolbars/BuildToolbarV2";
+
 import { ControlsHint } from "./features/ui/hud/ControlsHint";
 import { CameraReadout } from "./features/ui/hud/CameraReadout";
 import { SelectionPanel } from "./features/ui/panels/SelectionPanel";
 import { Minimap } from "./features/ui/panels/Minimap";
 import { WeatherPanel } from "./features/weather/ui/WeatherPanel";
 import { useSimulationStore } from "./shared/utils";
-import themes from "./shared/themes/color_palettes.json";
-import {
-  createThemeCSSVariables,
-  getThemeTokens,
-  getMainToolbarThemeStyle,
-  getBuildToolbarThemeStyle,
-} from "./features/ui/themes";
+import { getThemePalette, getThemeMode } from "./features/ui/themes/themes";
 
 export default function App() {
   const setActiveTool = useSimulationStore((state) => state.setActiveTool);
@@ -38,74 +33,31 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const theme = (themes as any)[themeName];
-    const themeTokens = getThemeTokens(
-      theme?.mode === "light" ? "light" : "dark",
-    );
+    const palette = getThemePalette(themeName);
+    const mode = getThemeMode(themeName);
     const root = document.documentElement;
 
-    Object.entries(createThemeCSSVariables(themeTokens)).forEach(
-      ([key, value]) => {
-        root.style.setProperty(key, value);
-      },
-    );
+    root.style.setProperty("--primary", palette.primary);
+    root.style.setProperty("--secondary", palette.secondary);
+    root.style.setProperty("--accent", palette.accent);
+    root.style.setProperty("--neutral-light", palette.neutralLight);
+    root.style.setProperty("--neutral-dark", palette.neutralDark);
 
-    const mainToolbarStyle = getMainToolbarThemeStyle(themeTokens);
-    const buildToolbarStyle = getBuildToolbarThemeStyle(themeTokens);
-    root.style.setProperty(
-      "--theme-main-toolbar-inline-css",
-      mainToolbarStyle.cssText,
-    );
-    root.style.setProperty(
-      "--theme-build-toolbar-inline-css",
-      buildToolbarStyle.cssText,
-    );
+    const background =
+      mode === "dark" ? palette.neutralDark : palette.neutralLight;
+    const text = mode === "dark" ? palette.neutralLight : palette.neutralDark;
 
-    if (theme) {
-      // Set the 5 core colors from the existing theme source of truth
-      root.style.setProperty("--primary", theme.primary);
-      root.style.setProperty("--secondary", theme.secondary);
-      root.style.setProperty("--accent", theme.accent);
-      root.style.setProperty("--neutral-light", theme.neutral_light);
-      root.style.setProperty("--neutral-dark", theme.neutral_dark);
+    root.style.setProperty("--background", background);
+    root.style.setProperty("--text", text);
+    root.style.setProperty("--highlight", palette.accent);
 
-      // Derived semantic roles
-      const isDark = theme.mode === "dark";
-      const background = isDark ? theme.neutral_dark : theme.neutral_light;
-      const text = isDark ? theme.neutral_light : theme.neutral_dark;
-
-      root.style.setProperty("--background", background);
-      root.style.setProperty("--text", text);
-      root.style.setProperty("--highlight", theme.accent);
-
-      // Extract RGB for all colors for shadows/transparency
-      const colors = {
-        primary: theme.primary,
-        secondary: theme.secondary,
-        accent: theme.accent,
-        "neutral-light": theme.neutral_light,
-        "neutral-dark": theme.neutral_dark,
-        background,
-        text,
-        highlight: theme.accent,
-      };
-
-      Object.entries(colors).forEach(([key, value]) => {
-        if (typeof value === "string" && value.startsWith("#")) {
-          const r = parseInt(value.slice(1, 3), 16);
-          const g = parseInt(value.slice(3, 5), 16);
-          const b = parseInt(value.slice(5, 7), 16);
-          root.style.setProperty(`--${key}-rgb`, `${r}, ${g}, ${b}`);
-        }
-      });
-
-      // Set the color-scheme property for browser UI
-      root.style.setProperty("color-scheme", theme.mode);
-      if (isDark) {
-        root.classList.add("dark");
-      } else {
-        root.classList.remove("dark");
-      }
+    // Extract RGB for all colors for shadows/transparency
+    // Set the color-scheme property for browser UI
+    root.style.setProperty("color-scheme", mode);
+    if (mode === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
     }
   }, [themeName]);
 
@@ -201,7 +153,7 @@ export default function App() {
     <div className="w-full h-screen relative overflow-hidden bg-background">
       <SimulationCanvas />
       <MainToolbar />
-      <BuildToolbar />
+      <BuildToolbarV2 />
       {showControls && <ControlsHint />}
       {selectedId && <SelectionPanel />}
       {showMinimap && <Minimap />}

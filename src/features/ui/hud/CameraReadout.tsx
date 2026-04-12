@@ -1,7 +1,7 @@
 import React from "react";
 import { useSimulationStore } from "../../../shared/utils/store";
 import { Compass } from "lucide-react";
-import themes from "../../../shared/themes/color_palettes.json";
+import themes from "../../ui/themes/palettes/color_palettes.json";
 
 export const CameraReadout: React.FC = () => {
   const cameraRotation = useSimulationStore((state) => state.cameraRotation);
@@ -32,25 +32,41 @@ export const CameraReadout: React.FC = () => {
           <Compass size={12} className="text-accent animate-pulse" />
           <span>Telemetry</span>
         </div>
-        <span className="text-[8px] px-1.5 py-0.5 bg-accent/20 text-accent rounded-sm">V2.0</span>
+        <span className="text-[8px] px-1.5 py-0.5 bg-accent/20 text-accent rounded-sm">
+          V2.0
+        </span>
       </div>
 
       <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
-        <span className="text-[10px] text-white/30 font-bold uppercase">Yaw</span>
-        <span className="text-right font-mono text-accent text-xs">{azimuthDeg}°</span>
+        <span className="text-[10px] text-white/30 font-bold uppercase">
+          Yaw
+        </span>
+        <span className="text-right font-mono text-accent text-xs">
+          {azimuthDeg}°
+        </span>
 
-        <span className="text-[10px] text-white/30 font-bold uppercase">Pitch</span>
-        <span className="text-right font-mono text-accent text-xs">{pitchDeg}°</span>
+        <span className="text-[10px] text-white/30 font-bold uppercase">
+          Pitch
+        </span>
+        <span className="text-right font-mono text-accent text-xs">
+          {pitchDeg}°
+        </span>
 
         <div className="col-span-2 border-t border-white/5 my-1"></div>
 
-        <span className="text-[10px] text-white/30 font-bold uppercase">Pos</span>
+        <span className="text-[10px] text-white/30 font-bold uppercase">
+          Pos
+        </span>
         <span className="text-right font-mono text-accent text-[10px] tabular-nums">
           {posX}, {posY}, {posZ}
         </span>
 
-        <span className="text-[10px] text-white/30 font-bold uppercase">Zoom</span>
-        <span className="text-right font-mono text-accent text-xs">{zoom}x</span>
+        <span className="text-[10px] text-white/30 font-bold uppercase">
+          Zoom
+        </span>
+        <span className="text-right font-mono text-accent text-xs">
+          {zoom}x
+        </span>
       </div>
     </div>
   );

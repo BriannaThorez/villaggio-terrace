@@ -1,37 +1,35 @@
-import React, { useMemo } from 'react';
-import { Environment, Lightformer, ContactShadows } from '@react-three/drei';
-import { Bloom, Noise, Vignette, N8AO } from '@react-three/postprocessing';
-import { useSimulationStore } from '../../shared/utils/store';
-import themes from '../../shared/themes/color_palettes.json';
-import { SolarSystem } from '../../features/lighting/ui/SolarSystem';
-import { RainField, RainMist } from '../../features/weather/ui/WeatherEffects';
+import React, { useMemo } from "react";
+import { Environment, Lightformer, ContactShadows } from "@react-three/drei";
+import { Bloom, Noise, Vignette, N8AO } from "@react-three/postprocessing";
+import { useSimulationStore } from "../../shared/utils/store";
+import themes from "../../features/ui/themes/palettes/color_palettes.json";
+import { SolarSystem } from "../../features/lighting/ui/SolarSystem";
+import { RainField, RainMist } from "../../features/weather/ui/WeatherEffects";
 
 export const LegacyLightingSystem = () => {
   const showWeather = useSimulationStore((state) => state.showWeather);
   const themeName = useSimulationStore((state) => state.themeName);
   const currentTheme = useMemo(() => (themes as any)[themeName], [themeName]);
-  const isDark = currentTheme?.mode === 'dark';
+  const isDark = currentTheme?.mode === "dark";
 
   return (
     <>
-      <color attach="background" args={[isDark ? '#0d1117' : '#cbd5e1']} />
+      <color attach="background" args={[isDark ? "#0d1117" : "#cbd5e1"]} />
       <fog
         attach="fog"
         args={[
-          isDark ? '#0d1117' : '#cbd5e1',
+          isDark ? "#0d1117" : "#cbd5e1",
           showWeather ? 100 : 500,
-          showWeather ? 1000 : 4000
+          showWeather ? 1000 : 4000,
         ]}
       />
 
       <SolarSystem />
 
       <Environment
-        preset={isDark ? 'night' : 'city'}
+        preset={isDark ? "night" : "city"}
         background={false}
-        environmentIntensity={
-          showWeather ? 0.45 : isDark ? 0.35 : 0.45
-        }
+        environmentIntensity={showWeather ? 0.45 : isDark ? 0.35 : 0.45}
       >
         {isDark && (
           <group>
@@ -67,14 +65,14 @@ export const LegacyLightingSystem = () => {
         blur={2.2}
         far={70}
         resolution={2048}
-        color={isDark ? '#0d1a1f' : '#1a242a'}
+        color={isDark ? "#0d1a1f" : "#1a242a"}
         frames={1}
       />
 
       <N8AO
         aoRadius={8}
         intensity={3.0}
-        color={isDark ? '#05080a' : '#0d1316'}
+        color={isDark ? "#05080a" : "#0d1316"}
         quality="high"
       />
 

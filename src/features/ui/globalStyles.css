@@ -1,0 +1,261 @@
+:root {
+  /* Forces 1rem to always be exactly 20px, ignoring Windows scaling */
+  /* Automatically matches browser base size (usually 16px)
+       but clamps it so Windows scaling can't push it past 20px. */
+  font-size: clamp(14px, 0.6rem, 10px);
+
+  /*
+  INDEX
+  - Main toolbar source of truth
+    - shell geometry
+      - padding
+      - gap
+      - radius
+      - background
+      - border
+      - shadow
+      - backdrop
+    - button geometry
+      - padding
+      - radius
+      - icon size
+      - stroke width
+      - shadow
+      - active scale
+      - idle opacity
+    - separator geometry
+      - width
+      - height
+      - opacity
+    - resource badge geometry
+      - gap
+      - padding
+      - icon size
+      - text size
+      - icon stroke width
+    - money indicator geometry
+      - padding
+      - gap
+      - icon size
+      - radius
+    - menu geometry
+      - padding
+      - min width
+      - radius
+      - z-index
+      - position offset
+      - header spacing
+      - row spacing
+      - row radius
+      - row typography
+      - row icon sizing
+      - check icon sizing
+    - shared UI color slots
+      - surface
+      - surface muted
+      - border
+      - border strong
+      - text
+      - text muted
+      - accent
+      - accent soft
+      - accent border
+  */
+
+  /* Fluid Scaling Units */
+  --fluid-space-xs: clamp(0.065rem, 1%, 0.095rem);
+  --fluid-space-sm: clamp(0.125rem, 1.5%, 0.185rem);
+  --fluid-space-md: clamp(0.25rem, 2%, 0.375rem);
+  --fluid-space-lg: clamp(0.375rem, 3%, 0.565rem);
+  --fluid-space-xl: clamp(0.5rem, 5%, 0.85rem);
+
+  --fluid-radius: clamp(0.065rem, 2%, 0.085rem);
+  --fluid-radius-lg: clamp(0.125rem, 4%, 0.375rem);
+
+  /* Text Clamps for High-Res Consistency */
+  --text-xs: clamp(0.4rem, 0.8%, 0.5rem);
+  --text-sm: clamp(0.5rem, 1%, 0.6rem);
+  --text-md: clamp(0.6rem, 1.2%, 0.7rem);
+  --text-base: clamp(0.6rem, 1.2%, 0.8rem);
+  --text-lg: clamp(0.7rem, 1.5%, 0.9rem);
+  --text-xl: clamp(0.8rem, 2%, 1rem);
+  --text-2xl: clamp(0.9rem, 3%, 1.1rem);
+
+  /* Text hugging: prevent line-height from bloating the box */
+  line-height: 1.1;
+
+  /* Main toolbar source of truth */
+  --ui-main-toolbar-shell-padding: 0.75rem;
+  --ui-main-toolbar-shell-gap: 0.375rem;
+  --ui-main-toolbar-shell-radius: 1.5rem;
+  --ui-main-toolbar-shell-background: #ffffff;
+  --ui-main-toolbar-shell-border: 1px solid rgba(0, 0, 0, 0.1);
+  --ui-main-toolbar-shell-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  --ui-main-toolbar-shell-backdrop: blur(16px);
+
+  --ui-main-toolbar-button-padding-x: 0.44rem;
+  --ui-main-toolbar-button-padding-y: 0.44rem;
+  --ui-main-toolbar-button-radius: 1.5rem;
+  --ui-main-toolbar-button-icon-size: 28px;
+  --ui-main-toolbar-button-stroke-width: 1.5;
+  --ui-main-toolbar-button-shadow: 0 0 15px var(--primary);
+  --ui-main-toolbar-button-glow: 0 0 15px var(--primary);
+  --ui-main-toolbar-button-active-scale: 1.1;
+  --ui-main-toolbar-button-idle-opacity: 1;
+
+  --ui-main-toolbar-separator-width: 1px;
+  --ui-main-toolbar-separator-height: 27.2px;
+  --ui-main-toolbar-separator-opacity: 0.2;
+
+  --ui-main-toolbar-resource-gap: 0.2125rem;
+  --ui-main-toolbar-resource-padding-x: 0.4675rem;
+  --ui-main-toolbar-resource-padding-y: 0.187rem;
+  --ui-main-toolbar-resource-icon-size: 20px;
+  --ui-main-toolbar-resource-text-size: 0.875rem;
+  --ui-main-toolbar-resource-icon-stroke-width: 1.25;
+
+  --ui-main-toolbar-money-padding-x: 0.765rem;
+  --ui-main-toolbar-money-padding-y: 0.3825rem;
+  --ui-main-toolbar-money-gap: 0.3825rem;
+  --ui-main-toolbar-money-icon-size: 18px;
+  --ui-main-toolbar-money-radius: 9999px;
+
+  --ui-main-toolbar-menu-padding: 0.31875rem;
+  --ui-main-toolbar-menu-min-width: 180px;
+  --ui-main-toolbar-menu-radius: 1.5rem;
+  --ui-main-toolbar-menu-z-index: 100;
+  --ui-main-toolbar-menu-position-offset: top-full mt-2 left-0;
+  --ui-main-toolbar-menu-header-padding-x: 0.5rem;
+  --ui-main-toolbar-menu-header-padding-y: 0.31875rem;
+  --ui-main-toolbar-menu-header-margin-bottom: 0.25rem;
+  --ui-main-toolbar-menu-header-text-size: 8px;
+  --ui-main-toolbar-menu-header-font-weight: 400;
+  --ui-main-toolbar-menu-header-tracking: widest;
+  --ui-main-toolbar-menu-row-padding-x: 0.6375rem;
+  --ui-main-toolbar-menu-row-padding-y: 0.31875rem;
+  --ui-main-toolbar-menu-row-gap: 1rem;
+  --ui-main-toolbar-menu-row-radius: 0.5rem;
+  --ui-main-toolbar-menu-row-text-size: 0.75rem;
+  --ui-main-toolbar-menu-row-font-weight: 400;
+  --ui-main-toolbar-menu-row-icon-size: 12px;
+  --ui-main-toolbar-menu-row-icon-stroke-width: 1.5;
+  --ui-main-toolbar-menu-check-icon-size: 12px;
+
+  /* V2 build toolbar defaults */
+  --ui-build-toolbar-v2-shell-padding: 0.75rem;
+  --ui-build-toolbar-v2-shell-gap: 0.375rem;
+  --ui-build-toolbar-v2-shell-radius: 1.5rem;
+  --ui-build-toolbar-v2-shell-background: #ffffff;
+  --ui-build-toolbar-v2-shell-border: 1px solid rgba(0, 0, 0, 0.1);
+  --ui-build-toolbar-v2-shell-shadow: 0 16px 40px rgba(0, 0, 0, 0.16);
+  --ui-build-toolbar-v2-shell-backdrop: blur(14px);
+
+  --ui-build-toolbar-v2-row-gap: 0.375rem;
+  --ui-build-toolbar-v2-row-padding-x: 0.75rem;
+  --ui-build-toolbar-v2-row-padding-y: 0.5rem;
+
+  --ui-build-toolbar-v2-button-padding-x: 0.75rem;
+  --ui-build-toolbar-v2-button-padding-y: 0.5rem;
+  --ui-build-toolbar-v2-button-radius: 1rem;
+  --ui-build-toolbar-v2-button-icon-size: 26px;
+  --ui-build-toolbar-v2-button-stroke-width: 1.5;
+  --ui-build-toolbar-v2-button-shadow: var(--ui-main-toolbar-button-shadow);
+  --ui-build-toolbar-v2-button-glow: var(--ui-main-toolbar-button-glow);
+  --ui-build-toolbar-v2-button-active-background: var(--primary);
+  --ui-build-toolbar-v2-button-active-foreground: var(--background);
+  --ui-build-toolbar-v2-button-idle-foreground: rgba(17, 17, 17, 0.55);
+  --ui-build-toolbar-v2-button-hover-background: rgba(34, 211, 238, 0.1);
+  --ui-build-toolbar-v2-button-hover-foreground: var(--primary);
+
+  --ui-build-toolbar-v2-submenu-min-width: 14rem;
+  --ui-build-toolbar-v2-submenu-padding: 0.375rem;
+  --ui-build-toolbar-v2-submenu-radius: 1rem;
+  --ui-build-toolbar-v2-submenu-gap: 0rem;
+  --ui-build-toolbar-v2-submenu-item-gap: 0.85rem;
+  --ui-build-toolbar-v2-submenu-item-padding-x: 1rem;
+  --ui-build-toolbar-v2-submenu-item-padding-y: 0.25rem;
+
+  /* Shared UI color slots */
+  --ui-surface: #ffffff;
+  --ui-surface-muted: rgba(255, 255, 255, 0.9);
+  --ui-border: rgba(0, 0, 0, 0.1);
+  --ui-border-strong: rgba(0, 0, 0, 0.14);
+  --ui-text: #111111;
+  --ui-text-muted: rgba(17, 17, 17, 0.6);
+  --ui-accent: #22d3ee;
+  --ui-accent-soft: rgba(34, 211, 238, 0.12);
+  --ui-accent-border: rgba(34, 211, 238, 0.28);
+}
+
+/* Main toolbar mapping classes */
+.ui-main-toolbar-shell {
+  padding: var(--ui-main-toolbar-shell-padding);
+  gap: var(--ui-main-toolbar-shell-gap);
+  border-radius: var(--ui-main-toolbar-shell-radius);
+  background: var(--ui-main-toolbar-shell-background);
+  border: var(--ui-main-toolbar-shell-border);
+  box-shadow: var(--ui-main-toolbar-shell-shadow);
+  backdrop-filter: var(--ui-main-toolbar-shell-backdrop);
+}
+
+.ui-main-toolbar-button {
+  padding: var(--ui-main-toolbar-button-padding-y)
+    var(--ui-main-toolbar-button-padding-x);
+  border-radius: var(--ui-main-toolbar-button-radius);
+  box-shadow: var(--ui-main-toolbar-button-shadow);
+  transition: all 300ms ease;
+}
+
+.ui-main-toolbar-button:hover {
+  background: var(--ui-main-toolbar-button-hover-background);
+  color: var(--ui-main-toolbar-button-hover-foreground);
+}
+
+.ui-main-toolbar-button[data-active="true"] {
+  background: var(--ui-main-toolbar-button-active-background);
+  color: var(--ui-main-toolbar-button-active-foreground);
+  transform: scale(var(--ui-main-toolbar-button-active-scale));
+  box-shadow: var(--ui-main-toolbar-button-glow);
+}
+
+.ui-main-toolbar-separator {
+  width: var(--ui-main-toolbar-separator-width);
+  height: var(--ui-main-toolbar-separator-height);
+  opacity: var(--ui-main-toolbar-separator-opacity);
+}
+
+.ui-main-toolbar-resource {
+  gap: var(--ui-main-toolbar-resource-gap);
+  padding: var(--ui-main-toolbar-resource-padding-y)
+    var(--ui-main-toolbar-resource-padding-x);
+}
+
+.ui-main-toolbar-menu {
+  padding: var(--ui-main-toolbar-menu-padding);
+  min-width: var(--ui-main-toolbar-menu-min-width);
+  border-radius: var(--ui-main-toolbar-menu-radius);
+  z-index: var(--ui-main-toolbar-menu-z-index);
+  background: var(--ui-surface-muted);
+  border: 1px solid var(--ui-border);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(14px);
+}
+
+.ui-main-toolbar-menu-row {
+  padding: var(--ui-main-toolbar-menu-row-padding-y)
+    var(--ui-main-toolbar-menu-row-padding-x);
+  gap: var(--ui-main-toolbar-menu-row-gap);
+  border-radius: var(--ui-main-toolbar-menu-row-radius);
+}
+
+.ui-main-toolbar-menu-header {
+  padding: var(--ui-main-toolbar-menu-header-padding-y)
+    var(--ui-main-toolbar-menu-header-padding-x);
+  margin-bottom: var(--ui-main-toolbar-menu-header-margin-bottom);
+  font-size: var(--ui-main-toolbar-menu-header-text-size);
+  font-weight: var(--ui-main-toolbar-menu-header-font-weight);
+  letter-spacing: var(--ui-main-toolbar-menu-header-tracking);
+  text-transform: uppercase;
+}
+
+/* 4. COMPONENT CLASSES & MASKS */

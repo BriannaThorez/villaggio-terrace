@@ -16,7 +16,16 @@ import { Droplet, Map, DollarSign } from "lucide-react";
 import { SmartTooltip } from "../../../shared/components/SmartTooltip";
 import { generateSVG } from "../../../shared/utils/svgExport";
 import React, { useState, createElement } from "react";
-import themes from "../../../shared/themes/color_palettes.json";
+type PaletteSwatch = {
+  neutral_light: string;
+  neutral_dark: string;
+  primary: string;
+  secondary: string;
+  accent: string;
+};
+
+import themes from "../themes/palettes/color_palettes.json";
+const paletteEntries = themes as Record<string, PaletteSwatch>;
 
 const GUI_SPACING_SCALE = 0.85;
 const HEADER_VERTICAL_SCALE = 0.9;
@@ -35,14 +44,6 @@ const GUI_ICON_STROKE = 1.5;
 const THEME_MAIN_TOOLBAR_PADDING = "var(--theme-main-toolbar-padding)";
 const THEME_MAIN_TOOLBAR_GAP = "var(--theme-main-toolbar-gap)";
 const THEME_MAIN_TOOLBAR_RADIUS = "var(--theme-main-toolbar-radius)";
-const THEME_MAIN_TOOLBAR_SHELL_BACKGROUND =
-  "var(--theme-main-toolbar-shell-background)";
-const THEME_MAIN_TOOLBAR_SHELL_BORDER =
-  "var(--theme-main-toolbar-shell-border)";
-const THEME_MAIN_TOOLBAR_SHELL_SHADOW =
-  "var(--theme-main-toolbar-shell-shadow)";
-const THEME_MAIN_TOOLBAR_SHELL_BACKDROP =
-  "var(--theme-main-toolbar-shell-backdrop)";
 const THEME_MAIN_TOOLBAR_BUTTON_RADIUS =
   "var(--theme-main-toolbar-button-radius)";
 const THEME_MAIN_TOOLBAR_BUTTON_PADDING_X =
@@ -495,15 +496,11 @@ export const MainToolbar = () => {
   return (
     <div className="absolute top-4 left-4 z-[60]">
       <div
-        className="inline-flex items-center"
+        className="pointer-events-auto relative inline-flex items-center bg-white border border-black/10 rounded-[1.5rem] shadow-[0_16px_40px_rgba(0,0,0,0.16)] overflow-visible"
         style={{
-          padding: THEME_MAIN_TOOLBAR_PADDING,
-          gap: THEME_MAIN_TOOLBAR_GAP,
-          borderRadius: THEME_MAIN_TOOLBAR_RADIUS,
-          background: THEME_MAIN_TOOLBAR_SHELL_BACKGROUND,
-          border: THEME_MAIN_TOOLBAR_SHELL_BORDER,
-          boxShadow: THEME_MAIN_TOOLBAR_SHELL_SHADOW,
-          backdropFilter: THEME_MAIN_TOOLBAR_SHELL_BACKDROP,
+          padding: "0.75rem",
+          gap: "0.375rem",
+          backdropFilter: "blur(14px)",
         }}
       >
         {menuButton}
@@ -592,11 +589,11 @@ export const MainToolbar = () => {
                     <span className="capitalize">{name.replace("_", " ")}</span>
                     <div className="flex gap-1">
                       {[
-                        palette.neutral_light,
-                        palette.neutral_dark,
-                        palette.primary,
-                        palette.secondary,
-                        palette.accent,
+                        paletteEntries[name].neutral_light,
+                        paletteEntries[name].neutral_dark,
+                        paletteEntries[name].primary,
+                        paletteEntries[name].secondary,
+                        paletteEntries[name].accent,
                       ].map((color, i) => (
                         <div
                           key={i}
