@@ -318,17 +318,12 @@ export const MainToolbar = () => {
       {showMainMenu && (
         <div
           onMouseLeave={() => setShowMainMenu(false)}
-          className="absolute flex flex-col"
+          className="absolute flex flex-col bg-white border border-black/10 rounded-[1.5rem] shadow-[0_16px_40px_rgba(0,0,0,0.16)] backdrop-blur-2xl"
           style={{
             insetBlockStart: "var(--theme-main-toolbar-menu-position-offset)",
             insetInlineStart: 0,
-            padding: THEME_MAIN_TOOLBAR_MENU_PADDING,
-            minWidth: THEME_MAIN_TOOLBAR_MENU_MIN_WIDTH,
-            borderRadius: THEME_MAIN_TOOLBAR_MENU_RADIUS,
-            background: THEME_MAIN_TOOLBAR_MENU_BACKGROUND,
-            border: THEME_MAIN_TOOLBAR_MENU_BORDER,
-            boxShadow: THEME_MAIN_TOOLBAR_MENU_SHADOW,
-            backdropFilter: THEME_MAIN_TOOLBAR_MENU_BACKDROP,
+            padding: "0.375rem",
+            minWidth: "180px",
             zIndex: THEME_MAIN_TOOLBAR_MENU_Z_INDEX as any,
             gap: "0.25rem",
           }}
