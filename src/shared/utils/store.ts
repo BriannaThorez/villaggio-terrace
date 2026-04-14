@@ -9,6 +9,7 @@ import {
 import { validatePlacement } from "../../features/roomPlacement/constraints/placementRules";
 import { FloorBucketIndex } from "../../features/roomPlacement/constraints/spatialIndex";
 import simulationSettings from "@/src/simulationSettings.json";
+import { reconstructVacancy } from "../../features/structuralScaffold/api/emptyRoomsSpawning";
 
 const globalHash = new SpatialHash(100);
 const normalizeCircularSolarTime = (value: number) => {
@@ -952,149 +953,20 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
 
       const stateAfter = get();
       const deletedWasEmptyFloor = shapeToDelete?.type === "empty_floor";
-      if (!isMerge && !deletedWasEmptyFloor) {
+      if (!isMerge && !deletedWasEmptyFloor && shapeToDelete) {
         // --- INDUSTRY LEADING LOCALIZED VACANCY RESTORATION ---
-        const currentShapes = stateAfter.shapes;
-
-        // Expanded sweep: Focus on the floor of deletion, but check all nearby structures
-        const centerX = shapeToDelete?.position[0] ?? 0;
-        const centerY = shapeToDelete?.position[1] ?? 0;
-        const searchRadiusX = (shapeToDelete?.size[0] ?? 0) / 2 + 50; // Increased sweep to find all adjacent structure segments
-
-        const impactedStructures = currentShapes.filter(
-          (s) =>
-            s.type === "structure" &&
-            Math.abs(s.position[1] - centerY) < 1 &&
-            Math.abs(s.position[0] - centerX) <= searchRadiusX,
-        );
-        let addedEmptyFloorCell = false;
-
-        impactedStructures.forEach((str) => {
-          const strLeft = str.position[0] - str.size[0] / 2;
-          const strRight = str.position[0] + str.size[0] / 2;
-
-          // Iterate through every 10-unit cell in this structure segment
-          for (let cx = strLeft + 5; cx < strRight; cx += 10) {
-            // RELAXED CONSTRAINT: A cell is a candidate if it intersects the deleted shape's footprint
-            // OR if it is within 5 units of it (to handle floating point/alignment edge cases)
-            const cellInFootprint =
-              Math.abs(cx - centerX) <= (shapeToDelete?.size[0] ?? 0) / 2 + 5.1;
-
-            if (!cellInFootprint) continue;
-
-            const isCellOccupied = currentShapes.some(
-              (s) =>
-                s.type !== "structure" &&
-                s.type !== "empty_floor" &&
-                Math.abs(s.position[1] - str.position[1]) < 1 &&
-                s.position[0] - s.size[0] / 2 < cx + 0.1 &&
-                s.position[0] + s.size[0] / 2 > cx - 0.1,
-            );
-
-            const hasEmptyFloor = currentShapes.some(
-              (s) =>
-                s.type === "empty_floor" &&
-                Math.abs(s.position[1] - str.position[1]) < 1 &&
-                s.position[0] - s.size[0] / 2 < cx + 0.1 &&
-                s.position[0] + s.size[0] / 2 > cx - 0.1,
-            );
-
-            if (!isCellOccupied && !hasEmptyFloor) {
-              stateAfter.addShape(
-                {
-                  id: `empty_floor_${Math.random().toString(36).substring(2, 9)}`,
-                  type: "empty_floor",
-                  position: [cx, str.position[1]],
-                  size: [10, str.size[1]],
-                  vertices: [
-                    [-5, -str.size[1] / 2],
-                    [5, -str.size[1] / 2],
-                    [5, str.size[1] / 2],
-                    [-5, str.size[1] / 2],
-                  ],
-                  name: "Empty Floor",
-                },
-                true,
-                true,
-                { skipSelection: true },
-              );
-              addedEmptyFloorCell = true;
-            }
-          }
+        reconstructVacancy({
+          deletedShape: shapeToDelete,
+          currentShapes: stateAfter.shapes,
+          addShapeCallback: stateAfter.addShape
         });
-        if (!addedEmptyFloorCell) {
-          const referenceStructure = impactedStructures[0];
-          const fallbackHeight =
-            referenceStructure?.size[1] ??
-            shapeToDelete?.size[1] ??
-            GRID_SIZE_Y;
-          const fallbackY = referenceStructure?.position[1] ?? centerY;
-
-          const fallbackStrLeft = referenceStructure
-            ? referenceStructure.position[0] - referenceStructure.size[0] / 2
-            : centerX - 5;
-          const fallbackStrRight = referenceStructure
-            ? referenceStructure.position[0] + referenceStructure.size[0] / 2
-            : centerX + 5;
-
-          const baseCellCenter = fallbackStrLeft + 5;
-          const candidateIndex = Math.round((centerX - baseCellCenter) / 10);
-          const clampedCx = Math.max(
-            fallbackStrLeft + 5,
-            Math.min(
-              baseCellCenter + candidateIndex * 10,
-              fallbackStrRight - 5,
-            ),
-          );
-
-          const candidateNode: SimulationNode = {
-            id: "fallback_empty_floor",
-            type: "empty_floor",
-            position: [clampedCx, fallbackY],
-            size: [10, fallbackHeight],
-            vertices: [
-              [-5, -fallbackHeight / 2],
-              [5, -fallbackHeight / 2],
-              [5, fallbackHeight / 2],
-              [-5, fallbackHeight / 2],
-            ],
-          };
-
-          const finalShapes = get().shapes;
-          const hasRoomNow = finalShapes.some(
-            (s) =>
-              s.type !== "structure" &&
-              s.type !== "empty_floor" &&
-              overlapsAABB(s, candidateNode),
-          );
-          const alreadyEmpty = finalShapes.some(
-            (s) => s.type === "empty_floor" && overlapsAABB(s, candidateNode),
-          );
-
-          if (!hasRoomNow && !alreadyEmpty) {
-            stateAfter.addShape(
-              {
-                id: `empty_floor_${Math.random().toString(36).substring(2, 9)}`,
-                type: "empty_floor",
-                position: [clampedCx, fallbackY],
-                size: [10, fallbackHeight],
-                vertices: [
-                  [-5, -fallbackHeight / 2],
-                  [5, -fallbackHeight / 2],
-                  [5, fallbackHeight / 2],
-                  [-5, fallbackHeight / 2],
-                ],
-                name: "Empty Floor",
-              },
-              true,
-              true,
-              { skipSelection: true },
-            );
-          }
+        if (stateAfter.selectedId === id) {
+          stateAfter.setSelectedId(null);
         }
       }
     },
     addLink: (from, to, fromPort, toPort) => {
+
       pushToHistory();
       set((state) => {
         const exists = state.links.some(

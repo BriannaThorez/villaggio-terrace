@@ -2,12 +2,12 @@ import React from "react";
 import * as THREE from "three";
 import { Text } from "@react-three/drei";
 import { RoomMeshCSG } from "../../visuals/RoomMeshCSG";
-import { getResidentialMaterials } from "@/src/engine/MaterialParser";
+import { getRoomMaterialsFromMetadata } from "@/src/engine/MaterialParser";
 import { getFurnitureMaterial } from "@/src/engine/materials/FurnitureRegistry";
 import { computeSnappedWorldOffset } from "@/src/shared/utils/CoordinateEngine";
 import { PlacementHologram } from "@/src/shared/components/PlacementHologram";
 
-interface Studio1VisualsProps {
+interface ResidenceVisualsProps {
   width: number;
   height: number;
   depth: number;
@@ -16,13 +16,16 @@ interface Studio1VisualsProps {
   hasRightWall: boolean;
   placementGrid: any;
   isGridVisible: boolean;
+  wallTextureId?: string;
+  floorTextureId?: string;
+  ceilingTextureId?: string;
 }
 
 /**
- * Studio1: Standard residential unit with a bed.
- * This entity defines the visual look and interior furniture.
+ * ResidentialUnit: Generalized residential module.
+ * This entity defines the visual look and interior furniture dynamically.
  */
-export const Studio1: React.FC<Studio1VisualsProps> = ({
+export const ResidentialUnit: React.FC<ResidenceVisualsProps> = ({
   width,
   height,
   depth,
@@ -31,8 +34,15 @@ export const Studio1: React.FC<Studio1VisualsProps> = ({
   hasRightWall,
   placementGrid,
   isGridVisible,
+  wallTextureId,
+  floorTextureId,
+  ceilingTextureId,
 }) => {
-  const materials = React.useMemo(() => getResidentialMaterials(), []);
+  const materials = React.useMemo(() => getRoomMaterialsFromMetadata({
+    wallTexture: wallTextureId,
+    floorTexture: floorTextureId,
+    ceilingTexture: ceilingTextureId,
+  }), [wallTextureId, floorTextureId, ceilingTextureId]);
 
   return (
     <group>

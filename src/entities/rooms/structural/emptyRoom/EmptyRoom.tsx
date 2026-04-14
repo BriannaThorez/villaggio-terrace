@@ -1,9 +1,6 @@
 import React, { useMemo } from "react";
 import * as THREE from "three";
-import {
-  parseMaterial,
-  getEmptyRoomMaterials,
-} from "@/src/engine/MaterialParser";
+import { parseRoomMaterial } from "@/src/engine/MaterialParser";
 import { RoomMeshCSG } from "../../visuals/RoomMeshCSG";
 import { generateWindowCutouts } from "../../visuals/WindowGenerator";
 
@@ -32,20 +29,48 @@ export const EmptyRoom: React.FC<EmptyRoomVisualsProps> = ({
   const openingHeight = 25.0;
   const verticalCenteringOffset = 0.275;
 
-  const { frameMaterial, glassMaterial, wallMaterial } = useMemo(() => {
-    return getEmptyRoomMaterials();
-  }, []);
+  const { frameMaterial, glassMaterial, roomShellMaterials } = useMemo(() => {
+    const frameMaterial = parseRoomMaterial({
+      albedo: "#808080",
+      roughness: 0.3,
+      metalness: 0.8,
+      wallTexture: "concrete_wall_1",
+    });
+    const wallMaterial = parseRoomMaterial({
+      albedo: "#ffffff",
+      roughness: 1.0,
+      metalness: 0.0,
+      wallTexture: "concrete_wall_1",
+    });
+    const floorMaterial = parseRoomMaterial({
+      albedo: "#ffffff",
+      roughness: 0.9,
+      metalness: 0.0,
+      floorTexture: "concrete_wall_1",
+    });
+    const glassMaterial = new THREE.MeshPhysicalMaterial({
+      color: "#8090A0",
+      metalness: 0.9,
+      roughness: 0.05,
+      transmission: 0.95,
+      opacity: 0.2,
+      transparent: true,
+      ior: 1.5,
+      thickness: 0.1,
+      side: THREE.DoubleSide,
+    });
 
-  const roomShellMaterials = useMemo(() => {
-    return [
+    const roomShellMaterials = [
       wallMaterial,
       wallMaterial,
-      glassMaterial,
-      glassMaterial,
+      floorMaterial, // Dedicated structural floor texture
+      glassMaterial, // Glass Ceiling
       wallMaterial,
       wallMaterial,
     ];
-  }, [wallMaterial, glassMaterial]);
+
+    return { frameMaterial, glassMaterial, roomShellMaterials };
+  }, []);
 
   const windowCutouts = useMemo(() => {
     return generateWindowCutouts({

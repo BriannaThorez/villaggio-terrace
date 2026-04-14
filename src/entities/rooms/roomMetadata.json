@@ -587,7 +587,10 @@
         "form": "Studio",
         "specialization": "Residence",
         "quality": "Basic",
-        "average_rent": 180
+        "average_rent": 180,
+        "wallTexture": "beige_wall_1",
+        "floorTexture": "wood_floor_1",
+        "ceilingTexture": "beige_wall_1"
       },
       "specificDescription": "A high-efficiency basic apartment module."
     },
@@ -613,7 +616,10 @@
         "form": "Studio",
         "specialization": "Residence",
         "quality": "Deluxe",
-        "average_rent": 240
+        "average_rent": 240,
+        "wallTexture": "beige_wall_1",
+        "floorTexture": "wood_floor_1",
+        "ceilingTexture": "beige_wall_1"
       },
       "specificDescription": "A high-efficiency deluxe apartment module."
     },
@@ -643,7 +649,10 @@
         "form": "Studio",
         "specialization": "Residence",
         "quality": "Luxury",
-        "average_rent": 360
+        "average_rent": 360,
+        "wallTexture": "beige_wall_1",
+        "floorTexture": "wood_floor_1",
+        "ceilingTexture": "beige_wall_1"
       },
       "specificDescription": "A high-efficiency luxury apartment module."
     },
@@ -668,7 +677,10 @@
         "form": "One-Bedroom",
         "specialization": "Residence",
         "quality": "Basic",
-        "average_rent": 220
+        "average_rent": 220,
+        "wallTexture": "beige_wall_1",
+        "floorTexture": "wood_floor_1",
+        "ceilingTexture": "beige_wall_1"
       },
       "specificDescription": "A high-efficiency basic apartment module."
     },
@@ -695,7 +707,10 @@
         "form": "One-Bedroom",
         "specialization": "Residence",
         "quality": "Deluxe",
-        "average_rent": 320
+        "average_rent": 320,
+        "wallTexture": "beige_wall_1",
+        "floorTexture": "wood_floor_1",
+        "ceilingTexture": "beige_wall_1"
       },
       "specificDescription": "A high-efficiency deluxe apartment module."
     },
@@ -726,7 +741,10 @@
         "form": "One-Bedroom",
         "specialization": "Residence",
         "quality": "Luxury",
-        "average_rent": 410
+        "average_rent": 410,
+        "wallTexture": "beige_wall_1",
+        "floorTexture": "wood_floor_1",
+        "ceilingTexture": "beige_wall_1"
       },
       "specificDescription": "A high-efficiency luxury apartment module."
     },
@@ -756,7 +774,10 @@
         "form": "Two-Bedroom",
         "specialization": "Residence",
         "quality": "Basic",
-        "average_rent": 490
+        "average_rent": 490,
+        "wallTexture": "beige_wall_1",
+        "floorTexture": "wood_floor_1",
+        "ceilingTexture": "beige_wall_1"
       },
       "specificDescription": "A high-efficiency basic apartment module."
     },
@@ -789,7 +810,10 @@
         "form": "Two-Bedroom",
         "specialization": "Residence",
         "quality": "Luxury",
-        "average_rent": 580
+        "average_rent": 580,
+        "wallTexture": "beige_wall_1",
+        "floorTexture": "wood_floor_1",
+        "ceilingTexture": "beige_wall_1"
       },
       "specificDescription": "A high-efficiency luxury apartment module."
     },
@@ -820,7 +844,10 @@
         "form": "Two-Bedroom",
         "specialization": "Residence",
         "quality": "Basic",
-        "average_rent": 935
+        "average_rent": 935,
+        "wallTexture": "beige_wall_1",
+        "floorTexture": "wood_floor_1",
+        "ceilingTexture": "beige_wall_1"
       },
       "specificDescription": "A high-efficiency large apartment module."
     },
@@ -855,7 +882,10 @@
         "form": "Duplex",
         "specialization": "Residence",
         "quality": "Luxury",
-        "average_rent": 1045
+        "average_rent": 1045,
+        "wallTexture": "beige_wall_1",
+        "floorTexture": "wood_floor_1",
+        "ceilingTexture": "beige_wall_1"
       },
       "specificDescription": "A high-efficiency fancy apartment module."
     },
@@ -894,7 +924,10 @@
         "form": "Duplex",
         "specialization": "Residence",
         "quality": "Luxury",
-        "average_rent": 1130
+        "average_rent": 1130,
+        "wallTexture": "beige_wall_1",
+        "floorTexture": "wood_floor_1",
+        "ceilingTexture": "beige_wall_1"
       },
       "specificDescription": "A high-efficiency large apartment module."
     },
@@ -926,7 +959,10 @@
         "form": "Loft",
         "specialization": "Residence",
         "quality": "Luxury",
-        "average_rent": 1835
+        "average_rent": 1835,
+        "wallTexture": "beige_wall_1",
+        "floorTexture": "wood_floor_1",
+        "ceilingTexture": "beige_wall_1"
       },
       "specificDescription": "A high-efficiency bi-level apartment module."
     },
@@ -959,7 +995,10 @@
         "form": "Loft",
         "specialization": "Residence",
         "quality": "Luxury",
-        "average_rent": 2035
+        "average_rent": 2035,
+        "wallTexture": "beige_wall_1",
+        "floorTexture": "wood_floor_1",
+        "ceilingTexture": "beige_wall_1"
       },
       "specificDescription": "A high-efficiency luxury apartment module."
     },
@@ -2342,5 +2381,10 @@
       },
       "specificDescription": "A high-efficiency standard wealth adviser services module."
     }
-  ]
+  ],
+  "residence": {
+    "wallTexture": "beige_wall_1",
+    "floorTexture": "wood_floor_1",
+    "ceilingTexture": "beige_wall_1"
+  }
 }

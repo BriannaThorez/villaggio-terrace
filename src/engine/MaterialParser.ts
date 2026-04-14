@@ -235,24 +235,34 @@ export const parseRoomMaterial = (
   return managed.material as THREE.MeshPhysicalMaterial;
 };
 
-export const getResidentialMaterials = (): THREE.Material[] => {
+export interface RoomSurfaceMetadata {
+  wallTexture?: string;
+  floorTexture?: string;
+  ceilingTexture?: string;
+}
+
+export const getRoomMaterialsFromMetadata = (metadata?: RoomSurfaceMetadata): THREE.Material[] => {
+  const wallTex = metadata?.wallTexture || "beige_wall_1";
+  const floorTex = metadata?.floorTexture || "wood_floor_1";
+  const ceilingTex = metadata?.ceilingTexture || "beige_wall_1";
+
   const wall = parseRoomMaterial({
     albedo: "#ffffff",
     roughness: 1.0,
     metalness: 0.0,
-    wallTexture: "beige_wall_1",
+    wallTexture: wallTex,
   });
   const floor = parseRoomMaterial({
     albedo: "#ffffff",
     roughness: 1.0,
     metalness: 0.0,
-    floorTexture: "wood_floor_1",
+    floorTexture: floorTex,
   });
   const ceiling = parseRoomMaterial({
     albedo: "#ffffff",
     roughness: 1.0,
     metalness: 0.0,
-    ceilingTexture: "beige_wall_1",
+    ceilingTexture: ceilingTex,
   });
   return [wall, wall, floor, ceiling, wall, wall];
 };
@@ -353,6 +363,12 @@ export const getEmptyRoomMaterials = () => {
     metalness: 0.0,
     wallTexture: "concrete_wall_1",
   });
+  const floorMaterial = parseRoomMaterial({
+    albedo: "#ffffff",
+    roughness: 0.9,
+    metalness: 0.0,
+    floorTexture: "concrete_wall_1",
+  });
   const glassMaterial = new THREE.MeshPhysicalMaterial({
     color: "#8090A0",
     metalness: 0.9,
@@ -364,7 +380,7 @@ export const getEmptyRoomMaterials = () => {
     thickness: 0.1,
     side: THREE.DoubleSide,
   });
-  return { frameMaterial, glassMaterial, wallMaterial };
+  return { frameMaterial, glassMaterial, wallMaterial, floorMaterial };
 };
 
 export const getStructuralShellMaterials = () => {

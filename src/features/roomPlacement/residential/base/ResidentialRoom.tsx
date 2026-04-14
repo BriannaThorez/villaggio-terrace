@@ -16,7 +16,7 @@ import {
   STRUCTURE_FLOOR_THICKNESS,
   STRUCTURE_CEILING_THICKNESS,
 } from "@/src/entities/rooms/constants/structuralConstants";
-import { Studio1 } from "@/src/entities/rooms";
+import { ResidentialUnit, roomMetadata } from "@/src/entities/rooms";
 
 interface ResidentialRoomProps {
   position: [number, number, number];
@@ -97,6 +97,18 @@ export const ResidentialRoom: React.FC<ResidentialRoomProps> = ({
     "tenth",
   );
 
+  const textureMeta = useMemo(() => {
+    // Attempt to parse metadata for dynamic textures
+    const parsedMeta = (roomMetadata as any).rooms?.find((r: any) => r.id === roomType)?.metadata;
+    // Fallback if none exist, grab generic residence
+    const generic = (roomMetadata as any).residence || {};
+    return {
+      wallTextureId: parsedMeta?.wallTexture || generic.wallTexture || "beige_wall_1",
+      floorTextureId: parsedMeta?.floorTexture || generic.floorTexture || "wood_floor_1",
+      ceilingTextureId: parsedMeta?.ceilingTexture || generic.ceilingTexture || "beige_wall_1",
+    };
+  }, [roomType]);
+
   return (
     <group
       position={roomPosition}
@@ -104,8 +116,8 @@ export const ResidentialRoom: React.FC<ResidentialRoomProps> = ({
       onPointerDown={onPointerDown}
       onDoubleClick={onDoubleClick}
     >
-      {/* Delegate to Modular Studio1 Entity */}
-      <Studio1
+      {/* Delegate to Modular Residential Entity */}
+      <ResidentialUnit
         width={insetWidth}
         height={insetHeight}
         depth={insetDepth}
@@ -114,6 +126,9 @@ export const ResidentialRoom: React.FC<ResidentialRoomProps> = ({
         hasRightWall={hasRightWall}
         placementGrid={placementGrid}
         isGridVisible={isGridVisible}
+        wallTextureId={textureMeta.wallTextureId}
+        floorTextureId={textureMeta.floorTextureId}
+        ceilingTextureId={textureMeta.ceilingTextureId}
       />
 
       {structuralRoom && (
