@@ -207,7 +207,7 @@ export class WorkerPoolCoordinator {
   private readonly pending = new Map<string, PendingTaskRecord>();
   private readonly staleResults = new Set<string>();
   private readonly queue: Array<PendingTaskRecord> = [];
-  private readonly workerFactory: () => Worker;
+  private readonly workerFactory: (role: WorkerRole) => Worker;
   private readonly maxQueueSize: number;
   private readonly staleWindowMs: number;
   private dispatchScheduled = false;
@@ -496,17 +496,20 @@ export class WorkerPoolCoordinator {
       } finally {
         const duration = performance.now() - startMs;
         if (duration >= WORKER_PROFILER_THRESHOLD_MS) {
-          const envelope = event.data as WorkerEnvelope | undefined;
+          const envelope = event.data as any;
           const kindName = envelope?.kind ?? "unknown";
-          const requestId =
-            (envelope as WorkerResultEnvelope | undefined)?.result?.requestId ??
-            (envelope as WorkerTaskErrorEnvelope | undefined)?.error?.requestId ??
-            undefined;
-          const taskType =
-            (envelope as WorkerResultEnvelope | undefined)?.result?.taskType ??
-            (envelope as WorkerTaskRequestEnvelope | undefined)?.type ??
-            (envelope as WorkerRequestEnvelope | undefined)?.type ??
-            undefined;
+          
+          let requestId = envelope?.requestId;
+          let taskType = envelope?.type;
+
+          if (envelope?.kind === WORKER_MESSAGE_KIND.Error) {
+            requestId = envelope.error?.requestId ?? requestId;
+            taskType = envelope.error?.taskType ?? taskType;
+          } else if (envelope?.kind === WORKER_MESSAGE_KIND.Result) {
+            requestId = envelope.result?.requestId ?? requestId;
+            taskType = envelope.result?.taskType ?? taskType;
+          }
+
           console.warn(
             `[WorkerProfiler] ${kindName} handler took ${duration.toFixed(
               1,

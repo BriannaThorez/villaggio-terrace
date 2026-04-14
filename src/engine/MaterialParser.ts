@@ -14,6 +14,12 @@ import {
 } from "../features/materialsEngine/presets/paintedPlaster";
 import { getTextureBundle } from "../features/materialsEngine/presets/materials";
 
+type RoomSurfaceTextureKey = "wallTexture" | "floorTexture" | "ceilingTexture";
+
+type RoomSurfaceTextureMap = Partial<Record<RoomSurfaceTextureKey, string>>;
+
+type RoomMaterialConfig = MaterialConfig & RoomSurfaceTextureMap;
+
 const drywallTextureCache = createTextureCache<DrywallTextureBundle>();
 const managedMaterialCache = createTextureCache<ManagedMaterialHandle>();
 const roomMaterialCache = createTextureCache<ManagedMaterialHandle>();
@@ -50,13 +56,76 @@ const getDrywallTextureSet = () => {
 const getManagedMaterialKey = (config: MaterialConfig) =>
   ["material", config.albedo, config.roughness, config.metalness].join(":");
 
-const getRoomMaterialKey = (config: MaterialConfig) =>
-  ["room-material", config.albedo, config.roughness, config.metalness].join(
-    ":",
-  );
+const getRoomMaterialKey = (config: RoomMaterialConfig) =>
+  [
+    "room-material",
+    config.albedo,
+    config.roughness,
+    config.metalness,
+    config.wallTexture ?? "",
+    config.floorTexture ?? "",
+    config.ceilingTexture ?? "",
+  ].join(":");
 
 const getAssetMaterialKey = (assetName: string, tintHex: string) =>
   ["asset-material", assetName, tintHex].join(":");
+
+const normalizeTextureName = (textureName: string): string => {
+  if (textureName === "painted_plaster_wall") {
+    return "beige_wall_1";
+  }
+  return textureName;
+};
+
+const getSurfaceTextureName = (
+  config: RoomMaterialConfig,
+): string | undefined =>
+  config.wallTexture ?? config.floorTexture ?? config.ceilingTexture;
+
+const createRoomSurfaceMaterial = (
+  textureName: string,
+  tintHex: string,
+  fallbackTextureName: string,
+) => {
+  const bundle = getTextureBundle(
+    normalizeTextureName(textureName ?? fallbackTextureName),
+  );
+
+  const material = new THREE.MeshPhysicalMaterial({
+    map: bundle.albedoMap,
+    color: "#ffffff",
+    aoMap: bundle.aoMap,
+    roughnessMap: bundle.roughnessMap,
+    metalnessMap: bundle.metalnessMap,
+    normalMap: bundle.normalMap,
+    displacementMap: bundle.displacementMap,
+    displacementScale: 0.01,
+    displacementBias: -0.005,
+    side: THREE.FrontSide,
+    shadowSide: THREE.BackSide,
+    roughness: 0.95,
+    metalness: 0.0,
+    envMapIntensity: 0.2,
+  });
+
+  applyTriplanarProjection(material, {
+    scale: 0.05,
+    detailScale: 5,
+    detailIntensity: 0.3,
+  });
+
+  material.aoMapIntensity = 1.8;
+  material.needsUpdate = true;
+
+  const managed = createManagedMaterial(material, [
+    bundle.albedoMap,
+    bundle.aoMap,
+    bundle.normalMap,
+    bundle.roughnessMap,
+  ]);
+
+  return managed.material as THREE.MeshPhysicalMaterial;
+};
 
 export const parseMaterial = (
   config: MaterialConfig,
@@ -67,9 +136,8 @@ export const parseMaterial = (
     return existing.material as THREE.MeshPhysicalMaterial;
   }
 
-  const color = new THREE.Color(config.albedo);
   const material = new THREE.MeshPhysicalMaterial({
-    color,
+    color: config.albedo,
     clearcoat: 0.3,
     clearcoatRoughness: 0.2,
     envMapIntensity: 0.45,
@@ -95,8 +163,13 @@ export const parseMaterial = (
   return managed.material as THREE.MeshPhysicalMaterial;
 };
 
+/**
+ * ARCHITECTURAL PIPELINE (Fancy):
+ * Used for structural components (walls, lobby shells).
+ * Applies displacement and high-intensity AO for realistic architectural depth.
+ */
 export const parseRoomMaterial = (
-  config: MaterialConfig,
+  config: RoomMaterialConfig,
 ): THREE.MeshPhysicalMaterial => {
   const cacheKey = getRoomMaterialKey(config);
   const existing = roomMaterialCache.get(cacheKey);
@@ -105,124 +178,209 @@ export const parseRoomMaterial = (
   }
 
   const textureBundle = getPaintedPlasterBundle();
-  const baseColor = new THREE.Color(config.albedo);
 
-  const material = new THREE.MeshPhysicalMaterial({
-    color: baseColor,
-    map: textureBundle.albedoMap,
-    aoMap: textureBundle.aoMap,
-    roughnessMap: textureBundle.roughnessMap,
-    metalnessMap: textureBundle.metalnessMap,
-    clearcoat: 0.25,
-    clearcoatRoughness: 0.3,
-    envMapIntensity: 0.55,
-    roughness: 0.84,
-    metalness: 0.0,
-    side: THREE.FrontSide,
-  });
+  const material = config.floorTexture
+    ? createRoomSurfaceMaterial(
+      config.floorTexture,
+      config.albedo,
+      "wood_floor_1",
+    )
+    : config.wallTexture || config.ceilingTexture
+      ? createRoomSurfaceMaterial(
+        config.wallTexture ?? config.ceilingTexture ?? "beige_wall_1",
+        config.albedo,
+        "beige_wall_1",
+      )
+      : new THREE.MeshPhysicalMaterial({
+        map: textureBundle.albedoMap,
+        color: "#ffffff",
+        aoMap: textureBundle.aoMap,
+        roughnessMap: textureBundle.roughnessMap,
+        metalnessMap: textureBundle.metalnessMap,
+        clearcoat: 0.25,
+        clearcoatRoughness: 0.4,
+        envMapIntensity: 0.1,
+        roughness: 0.98,
+        metalness: 0.0,
+        side: THREE.FrontSide,
+      });
 
-  material.aoMapIntensity = 1.0;
-  material.normalMap = textureBundle.normalMap;
-  material.normalScale = new THREE.Vector2(0.85, 0.85);
-  material.displacementMap = textureBundle.displacementMap;
-  material.displacementScale = 0.015;
-  material.displacementBias = -0.005;
+  if (!config.floorTexture && !config.wallTexture && !config.ceilingTexture) {
+    material.aoMapIntensity = 1.6;
+    material.normalMap = textureBundle.normalMap;
+    material.normalScale = new THREE.Vector2(0.85, 0.85);
+    material.displacementMap = textureBundle.displacementMap;
+    material.displacementScale = 0.015;
+    material.displacementBias = -0.005;
 
-  applyTriplanarProjection(material, {
-    scale: 0.058,
-    detailScale: 6,
-    detailIntensity: 0.42,
-  });
+    applyTriplanarProjection(material, {
+      scale: 0.058,
+      detailScale: 6,
+      detailIntensity: 0.42,
+    });
+  }
 
   material.needsUpdate = true;
 
   const managed = createManagedMaterial(material, [
-    textureBundle.albedoMap,
-    textureBundle.aoMap,
-    textureBundle.roughnessMap,
-    textureBundle.metalnessMap,
-    textureBundle.normalMap,
-    textureBundle.displacementMap,
+    material.map,
+    material.aoMap,
+    material.roughnessMap,
+    material.metalnessMap,
+    material.normalMap,
+    material.displacementMap,
   ]);
 
   roomMaterialCache.set(cacheKey, managed);
   return managed.material as THREE.MeshPhysicalMaterial;
 };
 
-export const parseAssetMaterial = (
-  assetName: string,
-  tintHex: string = "#ffffff",
-): THREE.MeshPhysicalMaterial => {
-  const cacheKey = getAssetMaterialKey(assetName, tintHex);
-  const existing = roomMaterialCache.get(cacheKey);
-  if (existing) return existing.material as THREE.MeshPhysicalMaterial;
-
-  const bundle = getTextureBundle(assetName);
-  const material = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(tintHex),
-    map: bundle.albedoMap,
-    aoMap: bundle.aoMap,
-    roughnessMap: bundle.roughnessMap,
-    metalnessMap: bundle.metalnessMap,
-    normalMap: bundle.normalMap,
-    displacementMap: bundle.displacementMap,
-    displacementScale: 0.01,
-    displacementBias: -0.005,
-    side: THREE.FrontSide,
-    shadowSide: THREE.BackSide,
-    roughness: 1.0,
-    metalness: 0.0,
-    envMapIntensity: 0.5,
-  });
-
-  applyTriplanarProjection(material, {
-    scale: 0.05,
-    detailScale: 5,
-    detailIntensity: 0.3,
-  });
-
-  material.needsUpdate = true;
-  const managed = createManagedMaterial(material, [
-    bundle.albedoMap,
-    bundle.aoMap,
-    bundle.normalMap,
-    bundle.roughnessMap,
-  ]);
-  roomMaterialCache.set(cacheKey, managed);
-  return material;
-};
-
-export const getResidentialMaterials = (wallTint: string): THREE.Material[] => {
-  const floor = parseAssetMaterial("wood_floor_1", "#ffffff");
-  const ceiling = parseAssetMaterial("beige_wall_1", "#ffffff");
-  const wall = parseAssetMaterial("beige_wall_1", wallTint);
-  return [wall, wall, ceiling, floor, wall, wall];
-};
-
-export const getEmptyFloorMaterials = (wallTint: string): THREE.Material[] => {
-  const floor = parseAssetMaterial("concrete_floor_1", "#ffffff");
-  const ceiling = parseAssetMaterial("concrete_wall_1", "#ffffff");
-  const wall = parseAssetMaterial("concrete_wall_1", wallTint);
-  return [wall, wall, ceiling, floor, wall, wall];
-};
-
-export const getLobbyMaterials = (wallTint: string): THREE.Material[] => {
-  const floor = parseAssetMaterial("grey_cartago_tiles", "#ffffff");
+export const getResidentialMaterials = (): THREE.Material[] => {
   const wall = parseRoomMaterial({
     albedo: "#ffffff",
-    roughness: 0.9,
+    roughness: 1.0,
     metalness: 0.0,
-  }); // Uses Painted Plaster by default
-  const ceiling = parseAssetMaterial("concrete_wall_1", "#ffffff");
-
-  // Custom wall tint for the lobby
-  const tintedWall = parseRoomMaterial({
-    albedo: wallTint,
-    roughness: 0.9,
-    metalness: 0.0,
+    wallTexture: "beige_wall_1",
   });
+  const floor = parseRoomMaterial({
+    albedo: "#ffffff",
+    roughness: 1.0,
+    metalness: 0.0,
+    floorTexture: "wood_floor_1",
+  });
+  const ceiling = parseRoomMaterial({
+    albedo: "#ffffff",
+    roughness: 1.0,
+    metalness: 0.0,
+    ceilingTexture: "beige_wall_1",
+  });
+  return [wall, wall, floor, ceiling, wall, wall];
+};
 
-  return [tintedWall, tintedWall, ceiling, floor, tintedWall, tintedWall];
+export const getEmptyFloorMaterials = (): THREE.Material[] => {
+  const wall = parseRoomMaterial({
+    albedo: "#ffffff",
+    roughness: 1.0,
+    metalness: 0.0,
+    wallTexture: "concrete_wall_1",
+  });
+  const floor = parseRoomMaterial({
+    albedo: "#ffffff",
+    roughness: 1.0,
+    metalness: 0.0,
+    floorTexture: "concrete_floor_1",
+  });
+  const ceiling = parseRoomMaterial({
+    albedo: "#ffffff",
+    roughness: 1.0,
+    metalness: 0.0,
+    ceilingTexture: "concrete_wall_1",
+  });
+  return [wall, wall, floor, ceiling, wall, wall];
+};
+
+export const getLobbyMaterials = (): THREE.Material[] => {
+  const wall = parseRoomMaterial({
+    albedo: "#ffffff",
+    roughness: 1.0,
+    metalness: 0.0,
+    wallTexture: "beige_wall_1",
+  });
+  const floor = parseRoomMaterial({
+    albedo: "#ffffff",
+    roughness: 1.0,
+    metalness: 0.0,
+    floorTexture: "grey_cartago_tiles",
+  });
+  const ceiling = parseRoomMaterial({
+    albedo: "#ffffff",
+    roughness: 1.0,
+    metalness: 0.0,
+    ceilingTexture: "concrete_wall_1",
+  });
+  return [wall, wall, floor, ceiling, wall, wall];
+};
+
+export const getStructuralConcreteMaterials = () => {
+  const wall = parseRoomMaterial({
+    albedo: "#ffffff",
+    roughness: 1.0,
+    metalness: 0.0,
+    wallTexture: "concrete_wall_1",
+  });
+  const floor = parseRoomMaterial({
+    albedo: "#ffffff",
+    roughness: 1.0,
+    metalness: 0.0,
+    floorTexture: "concrete_floor_1",
+  });
+  const ceiling = parseRoomMaterial({
+    albedo: "#ffffff",
+    roughness: 1.0,
+    metalness: 0.0,
+    ceilingTexture: "concrete_wall_1",
+  });
+  const frameMaterial = parseRoomMaterial({
+    albedo: "#808080",
+    roughness: 0.3,
+    metalness: 0.8,
+    wallTexture: "concrete_wall_1",
+  });
+  const glassMaterial = new THREE.MeshPhysicalMaterial({
+    color: "#8090A0",
+    metalness: 0.9,
+    roughness: 0.05,
+    transmission: 0.95,
+    opacity: 0.2,
+    transparent: true,
+    ior: 1.5,
+    thickness: 0.1,
+    side: THREE.DoubleSide,
+  });
+  return { frameMaterial, glassMaterial, ceiling, floor, wall };
+};
+
+export const getEmptyRoomMaterials = () => {
+  const frameMaterial = parseRoomMaterial({
+    albedo: "#808080",
+    roughness: 0.3,
+    metalness: 0.8,
+    wallTexture: "concrete_wall_1",
+  });
+  const wallMaterial = parseRoomMaterial({
+    albedo: "#ffffff",
+    roughness: 1.0,
+    metalness: 0.0,
+    wallTexture: "concrete_wall_1",
+  });
+  const glassMaterial = new THREE.MeshPhysicalMaterial({
+    color: "#8090A0",
+    metalness: 0.9,
+    roughness: 0.05,
+    transmission: 0.95,
+    opacity: 0.2,
+    transparent: true,
+    ior: 1.5,
+    thickness: 0.1,
+    side: THREE.DoubleSide,
+  });
+  return { frameMaterial, glassMaterial, wallMaterial };
+};
+
+export const getStructuralShellMaterials = () => {
+  const wallMaterial = parseRoomMaterial({
+    albedo: "#ffffff",
+    roughness: 1.0,
+    metalness: 0.0,
+    wallTexture: "concrete_wall_1",
+  });
+  const floorMaterial = parseRoomMaterial({
+    albedo: "#ffffff",
+    roughness: 1.0,
+    metalness: 0.0,
+    floorTexture: "concrete_floor_1",
+  });
+  return { wallMaterial, floorMaterial };
 };
 
 export const disposeParsedMaterial = (
@@ -272,7 +430,7 @@ export const releaseParsedMaterial = (config: MaterialConfig): void => {
   managedMaterialCache.delete(cacheKey);
 };
 
-export const releaseParsedRoomMaterial = (config: MaterialConfig): void => {
+export const releaseParsedRoomMaterial = (config: RoomMaterialConfig): void => {
   const cacheKey = getRoomMaterialKey(config);
   const handle = roomMaterialCache.get(cacheKey);
   handle?.dispose();

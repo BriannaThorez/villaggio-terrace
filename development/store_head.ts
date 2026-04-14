@@ -1,21 +1,12 @@
-import { create } from "zustand";
+﻿import { create } from "zustand";
 import { SpatialHash } from "./SpatialHash";
 import { getWorkerPool } from "../../worker/client";
-import {
-  SIMULATION_TASK_TYPE,
-  type CheckPlacementPayload,
-  type CheckPlacementResult,
-} from "../worker/protocol";
+import { SIMULATION_TASK_TYPE, type CheckPlacementPayload, type CheckPlacementResult } from "../worker/protocol";
 import { validatePlacement } from "../../features/roomPlacement/constraints/placementRules";
 import { FloorBucketIndex } from "../../features/roomPlacement/constraints/spatialIndex";
 import simulationSettings from "@/src/simulationSettings.json";
 
 const globalHash = new SpatialHash(100);
-const normalizeCircularSolarTime = (value: number) => {
-  if (!Number.isFinite(value)) return 0;
-  const wrapped = value % 1;
-  return wrapped < 0 ? wrapped + 1 : wrapped;
-};
 
 /**
  * Simulation building blocks.
@@ -65,7 +56,10 @@ export const snapX = (x: number, width: number) => {
 };
 
 export const getFloorIndex = (y: number) =>
-  Math.max(0, Math.ceil((y - FLOOR_Y_EPSILON) / GRID_SIZE_Y) - 1);
+  Math.max(
+    0,
+    Math.ceil((y - FLOOR_Y_EPSILON) / GRID_SIZE_Y) - 1,
+  );
 
 export const getFloorBaseY = (y: number) => getFloorIndex(y) * GRID_SIZE_Y;
 
@@ -131,7 +125,7 @@ export interface SimulationNode {
   rotation?: number; // in radians
   structuralMetadata?: {
     adjacencies: string[]; // IDs of touching units
-    wallMask: number; // Bitmask for left/right/top/bottom wall presence
+    wallMask: number;      // Bitmask for left/right/top/bottom wall presence
   };
 }
 
@@ -205,13 +199,6 @@ export interface SimulationState {
     ignoreId?: string,
     isForce?: boolean,
   ) => boolean;
-  checkPlacementAuthoritative: (
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    ignoreId?: string,
-  ) => Promise<boolean>;
   setLinkingFrom: (linking: { id: string; port: PortType } | null) => void;
   setLinkingTo: (pos: [number, number] | null) => void;
   resolveAllOverlaps: () => void;
@@ -280,14 +267,7 @@ export interface SimulationState {
   sunIntensity: number;
   setSunIntensity: (val: number) => void;
   setSpendableMoney: (value: number) => void;
-  registerStructuralRoom: (
-    id: string,
-    type: SimulationNodeType,
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-  ) => void;
+  registerStructuralRoom: (id: string, type: SimulationNodeType, x: number, y: number, w: number, h: number) => void;
 }
 
 export const getGridKey = (x: number, y: number) => `${x},${y}`;
@@ -334,26 +314,20 @@ const checkOverlap = (s1: SimulationNode, s2: SimulationNode) => {
   );
 };
 
-const computeStructuralMetadata = (
-  shapes: SimulationNode[],
-): SimulationNode[] => {
-  return shapes.map((s) => {
-    const adjacencies = shapes
-      .filter(
-        (other) =>
-          other.id !== s.id &&
-          Math.abs(other.position[1] - s.position[1]) < 1 &&
-          Math.abs(other.position[0] - s.position[0]) <=
-            (other.size[0] + s.size[0]) / 2 + 0.1,
-      )
-      .map((o) => o.id);
+const computeStructuralMetadata = (shapes: SimulationNode[]): SimulationNode[] => {
+  return shapes.map(s => {
+    const adjacencies = shapes.filter(other =>
+      other.id !== s.id &&
+      Math.abs(other.position[1] - s.position[1]) < 1 &&
+      Math.abs(other.position[0] - s.position[0]) <= (other.size[0] + s.size[0]) / 2 + 0.1
+    ).map(o => o.id);
 
     return {
       ...s,
       structuralMetadata: {
         adjacencies,
-        wallMask: 0, // Simplified for example
-      },
+        wallMask: 0 // Simplified for example
+      }
     };
   });
 };
@@ -367,15 +341,9 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
   const history: HistoryState[] = [];
   const redoStack: HistoryState[] = [];
 
-  const savedUIPositions = JSON.parse(
-    localStorage.getItem("villaggio_ui_positions") || "{}",
-  );
-  const savedSpendableMoney = parseFloat(
-    localStorage.getItem("villaggio_spendable_money") ?? "",
-  );
-  const initialSpendableMoney = Number.isFinite(savedSpendableMoney)
-    ? savedSpendableMoney
-    : 10000000;
+  const savedUIPositions = JSON.parse(localStorage.getItem("villaggio_ui_positions") || "{}");
+  const savedSpendableMoney = parseFloat(localStorage.getItem("villaggio_spendable_money") ?? "");
+  const initialSpendableMoney = Number.isFinite(savedSpendableMoney) ? savedSpendableMoney : 10000000;
 
   const pushToHistory = () => {
     const { shapes, links } = get();
@@ -406,67 +374,34 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     uiPositions: savedUIPositions,
     showControls: localStorage.getItem("villaggio_show_controls") === "true",
     showWeather: localStorage.getItem("villaggio_show_weather") === "true", // Default to false
-    showPlacementGrid:
-      localStorage.getItem("villaggio_show_placement_grid") === "true",
+    showPlacementGrid: localStorage.getItem("villaggio_show_placement_grid") === "true",
     showMinimap: localStorage.getItem("villaggio_show_minimap") !== "false", // Default to true
-    showWeatherPanel:
-      localStorage.getItem("villaggio_show_weather_panel") === "true",
-    sunTime: normalizeCircularSolarTime(
-      parseFloat(localStorage.getItem("villaggio_sun_time") || "0.55"),
-    ),
-    sunIntensity: parseFloat(
-      localStorage.getItem("villaggio_sun_intensity") || "2.0",
-    ),
+    showWeatherPanel: localStorage.getItem("villaggio_show_weather_panel") === "true",
+    sunTime: parseFloat(localStorage.getItem("villaggio_sun_time") || "0.55"),
+    sunIntensity: parseFloat(localStorage.getItem("villaggio_sun_intensity") || "2.0"),
     registerStructuralRoom: (id, type, x, y, w, h) => {
       // Industry Leading Structural Registration
       // This builds the adjacency graph for room merging
-      set((state) => {
-        const shape = state.shapes.find((s) => s.id === id);
+      set(state => {
+        const shape = state.shapes.find(s => s.id === id);
         if (!shape) return state;
 
         // Force a state update to trigger computeStructuralMetadata
         return {
-          shapes: computeStructuralMetadata([...state.shapes]),
+          shapes: computeStructuralMetadata([...state.shapes])
         };
       });
     },
 
-    checkPlacement: (
-      x: number,
-      y: number,
-      w: number,
-      h: number,
-      type: string,
-      ignoreId?: string,
-      isForce = false,
-    ) => {
+    checkPlacement: (x: number, y: number, w: number, h: number, type: string, ignoreId?: string, isForce = false) => {
       const shapes = get().shapes;
       const index = new FloorBucketIndex(shapes);
-      const result = validatePlacement(
-        x,
-        y,
-        w,
-        h,
-        shapes,
-        type,
-        ignoreId,
-        isForce,
-        index,
-      );
+      const result = validatePlacement(x, y, w, h, shapes, type, ignoreId, isForce, index);
       return result.isValid;
     },
-    checkPlacementAuthoritative: async (
-      x: number,
-      y: number,
-      w: number,
-      h: number,
-      ignoreId?: string,
-    ) => {
+    checkPlacementAuthoritative: async (x: number, y: number, w: number, h: number, ignoreId?: string) => {
       const workerPool = getWorkerPool();
-      const handle = workerPool.submit<
-        CheckPlacementPayload,
-        CheckPlacementResult
-      >({
+      const handle = workerPool.submit<CheckPlacementPayload, CheckPlacementResult>({
         taskType: SIMULATION_TASK_TYPE.CheckPlacement,
         payload: { x, y, w, h, type: "residential", ignoreId },
         sceneRevision: 0,
@@ -476,21 +411,12 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       return result.isValid;
     },
 
-    addShape: (
-      shape,
-      force = false,
-      skipHistory = false,
-      options?: AddShapeOptions,
-    ) => {
+    addShape: (shape, force = false, skipHistory = false, options?: AddShapeOptions) => {
       const state = get();
       const skipSelection = options?.skipSelection ?? false;
 
       // Modular Merging Logic (Industry Leading Foundation)
-      const mergeableTypes: SimulationNodeType[] = [
-        "lobby",
-        "structure",
-        "empty_floor",
-      ];
+      const mergeableTypes: SimulationNodeType[] = ["lobby", "structure", "empty_floor"];
       if (mergeableTypes.includes(shape.type)) {
         const snappedX = shape.position[0];
         const snappedY = shape.position[1];
@@ -498,30 +424,24 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
 
         // Intersection + Adjacency Merge Engine (Union Algorithm)
         const overlapEpsilon = 1.0;
-        const intersectingNeighbors = state.shapes.filter(
-          (s) =>
-            s.id !== shape.id &&
-            s.type === shape.type &&
-            Math.abs(s.position[1] - snappedY) < 1 && // Same floor
+        const intersectingNeighbors = state.shapes.filter(s =>
+          s.id !== shape.id &&
+          s.type === shape.type &&
+          Math.abs(s.position[1] - snappedY) < 1 && // Same floor
+          (
             // Check if AABBs intersect or are adjacent
-            Math.abs(s.position[0] - snappedX) <=
-              (s.size[0] + shape.size[0]) / 2 + overlapEpsilon,
+            Math.abs(s.position[0] - snappedX) <= (s.size[0] + shape.size[0]) / 2 + overlapEpsilon
+          )
         );
 
         if (intersectingNeighbors.length > 0) {
           const prime = intersectingNeighbors[0];
           const others = intersectingNeighbors.slice(1);
 
-          let minX = Math.min(
-            prime.position[0] - prime.size[0] / 2,
-            snappedX - halfWidth,
-          );
-          let maxX = Math.max(
-            prime.position[0] + prime.size[0] / 2,
-            snappedX + halfWidth,
-          );
+          let minX = Math.min(prime.position[0] - prime.size[0] / 2, snappedX - halfWidth);
+          let maxX = Math.max(prime.position[0] + prime.size[0] / 2, snappedX + halfWidth);
 
-          others.forEach((o) => {
+          others.forEach(o => {
             minX = Math.min(minX, o.position[0] - o.size[0] / 2);
             maxX = Math.max(maxX, o.position[0] + o.size[0] / 2);
             state.deleteShape(o.id, true);
@@ -530,27 +450,23 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           const newWidth = maxX - minX;
           const newCenterX = minX + newWidth / 2;
 
-          state.updateShape(
-            prime.id,
-            {
-              position: [newCenterX, snappedY],
-              size: [newWidth, prime.size[1]],
-            },
-            skipHistory,
-          );
+          state.updateShape(prime.id, {
+            position: [newCenterX, snappedY],
+            size: [newWidth, prime.size[1]]
+          }, skipHistory);
 
-          if (shape.type !== "structure" && shape.type !== "empty_floor") {
-            const roomLeft = shape.position[0] - shape.size[0] / 2;
-            const roomRight = shape.position[0] + shape.size[0] / 2;
-            const roomTop = shape.position[1] + shape.size[1] / 2;
-            const roomBottom = shape.position[1] - shape.size[1] / 2;
+          if (shape.type !== 'structure' && shape.type !== 'empty_floor') {
+           const roomLeft = shape.position[0] - shape.size[0] / 2;
+           const roomRight = shape.position[0] + shape.size[0] / 2;
+           const roomTop = shape.position[1] + shape.size[1] / 2;
+           const roomBottom = shape.position[1] - shape.size[1] / 2;
 
-            const toDelete = state.shapes.filter((s) => {
-              if (s.type !== "empty_floor") return false;
-              const sLeft = s.position[0] - s.size[0] / 2;
-              const sRight = s.position[0] + s.size[0] / 2;
-              const sTop = s.position[1] + s.size[1] / 2;
-              const sBottom = s.position[1] - s.size[1] / 2;
+           const toDelete = state.shapes.filter(s => {
+             if (s.type !== 'empty_floor') return false;
+             const sLeft = s.position[0] - s.size[0] / 2;
+             const sRight = s.position[0] + s.size[0] / 2;
+             const sTop = s.position[1] + s.size[1] / 2;
+             const sBottom = s.position[1] - s.size[1] / 2;
               return (
                 sLeft < roomRight - 0.1 &&
                 sRight > roomLeft + 0.1 &&
@@ -558,70 +474,57 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
                 sTop > roomBottom + 0.1
               );
             });
-            toDelete.forEach((o) => state.deleteShape(o.id, true));
+            toDelete.forEach(o => state.deleteShape(o.id, true));
           }
 
           // Force update of underlying structure if room moved/expanded
-          if (shape.type !== "structure") {
-            state.addShape(
-              {
-                id: `scaffold_${Math.random().toString(36).substr(2, 9)}`,
-                type: "structure",
-                position: [newCenterX, snappedY],
-                size: [newWidth, prime.size[1]],
-                vertices: [
-                  [-newWidth / 2, -prime.size[1] / 2],
-                  [newWidth / 2, -prime.size[1] / 2],
-                  [newWidth / 2, prime.size[1] / 2],
-                  [-newWidth / 2, prime.size[1] / 2],
-                ],
-                name: "Structural Scaffold",
-              },
-              true,
-              true,
-              { skipSelection: true },
-            );
+          if (shape.type !== 'structure') {
+            state.addShape({
+              id: `scaffold_${Math.random().toString(36).substr(2, 9)}`,
+              type: "structure",
+              position: [newCenterX, snappedY],
+              size: [newWidth, prime.size[1]],
+              vertices: [
+                [-newWidth / 2, -prime.size[1] / 2],
+                [newWidth / 2, -prime.size[1] / 2],
+                [newWidth / 2, prime.size[1] / 2],
+                [-newWidth / 2, prime.size[1] / 2],
+              ],
+              name: "Structural Scaffold",
+            }, true, true, { skipSelection: true });
           }
 
-          if (shape.type === "structure") {
+          if (shape.type === 'structure') {
             const currentShapes = get().shapes;
             // Iterate over the newly merged structural bound by strict 10-width cell increments
             for (let cx = minX + 5; cx < maxX; cx += 10) {
-              const hasRoom = currentShapes.some(
-                (s) =>
-                  s.type !== "structure" &&
-                  s.type !== "empty_floor" &&
-                  Math.abs(s.position[1] - snappedY) < 1 &&
-                  s.position[0] - s.size[0] / 2 < cx + 0.1 &&
-                  s.position[0] + s.size[0] / 2 > cx - 0.1,
+              const hasRoom = currentShapes.some(s =>
+                s.type !== 'structure' && s.type !== 'empty_floor' &&
+                Math.abs(s.position[1] - snappedY) < 1 &&
+                s.position[0] - s.size[0] / 2 < cx + 0.1 &&
+                s.position[0] + s.size[0] / 2 > cx - 0.1
               );
-              const hasEmptyFloor = currentShapes.some(
-                (s) =>
-                  s.type === "empty_floor" &&
-                  Math.abs(s.position[1] - snappedY) < 1 &&
-                  s.position[0] - s.size[0] / 2 < cx + 0.1 &&
-                  s.position[0] + s.size[0] / 2 > cx - 0.1,
+              const hasEmptyFloor = currentShapes.some(s =>
+                s.type === 'empty_floor' &&
+                Math.abs(s.position[1] - snappedY) < 1 &&
+                s.position[0] - s.size[0] / 2 < cx + 0.1 &&
+                s.position[0] + s.size[0] / 2 > cx - 0.1
               );
 
               if (!hasRoom && !hasEmptyFloor) {
-                state.addShape(
-                  {
-                    id: `empty_floor_${Math.random().toString(36).substring(2, 9)}`,
-                    type: "empty_floor",
-                    position: [cx, snappedY],
-                    size: [10, prime.size[1]],
-                    vertices: [
-                      [-5, -prime.size[1] / 2],
-                      [5, -prime.size[1] / 2],
-                      [5, prime.size[1] / 2],
-                      [-5, prime.size[1] / 2],
-                    ],
-                    name: "Empty Floor",
-                  },
-                  true,
-                  true,
-                  { skipSelection: true },
-                );
+                state.addShape({
+                  id: `empty_floor_${Math.random().toString(36).substring(2, 9)}`,
+                  type: 'empty_floor',
+                  position: [cx, snappedY],
+                  size: [10, prime.size[1]],
+                  vertices: [
+                    [-5, -prime.size[1] / 2],
+                    [5, -prime.size[1] / 2],
+                    [5, prime.size[1] / 2],
+                    [-5, prime.size[1] / 2],
+                  ],
+                  name: "Empty Floor"
+                }, true, true, { skipSelection: true });
               }
             }
           }
@@ -634,17 +537,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       }
 
       // Prevent exact placement duplicate or box intersection
-      if (
-        !force &&
-        !state.checkPlacement(
-          shape.position[0],
-          shape.position[1],
-          shape.size[0],
-          shape.size[1],
-          shape.type as string,
-          shape.id,
-        )
-      ) {
+      if (!force && !state.checkPlacement(shape.position[0], shape.position[1], shape.size[0], shape.size[1], shape.type as string, shape.id)) {
         return; // Placements must be strictly non-overlapping
       }
 
@@ -657,68 +550,48 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       workerPool.broadcast({
         taskType: SIMULATION_TASK_TYPE.SyncSpatialHash,
         payload: {
-          inserts: [
-            {
-              id: shape.id,
-              x: shape.position[0],
-              y: shape.position[1],
-              w: shape.size[0],
-              h: shape.size[1],
-            },
-          ],
+          inserts: [{
+            id: shape.id,
+            x: shape.position[0],
+            y: shape.position[1],
+            w: shape.size[0],
+            h: shape.size[1]
+          }]
         },
         sceneRevision: 0,
         clientRevision: 0,
       });
 
       // Remove any overlapping empty_floor before placing a new room
-      if (shape.type !== "empty_floor" && shape.type !== "structure") {
+      if (shape.type !== 'empty_floor' && shape.type !== 'structure') {
         const myLeft = shape.position[0] - shape.size[0] / 2;
         const myRight = shape.position[0] + shape.size[0] / 2;
         const myTop = shape.position[1] + shape.size[1] / 2;
         const myBottom = shape.position[1] - shape.size[1] / 2;
 
-        const toDelete = state.shapes.filter((s) => {
-          if (s.type !== "empty_floor") return false;
+        const toDelete = state.shapes.filter(s => {
+          if (s.type !== 'empty_floor') return false;
           const sLeft = s.position[0] - s.size[0] / 2;
           const sRight = s.position[0] + s.size[0] / 2;
           const sTop = s.position[1] + s.size[1] / 2;
           const sBottom = s.position[1] - s.size[1] / 2;
-          return (
-            sLeft < myRight - 0.1 &&
-            sRight > myLeft + 0.1 &&
-            sBottom < myTop - 0.1 &&
-            sTop > myBottom + 0.1
-          );
+          return (sLeft < myRight - 0.1 && sRight > myLeft + 0.1 && sBottom < myTop - 0.1 && sTop > myBottom + 0.1);
         });
 
-        toDelete.forEach((o) => {
+        toDelete.forEach(o => {
           if (o.id !== shape.id) state.deleteShape(o.id, true);
         });
       }
 
       // Synchronize local spatial hash for authoritative main-thread collision checks
-      globalHash.insert(
-        shape.id,
-        shape.position[0],
-        shape.position[1],
-        shape.size[0],
-        shape.size[1],
-      );
+      globalHash.insert(shape.id, shape.position[0], shape.position[1], shape.size[0], shape.size[1]);
 
       set((state) => {
-        const newShapes = [
-          ...state.shapes,
-          {
-            ...shape,
-            name:
-              shape.name ||
-              shape.type.charAt(0).toUpperCase() + shape.type.slice(1),
-          },
-        ];
-        const shouldCleanupEmptyFloors = !["structure", "empty_floor"].includes(
-          shape.type,
-        );
+        const newShapes = [...state.shapes, {
+          ...shape,
+          name: shape.name || (shape.type.charAt(0).toUpperCase() + shape.type.slice(1))
+        }];
+        const shouldCleanupEmptyFloors = !["structure", "empty_floor"].includes(shape.type);
         const cleanedShapes = shouldCleanupEmptyFloors
           ? purgeOverlappingEmptyFloors(newShapes, shape)
           : newShapes;
@@ -726,73 +599,41 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       });
 
       // Immediately append invisible permanent scaffold structure
-      if (
-        [
-          "residential",
-          "commercial",
-          "office",
-          "utility",
-          "lobby",
-          "elevator",
-          "stairs",
-        ].includes(shape.type) &&
-        shape.type !== "structure"
-      ) {
+      if (['residential', 'commercial', 'office', 'utility', 'lobby', 'elevator', 'stairs'].includes(shape.type) && shape.type !== 'structure') {
         const stateAfter = get();
-        stateAfter.addShape(
-          {
-            id: `scaffold_${Math.random().toString(36).substr(2, 9)}`,
-            type: "structure",
-            position: shape.position,
-            size: shape.size,
-            vertices: shape.vertices,
-            name: "Structural Scaffold",
-          },
-          true,
-          true,
-          { skipSelection: true },
-        );
-      } else if (shape.type === "structure") {
+        stateAfter.addShape({
+          id: `scaffold_${Math.random().toString(36).substr(2, 9)}`,
+          type: "structure",
+          position: shape.position,
+          size: shape.size,
+          vertices: shape.vertices,
+          name: "Structural Scaffold",
+        }, true, true, { skipSelection: true });
+      } else if (shape.type === 'structure') {
         const stateAfter = get();
         // Check structural vacancy using SpatialHash for localized speed
-        const candidates = globalHash.query(
-          shape.position[0],
-          shape.position[1],
-          shape.size[0] - 0.2,
-          shape.size[1] - 0.2,
-        );
+        const candidates = globalHash.query(shape.position[0], shape.position[1], shape.size[0] - 0.2, shape.size[1] - 0.2);
         let isOccupied = false;
         for (const id of candidates) {
-          const s = stateAfter.shapes.find((sh) => sh.id === id);
-          if (
-            s &&
-            s.type !== "structure" &&
-            s.type !== "empty_floor" &&
+          const s = stateAfter.shapes.find(sh => sh.id === id);
+          if (s && s.type !== 'structure' && s.type !== 'empty_floor' &&
             Math.abs(s.position[1] - shape.position[1]) < 0.1 &&
-            s.position[0] + s.size[0] / 2 >
-              shape.position[0] - shape.size[0] / 2 + 0.1 &&
-            s.position[0] - s.size[0] / 2 <
-              shape.position[0] + shape.size[0] / 2 - 0.1
-          ) {
+            (s.position[0] + s.size[0] / 2 > shape.position[0] - shape.size[0] / 2 + 0.1) &&
+            (s.position[0] - s.size[0] / 2 < shape.position[0] + shape.size[0] / 2 - 0.1)) {
             isOccupied = true;
             break;
           }
         }
 
         if (!isOccupied) {
-          stateAfter.addShape(
-            {
-              id: `empty_floor_${Math.random().toString(36).substr(2, 9)}`,
-              type: "empty_floor",
-              position: [...shape.position],
-              size: [...shape.size],
-              vertices: [...shape.vertices],
-              name: "Empty Floor",
-            },
-            true,
-            true,
-            { skipSelection: true },
-          );
+          stateAfter.addShape({
+            id: `empty_floor_${Math.random().toString(36).substr(2, 9)}`,
+            type: 'empty_floor',
+            position: [...shape.position],
+            size: [...shape.size],
+            vertices: [...shape.vertices],
+            name: "Empty Floor"
+          }, true, true, { skipSelection: true });
         }
       }
     },
@@ -804,44 +645,28 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
         const updatedShapes = state.shapes.map((s) => {
           if (s.id === id) {
             const newShape = { ...s, ...updates };
-            if (s.type !== "structure") {
-              globalHash.remove(
-                id,
-                s.position[0],
-                s.position[1],
-                s.size[0],
-                s.size[1],
-              );
-              globalHash.insert(
-                id,
-                newShape.position[0],
-                newShape.position[1],
-                newShape.size[0] || s.size[0],
-                newShape.size[1] || s.size[1],
-              );
+            if (s.type !== 'structure') {
+              globalHash.remove(id, s.position[0], s.position[1], s.size[0], s.size[1]);
+              globalHash.insert(id, newShape.position[0], newShape.position[1], newShape.size[0] || s.size[0], newShape.size[1] || s.size[1]);
 
               const workerPool = getWorkerPool();
               workerPool.broadcast({
                 taskType: SIMULATION_TASK_TYPE.SyncSpatialHash,
                 payload: {
-                  removes: [
-                    {
-                      id,
-                      x: s.position[0],
-                      y: s.position[1],
-                      w: s.size[0],
-                      h: s.size[1],
-                    },
-                  ],
-                  inserts: [
-                    {
-                      id,
-                      x: newShape.position[0],
-                      y: newShape.position[1],
-                      w: newShape.size[0] || s.size[0],
-                      h: newShape.size[1] || s.size[1],
-                    },
-                  ],
+                  removes: [{
+                    id,
+                    x: s.position[0],
+                    y: s.position[1],
+                    w: s.size[0],
+                    h: s.size[1]
+                  }],
+                  inserts: [{
+                    id,
+                    x: newShape.position[0],
+                    y: newShape.position[1],
+                    w: newShape.size[0] || s.size[0],
+                    h: newShape.size[1] || s.size[1]
+                  }]
                 },
                 sceneRevision: 0,
                 clientRevision: 0,
@@ -870,12 +695,12 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       });
     },
     deleteShape: (id, isMerge = false) => {
-      const shapeToDelete = get().shapes.find((s) => s.id === id);
+      const shapeToDelete = get().shapes.find(s => s.id === id);
       if (!shapeToDelete) return;
 
       if (
         !isMerge &&
-        shapeToDelete.type === "empty_floor" &&
+        shapeToDelete.type === 'empty_floor' &&
         !simulationSettings.deletable_empty_rooms
       ) {
         console.warn("Village: Empty-floor removal is disabled in settings.");
@@ -883,54 +708,42 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       }
 
       pushToHistory();
-      const isStructure = shapeToDelete.type === "structure";
-      const isRoom = !isStructure && shapeToDelete.type !== "empty_floor";
+      const isStructure = shapeToDelete.type === 'structure';
+      const isRoom = !isStructure && shapeToDelete.type !== 'empty_floor';
 
       set((state) => {
-        const shape = state.shapes.find((s) => s.id === id);
+        const shape = state.shapes.find(s => s.id === id);
         if (shape) {
           // Guard: Cannot delete a foundation if a room sits on it
-          if (shape.type === "structure" && !isMerge) {
+          if (shape.type === 'structure' && !isMerge) {
             const myLeft = shape.position[0] - shape.size[0] / 2;
             const myRight = shape.position[0] + shape.size[0] / 2;
-            const hasRoomAbove = state.shapes.some(
-              (s) =>
-                s.type !== "structure" &&
-                s.type !== "text" &&
-                Math.abs(s.position[1] - shape.position[1]) < 5 &&
-                s.position[0] + s.size[0] / 2 > myLeft + 0.1 &&
-                s.position[0] - s.size[0] / 2 < myRight - 0.1,
+            const hasRoomAbove = state.shapes.some(s =>
+              s.type !== 'structure' && s.type !== 'text' &&
+              Math.abs(s.position[1] - shape.position[1]) < 5 &&
+              (s.position[0] + s.size[0] / 2 > myLeft + 0.1) &&
+              (s.position[0] - s.size[0] / 2 < myRight - 0.1)
             );
             if (hasRoomAbove) {
-              console.warn(
-                "Village: Deletion blocked - Foundation is occupied.",
-              );
+              console.warn("Village: Deletion blocked - Foundation is occupied.");
               return state;
             }
           }
 
-          if (shape.type !== "structure") {
-            globalHash.remove(
-              id,
-              shape.position[0],
-              shape.position[1],
-              shape.size[0],
-              shape.size[1],
-            );
+          if (shape.type !== 'structure') {
+            globalHash.remove(id, shape.position[0], shape.position[1], shape.size[0], shape.size[1]);
 
             const workerPool = getWorkerPool();
             workerPool.broadcast({
               taskType: SIMULATION_TASK_TYPE.SyncSpatialHash,
               payload: {
-                removes: [
-                  {
-                    id,
-                    x: shape.position[0],
-                    y: shape.position[1],
-                    w: shape.size[0],
-                    h: shape.size[1],
-                  },
-                ],
+                removes: [{
+                  id,
+                  x: shape.position[0],
+                  y: shape.position[1],
+                  w: shape.size[0],
+                  h: shape.size[1]
+                }]
               },
               sceneRevision: 0,
               clientRevision: 0,
@@ -951,7 +764,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       });
 
       const stateAfter = get();
-      const deletedWasEmptyFloor = shapeToDelete?.type === "empty_floor";
+      const deletedWasEmptyFloor = shapeToDelete?.type === 'empty_floor';
       if (!isMerge && !deletedWasEmptyFloor) {
         // --- INDUSTRY LEADING LOCALIZED VACANCY RESTORATION ---
         const currentShapes = stateAfter.shapes;
@@ -961,15 +774,14 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
         const centerY = shapeToDelete?.position[1] ?? 0;
         const searchRadiusX = (shapeToDelete?.size[0] ?? 0) / 2 + 50; // Increased sweep to find all adjacent structure segments
 
-        const impactedStructures = currentShapes.filter(
-          (s) =>
-            s.type === "structure" &&
-            Math.abs(s.position[1] - centerY) < 1 &&
-            Math.abs(s.position[0] - centerX) <= searchRadiusX,
+        const impactedStructures = currentShapes.filter(s =>
+          s.type === 'structure' &&
+          Math.abs(s.position[1] - centerY) < 1 &&
+          Math.abs(s.position[0] - centerX) <= searchRadiusX
         );
         let addedEmptyFloorCell = false;
 
-        impactedStructures.forEach((str) => {
+        impactedStructures.forEach(str => {
           const strLeft = str.position[0] - str.size[0] / 2;
           const strRight = str.position[0] + str.size[0] / 2;
 
@@ -977,47 +789,38 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           for (let cx = strLeft + 5; cx < strRight; cx += 10) {
             // RELAXED CONSTRAINT: A cell is a candidate if it intersects the deleted shape's footprint
             // OR if it is within 5 units of it (to handle floating point/alignment edge cases)
-            const cellInFootprint =
-              Math.abs(cx - centerX) <= (shapeToDelete?.size[0] ?? 0) / 2 + 5.1;
+            const cellInFootprint = Math.abs(cx - centerX) <= (shapeToDelete?.size[0] ?? 0) / 2 + 5.1;
 
             if (!cellInFootprint) continue;
 
-            const isCellOccupied = currentShapes.some(
-              (s) =>
-                s.type !== "structure" &&
-                s.type !== "empty_floor" &&
-                Math.abs(s.position[1] - str.position[1]) < 1 &&
-                s.position[0] - s.size[0] / 2 < cx + 0.1 &&
-                s.position[0] + s.size[0] / 2 > cx - 0.1,
+            const isCellOccupied = currentShapes.some(s =>
+              s.type !== 'structure' && s.type !== 'empty_floor' &&
+              Math.abs(s.position[1] - str.position[1]) < 1 &&
+              s.position[0] - s.size[0] / 2 < cx + 0.1 &&
+              s.position[0] + s.size[0] / 2 > cx - 0.1
             );
 
-            const hasEmptyFloor = currentShapes.some(
-              (s) =>
-                s.type === "empty_floor" &&
-                Math.abs(s.position[1] - str.position[1]) < 1 &&
-                s.position[0] - s.size[0] / 2 < cx + 0.1 &&
-                s.position[0] + s.size[0] / 2 > cx - 0.1,
+            const hasEmptyFloor = currentShapes.some(s =>
+              s.type === 'empty_floor' &&
+              Math.abs(s.position[1] - str.position[1]) < 1 &&
+              s.position[0] - s.size[0] / 2 < cx + 0.1 &&
+              s.position[0] + s.size[0] / 2 > cx - 0.1
             );
 
             if (!isCellOccupied && !hasEmptyFloor) {
-              stateAfter.addShape(
-                {
-                  id: `empty_floor_${Math.random().toString(36).substring(2, 9)}`,
-                  type: "empty_floor",
-                  position: [cx, str.position[1]],
-                  size: [10, str.size[1]],
-                  vertices: [
-                    [-5, -str.size[1] / 2],
-                    [5, -str.size[1] / 2],
-                    [5, str.size[1] / 2],
-                    [-5, str.size[1] / 2],
-                  ],
-                  name: "Empty Floor",
-                },
-                true,
-                true,
-                { skipSelection: true },
-              );
+              stateAfter.addShape({
+                id: `empty_floor_${Math.random().toString(36).substring(2, 9)}`,
+                type: 'empty_floor',
+                position: [cx, str.position[1]],
+                size: [10, str.size[1]],
+                vertices: [
+                  [-5, -str.size[1] / 2],
+                  [5, -str.size[1] / 2],
+                  [5, str.size[1] / 2],
+                  [-5, str.size[1] / 2],
+                ],
+                name: "Empty Floor"
+              }, true, true, { skipSelection: true });
               addedEmptyFloorCell = true;
             }
           }
@@ -1061,35 +864,29 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           };
 
           const finalShapes = get().shapes;
-          const hasRoomNow = finalShapes.some(
-            (s) =>
-              s.type !== "structure" &&
-              s.type !== "empty_floor" &&
-              overlapsAABB(s, candidateNode),
+          const hasRoomNow = finalShapes.some(s =>
+            s.type !== "structure" &&
+            s.type !== "empty_floor" &&
+            overlapsAABB(s, candidateNode),
           );
-          const alreadyEmpty = finalShapes.some(
-            (s) => s.type === "empty_floor" && overlapsAABB(s, candidateNode),
+          const alreadyEmpty = finalShapes.some(s =>
+            s.type === "empty_floor" && overlapsAABB(s, candidateNode),
           );
 
           if (!hasRoomNow && !alreadyEmpty) {
-            stateAfter.addShape(
-              {
-                id: `empty_floor_${Math.random().toString(36).substring(2, 9)}`,
-                type: "empty_floor",
-                position: [clampedCx, fallbackY],
-                size: [10, fallbackHeight],
-                vertices: [
-                  [-5, -fallbackHeight / 2],
-                  [5, -fallbackHeight / 2],
-                  [5, fallbackHeight / 2],
-                  [-5, fallbackHeight / 2],
-                ],
-                name: "Empty Floor",
-              },
-              true,
-              true,
-              { skipSelection: true },
-            );
+            stateAfter.addShape({
+              id: `empty_floor_${Math.random().toString(36).substring(2, 9)}`,
+              type: 'empty_floor',
+              position: [clampedCx, fallbackY],
+              size: [10, fallbackHeight],
+              vertices: [
+                [-5, -fallbackHeight / 2],
+                [5, -fallbackHeight / 2],
+                [5, fallbackHeight / 2],
+                [-5, fallbackHeight / 2],
+              ],
+              name: "Empty Floor"
+            }, true, true, { skipSelection: true });
           }
         }
       }
@@ -1145,33 +942,15 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     setIsDragging: (isDragging) => {
       const state = get();
       if (isDragging) {
-        const shape = state.selectedId
-          ? state.shapes.find((s) => s.id === state.selectedId)
-          : null;
-        set({
-          isDragging,
-          preDragPosition: shape ? [...shape.position] : null,
-        });
+        const shape = state.selectedId ? state.shapes.find(s => s.id === state.selectedId) : null;
+        set({ isDragging, preDragPosition: shape ? [...shape.position] : null });
       } else {
         if (state.isDragging && state.selectedId) {
           const shape = state.shapes.find((s) => s.id === state.selectedId);
           if (shape) {
-            if (
-              !state.checkPlacement(
-                shape.position[0],
-                shape.position[1],
-                shape.size[0],
-                shape.size[1],
-                shape.type,
-                shape.id,
-              )
-            ) {
+            if (!state.checkPlacement(shape.position[0], shape.position[1], shape.size[0], shape.size[1], shape.type, shape.id)) {
               if (state.preDragPosition) {
-                state.updateShape(
-                  shape.id,
-                  { position: state.preDragPosition },
-                  true,
-                );
+                state.updateShape(shape.id, { position: state.preDragPosition }, true);
               }
             }
           }
@@ -1185,15 +964,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       if (!isRotating && state.isRotating && state.selectedId) {
         const shape = state.shapes.find((s) => s.id === state.selectedId);
         if (shape) {
-          if (
-            !state.checkPlacement(
-              shape.position[0],
-              shape.position[1],
-              shape.size[0],
-              shape.size[1],
-              shape.id,
-            )
-          ) {
+          if (!state.checkPlacement(shape.position[0], shape.position[1], shape.size[0], shape.size[1], shape.id)) {
             // Let it revert or stay invalid, typically rotation shouldn't collide inside a bounding box
           }
         }
@@ -1232,37 +1003,25 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
         const x = startX + i * 10;
 
         // Add Lobby Cell
-        get().addShape(
-          {
-            id: `lobby_${Math.random().toString(36).substr(2, 9)}`,
-            type: "lobby",
-            position: [x, 0],
-            size: [10, 40],
-            vertices: [
-              [-5, -20],
-              [5, -20],
-              [5, 20],
-              [-5, 20],
-            ],
-            name: "Lobby Entry",
-          },
-          true,
-          true,
-          { skipSelection: true },
-        );
+        get().addShape({
+          id: `lobby_${Math.random().toString(36).substr(2, 9)}`,
+          type: "lobby",
+          position: [x, 0],
+          size: [10, 40],
+          vertices: [
+            [-5, -20],
+            [5, -20],
+            [5, 20],
+            [-5, 20],
+          ],
+          name: "Lobby Entry",
+        }, true, true, { skipSelection: true });
       }
 
       // Final structural registration audit to catch any HMR artifacts
       const finalShapes = get().shapes;
-      finalShapes.forEach((s) => {
-        get().registerStructuralRoom(
-          s.id,
-          s.type,
-          s.position[0],
-          s.position[1],
-          s.size[0],
-          s.size[1],
-        );
+      finalShapes.forEach(s => {
+        get().registerStructuralRoom(s.id, s.type, s.position[0], s.position[1], s.size[0], s.size[1]);
       });
 
       // Sync all workers at once
@@ -1271,13 +1030,13 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
         taskType: SIMULATION_TASK_TYPE.SyncSpatialHash,
         payload: {
           clear: true,
-          inserts: get().shapes.map((s) => ({
+          inserts: get().shapes.map(s => ({
             id: s.id,
             x: s.position[0],
             y: s.position[1],
             w: s.size[0],
-            h: s.size[1],
-          })),
+            h: s.size[1]
+          }))
         },
         sceneRevision: 0,
         clientRevision: 0,
@@ -1349,9 +1108,8 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       set({ showWeatherPanel: val });
     },
     setSunTime: (val) => {
-      const normalized = normalizeCircularSolarTime(val);
-      localStorage.setItem("villaggio_sun_time", String(normalized));
-      set({ sunTime: normalized });
+      localStorage.setItem("villaggio_sun_time", String(val));
+      set({ sunTime: val });
     },
     setSunIntensity: (val) => {
       localStorage.setItem("villaggio_sun_intensity", String(val));

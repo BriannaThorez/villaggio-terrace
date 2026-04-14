@@ -1,4 +1,8 @@
 import React, { useMemo, useRef, useState, useEffect } from "react";
+import {
+  shouldIgnoreInteraction,
+  handlePointerDown as handleModularPointerDown,
+} from "../features/ui/controls/UserControls";
 import { useThree } from "@react-three/fiber";
 import { ResidentialRoom } from "../features/roomPlacement/residential/base/ResidentialRoom";
 import { RoomMeshCSG } from "./rooms/visuals/RoomMeshCSG";
@@ -22,7 +26,11 @@ import {
   buildCellBeamGraph,
   type StructuralShape,
 } from "../features/roomPlacement/structural/graph";
-import { parseMaterial } from "../engine/MaterialParser";
+import {
+  parseMaterial,
+  getStructuralConcreteMaterials,
+  getStructuralShellMaterials,
+} from "../engine/MaterialParser";
 import { EmptyFloorRoom } from "../features/roomPlacement/emptyFloor/EmptyFloorRoom";
 import { LobbyRoom } from "../features/roomPlacement/lobby/LobbyRoom";
 
@@ -565,45 +573,42 @@ export const SimulationNodes = () => {
   }, [selectedId, shapeIndexById, isSelectedArray]);
 
   const handleNodePointerDown = (e: any, id: string) => {
-    // Only stop propagation for left-click (Button 0) to allow right-click (Button 2)
-    // to bubble up to the global tool cancellation listener.
-    if (e.button === 0) {
-      e.stopPropagation();
-    }
+    if (shouldIgnoreInteraction(e)) return;
 
-    const shape = renderedShapeById.get(id);
-    if (!shape) return;
+    handleModularPointerDown(e, () => {
+      const shape = renderedShapeById.get(id);
+      if (!shape) return;
 
-    // Movement interactions are intentionally disabled for now.
-    // Preserve this handler so room/node movement can be re-enabled later without changing ownership or selection flow.
-    if (e.button === 1) return;
+      // Movement interactions are intentionally disabled for now.
+      if (e.button === 1) return;
 
-    // For volumetric room components, rely on mesh intersection rather than 2D SDF UV mapping
-    const isVolumetricRoom = [
-      "residential",
-      "commercial",
-      "office",
-      "utility",
-      "lobby",
-      "elevator",
-      "structure",
-      "empty_floor",
-    ].includes(shape.type);
-    if (!isVolumetricRoom && !isInsideShape(e.uv, shape)) return;
+      // For volumetric room components, rely on mesh intersection rather than 2D SDF UV mapping
+      const isVolumetricRoom = [
+        "residential",
+        "commercial",
+        "office",
+        "utility",
+        "lobby",
+        "elevator",
+        "structure",
+        "empty_floor",
+      ].includes(shape.type);
+      if (!isVolumetricRoom && !isInsideShape(e.uv, shape)) return;
 
-    if (editingId && editingId !== id) {
-      const editingShape = renderedShapeById.get(editingId);
-      if (
-        editingShape &&
-        (!editingShape.text || editingShape.text.trim() === "")
-      ) {
-        useSimulationStore.getState().deleteShape(editingId);
+      if (editingId && editingId !== id) {
+        const editingShape = renderedShapeById.get(editingId);
+        if (
+          editingShape &&
+          (!editingShape.text || editingShape.text.trim() === "")
+        ) {
+          useSimulationStore.getState().deleteShape(editingId);
+        }
+        setEditingId(null);
       }
-      setEditingId(null);
-    }
 
-    if (activeTool !== "select") return;
-    setSelectedId(id);
+      if (activeTool !== "select") return;
+      setSelectedId(id);
+    });
   };
 
   const handleNodeDoubleClick = (e: any, id: string) => {
@@ -877,7 +882,9 @@ export const SimulationNodes = () => {
                       depth={40}
                       hasLeftWall={hasLeftWall}
                       hasRightWall={hasRightWall}
+                      color={shape.color || "#ffffff"}
                       onPointerDown={(e) => {
+                        if (shouldIgnoreInteraction(e)) return;
                         if (!isSelectionMode) return;
                         e.stopPropagation();
                         // Movement interactions are intentionally disabled for now.
@@ -903,10 +910,11 @@ export const SimulationNodes = () => {
                       width={shape.size[0]}
                       height={shape.size[1]}
                       depth={40}
-                      color={shape.color || (themes as any)[themeName].primary}
+                      color={shape.color || "#ffffff"}
                       hasLeftWall={hasLeftWall}
                       hasRightWall={hasRightWall}
                       onPointerDown={(e) => {
+                        if (shouldIgnoreInteraction(e)) return;
                         if (!isSelectionMode) return;
                         e.stopPropagation();
                         handleNodePointerDown(e, shape.id);
@@ -926,7 +934,7 @@ export const SimulationNodes = () => {
                     rotation={0}
                     size={shape.size}
                     roomType={shape.type}
-                    color={shape.color || (themes as any)[themeName].primary}
+                    color={shape.color || "#ffffff"}
                     material={shape.material}
                     hasLeftWall={hasLeftWall}
                     hasRightWall={hasRightWall}
@@ -937,6 +945,7 @@ export const SimulationNodes = () => {
                     structuralRoom={shape.structuralRoom}
                     frontFaceVisibility="transparent"
                     onPointerDown={(e) => {
+                      if (shouldIgnoreInteraction(e)) return;
                       if (!isSelectionMode) return;
                       e.stopPropagation();
                       // Movement interactions are intentionally disabled for now.
@@ -968,23 +977,19 @@ export const SimulationNodes = () => {
                     baseColor = roomAbove.themeColors[themeName] || baseColor;
                   }
                 }
-
-                const darkenedColor = new THREE.Color(baseColor)
-                  .lerp(new THREE.Color(0x000000), 0.25)
-                  .getHexString();
-
-                const scaffoldMat = parseMaterial({
-                  albedo: `#${darkenedColor}`,
-                  roughness: 0.95,
-                  metalness: 0.2,
-                });
-                scaffoldMat.polygonOffset = true;
-                scaffoldMat.polygonOffsetFactor = 1; // Slight pushback to ensure room interior renders cleanly if boundaries are perfectly flush
-                scaffoldMat.polygonOffsetUnits = 1;
+                const {
+                  wallMaterial: scaffoldWallMat,
+                  floorMaterial: scaffoldFloorMat,
+                } = getStructuralShellMaterials();
+                scaffoldWallMat.polygonOffset = true;
+                scaffoldWallMat.polygonOffsetFactor = 1;
+                scaffoldWallMat.polygonOffsetUnits = 1;
 
                 return (
                   <group
+                    frustumCulled={false}
                     onPointerDown={(e) => {
+                      if (shouldIgnoreInteraction(e)) return;
                       e.stopPropagation();
                       if (hasRoomAbove) return;
                       handleNodePointerDown(e, shape.id);
@@ -998,9 +1003,17 @@ export const SimulationNodes = () => {
                     <RoomMeshCSG
                       width={shape.size[0]}
                       height={shape.size[1]}
-                      depth={40}
+                      depth={shape.size[1]}
                       wallThickness={0.25}
-                      material={scaffoldMat}
+                      material={[
+                        scaffoldWallMat,
+                        scaffoldWallMat,
+                        scaffoldFloorMat,
+                        scaffoldFloorMat,
+                        scaffoldWallMat,
+                        scaffoldWallMat,
+                      ]}
+                      frustumCulled={false}
                       hasBackWall={false}
                       hasLeftWall={
                         shape.structuralRoom

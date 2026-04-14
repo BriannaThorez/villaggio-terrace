@@ -23,7 +23,10 @@ const createDetailNoiseTexture = (): THREE.Texture => {
     canvas.height = DETAIL_TEXTURE_SIZE;
     const context = (canvas as HTMLCanvasElement).getContext("2d");
     if (context) {
-      const imageData = context.createImageData(DETAIL_TEXTURE_SIZE, DETAIL_TEXTURE_SIZE);
+      const imageData = context.createImageData(
+        DETAIL_TEXTURE_SIZE,
+        DETAIL_TEXTURE_SIZE,
+      );
       for (let i = 0; i < imageData.data.length; i += 4) {
         const value = Math.floor(Math.random() * 255);
         imageData.data[i] = value;
@@ -91,12 +94,13 @@ vec3 triplanarBlendWeights(vec3 normal) {
 
 vec4 sampleTriplanarTexture(sampler2D textureSampler, vec3 worldPosition, vec3 normal, float scale) {
 	vec3 weights = triplanarBlendWeights(normal);
+	vec3 signedNormal = sign(normal);
 	vec2 yz = worldPosition.yz * scale;
 	vec2 zx = worldPosition.zx * scale;
 	vec2 xy = worldPosition.xy * scale;
-	vec4 xSample = texture2D(textureSampler, yz);
-	vec4 ySample = texture2D(textureSampler, zx);
-	vec4 zSample = texture2D(textureSampler, xy);
+	vec4 xSample = texture2D(textureSampler, yz * vec2(signedNormal.x == 0.0 ? 1.0 : signedNormal.x, 1.0));
+	vec4 ySample = texture2D(textureSampler, zx * vec2(signedNormal.y == 0.0 ? 1.0 : signedNormal.y, 1.0));
+	vec4 zSample = texture2D(textureSampler, xy * vec2(signedNormal.z == 0.0 ? 1.0 : signedNormal.z, 1.0));
 	return xSample * weights.x + ySample * weights.y + zSample * weights.z;
 }
 
@@ -194,42 +198,54 @@ export const applyTriplanarProjection = (
     const hasMetalnessMap = Boolean(material.metalnessMap);
     const hasAoMap = Boolean(material.aoMap);
 
-    // Removed manual injection of USE_MAP, USE_AOMAP, etc. because Three.js WebGLProgram natively 
-    // defines these macros organically without values (e.g. `#define USE_AOMAP`). 
+    // Removed manual injection of USE_MAP, USE_AOMAP, etc. because Three.js WebGLProgram natively
+    // defines these macros organically without values (e.g. `#define USE_AOMAP`).
     // Manually setting `defines.USE_AOMAP = 1` triggered a fatal `macro redefined` GLSL compilation crash.
 
     const replaceFragment = (search: string, replacement: string) => {
       if (shader.fragmentShader.includes(search)) {
-        shader.fragmentShader = shader.fragmentShader.replace(search, replacement);
+        shader.fragmentShader = shader.fragmentShader.replace(
+          search,
+          replacement,
+        );
       }
     };
 
     shader.vertexShader = shader.vertexShader.replace(
       "#include <common>",
-      `#include <common>\n${TRIPLANAR_VERTEX_DECLARATIONS}`
+      `#include <common>\n${TRIPLANAR_VERTEX_DECLARATIONS}`,
     );
 
     shader.vertexShader = shader.vertexShader.replace(
       "#include <project_vertex>",
-      "#include <project_vertex>\n    vTriplanarWorldNormal = normalize((modelMatrix * vec4(objectNormal, 0.0)).xyz);\n    vTriplanarWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;\n"
+      "#include <project_vertex>\n    vTriplanarWorldNormal = normalize((modelMatrix * vec4(objectNormal, 0.0)).xyz);\n    vTriplanarWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;\n",
     );
 
     shader.fragmentShader = shader.fragmentShader.replace(
       "#include <common>",
-      `#include <common>\n${TRIPLANAR_FRAGMENT_HELPERS}`
+      `#include <common>\n${TRIPLANAR_FRAGMENT_HELPERS}`,
     );
 
     if (hasMap) {
       replaceFragment("#include <map_fragment>", MAP_FRAGMENT_TRIPLANAR);
     } else {
-      replaceFragment("#include <color_fragment>", `#include <color_fragment>\n${DETAIL_FRAGMENT_ONLY_TRIPLANAR}`);
+      replaceFragment(
+        "#include <color_fragment>",
+        `#include <color_fragment>\n${DETAIL_FRAGMENT_ONLY_TRIPLANAR}`,
+      );
     }
 
     if (hasRoughnessMap) {
-      replaceFragment("#include <roughnessmap_fragment>", ROUGHNESS_FRAGMENT_TRIPLANAR);
+      replaceFragment(
+        "#include <roughnessmap_fragment>",
+        ROUGHNESS_FRAGMENT_TRIPLANAR,
+      );
     }
     if (hasMetalnessMap) {
-      replaceFragment("#include <metalnessmap_fragment>", METALNESS_FRAGMENT_TRIPLANAR);
+      replaceFragment(
+        "#include <metalnessmap_fragment>",
+        METALNESS_FRAGMENT_TRIPLANAR,
+      );
     }
     if (hasAoMap) {
       replaceFragment("#include <aomap_fragment>", AOMAP_FRAGMENT_TRIPLANAR);

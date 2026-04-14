@@ -7,28 +7,35 @@ export const SolarSystem: React.FC = () => {
     const baseIntensity = useSimulationStore((state) => state.sunIntensity);
     const showWeather = useSimulationStore((state) => state.showWeather);
 
-    // Dynamic solar arc calculation (for future Day/Night)
+    // 24-Hour Solar Orbit (360 Degree Logic)
     const sunPosition = useMemo(() => {
-        const angle = (time - 0.5) * Math.PI; // -PI/2 to PI/2
-        const distance = 800; // Optimal for depth precision vs frustum coverage
+        const angle = (time - 0.5) * Math.PI * 2; // Full PI * 2 cycle
+        const distance = 800;
         return new THREE.Vector3(
             Math.sin(angle) * distance,
-            Math.cos(angle) * distance,
-            150 // Restored forward-offset for architectural depth (now safe with near-plane fix)
+            Math.cos(angle) * distance, // Noon (0.5) -> Top (1.0), Midnight (0/1) -> Bottom (-1.0)
+            150
         );
     }, [time]);
 
-    // Weather dimming logic (Integration for real-time mood shifts)
-    const sunIntensity = showWeather ? baseIntensity * 0.15 : baseIntensity;
+    // Solar Elevation Intensity Modulation
+    const sunElevation = (time - 0.5) * Math.PI * 2;
+    const dayFactor = Math.max(0, Math.cos(sunElevation)); 
+    const effectiveIntensity = baseIntensity * Math.pow(dayFactor, 0.5); // Soft falloff near horizon
 
-    // Dynamic Radiosity Approximation (Bounced Sunlight)
-    const skyColor = showWeather ? "#64748b" : "#b0c4fa"; // Zenith (sky)
-    const groundColor = "#40433c"; // Nadir (earthy bounce albedo)
+    // Weather and Day/Night integration
+    const sunIntensity = showWeather ? effectiveIntensity * 0.15 : effectiveIntensity;
 
-    // Bounce intensity mathematically linked to solar elevation.
-    const sunElevation = (time - 0.5) * Math.PI;
-    // CRITICAL: Ambient light was previously too high, causing 'light blurring' into shadows.
-    const bounceIntensity = showWeather ? 0.08 : Math.max(0.01, Math.cos(sunElevation) * 0.06);
+    // Dynamic Radiosity Approximation
+    const skyColor = showWeather ? "#64748b" : (dayFactor > 0 ? "#b0c4fa" : "#02040a");
+    const groundColor = "#40433c";
+
+    // Bounce intensity linked to solar elevation and time of day
+    const bounceIntensity = showWeather 
+        ? 0.08 
+        : dayFactor > 0 
+            ? Math.max(0.01, dayFactor * 0.08) 
+            : 0.005; // Faint ambient at night
 
     return (
         <group>

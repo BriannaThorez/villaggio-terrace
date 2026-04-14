@@ -9,6 +9,8 @@ import { useGraph } from '@react-three/fiber'
 import { useAnimations, useGLTF } from '@react-three/drei'
 import { GLTF, SkeletonUtils } from 'three-stdlib'
 
+type GLTFAction = THREE.AnimationAction
+
 type GLTFResult = GLTF & {
   nodes: {
     mesh_0: THREE.SkinnedMesh
@@ -179,7 +181,7 @@ type GLTFResult = GLTF & {
 
 export function Model({ tint = '#ffffff', skinTint = '#ffffff', ...props }: JSX.IntrinsicElements['group'] & { tint?: string, skinTint?: string }) {
   const group = React.useRef<THREE.Group>(null)
-  const { scene, animations } = useGLTF(`${import.meta.env.BASE_URL}Female_Casual.fbx.glb`)
+  const { scene, animations } = useGLTF(`${(import.meta as any).env.BASE_URL}Female_Casual.fbx.glb`)
   const clone = React.useMemo(() => SkeletonUtils.clone(scene), [scene])
   const { nodes, materials } = useGraph(clone) as GLTFResult
   const { actions } = useAnimations(animations, group)

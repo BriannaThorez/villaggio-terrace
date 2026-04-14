@@ -14,6 +14,7 @@ interface EmptyFloorRoomProps {
     depth: number;
     hasLeftWall?: boolean;
     hasRightWall?: boolean;
+    color?: string;
     onPointerDown?: (e: any) => void;
     onDoubleClick?: (e: any) => void;
 }
@@ -31,6 +32,7 @@ export const EmptyFloorRoom: React.FC<EmptyFloorRoomProps> = ({
     depth,
     hasLeftWall = true,
     hasRightWall = true,
+    color = "#ffffff",
     onPointerDown,
     onDoubleClick,
 }) => {
@@ -69,6 +71,7 @@ export const EmptyFloorRoom: React.FC<EmptyFloorRoomProps> = ({
                 depth={insetDepth}
                 hasLeftWall={hasLeftWall}
                 hasRightWall={hasRightWall}
+                color={color}
             />
         </group>
     );

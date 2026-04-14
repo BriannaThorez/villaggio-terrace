@@ -4,46 +4,51 @@ import { createTextureCache } from "../api";
 const textureLoader = new THREE.TextureLoader();
 
 interface TextureOptions {
-    name: string;
-    colorSpace: THREE.ColorSpace;
-    flipY?: boolean;
+  name: string;
+  colorSpace: THREE.ColorSpace;
+  flipY?: boolean;
 }
 
 const configureTexture = (
-    texture: THREE.Texture,
-    options: TextureOptions,
+  texture: THREE.Texture,
+  options: TextureOptions,
 ): THREE.Texture => {
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
-    texture.minFilter = THREE.LinearMipmapLinearFilter;
-    texture.magFilter = THREE.LinearFilter;
-    texture.generateMipmaps = true;
-    texture.anisotropy = 4;
-    texture.colorSpace = options.colorSpace;
-    if (options.flipY !== undefined) {
-        texture.flipY = options.flipY;
-    }
-    texture.name = options.name;
-    return texture;
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = true;
+  texture.anisotropy = 4;
+  texture.colorSpace = options.colorSpace;
+  if (options.flipY !== undefined) {
+    texture.flipY = options.flipY;
+  }
+  texture.name = options.name;
+  return texture;
 };
 
-const loadTextureArgs = (url: string, options: TextureOptions): THREE.Texture => {
-    const texture = textureLoader.load(
-        url,
-        () => { texture.needsUpdate = true; },
-        undefined,
-        (err) => console.warn(`Failed to load texture ${url}`, err)
-    );
-    return configureTexture(texture, options);
+const loadTextureArgs = (
+  url: string,
+  options: TextureOptions,
+): THREE.Texture => {
+  const texture = textureLoader.load(
+    url,
+    () => {
+      texture.needsUpdate = true;
+    },
+    undefined,
+    (err) => console.warn(`Failed to load texture ${url}`, err),
+  );
+  return configureTexture(texture, options);
 };
 
 export interface TextureBundle {
-    albedoMap: THREE.Texture | null;
-    aoMap: THREE.Texture;
-    roughnessMap: THREE.Texture;
-    metalnessMap: THREE.Texture;
-    normalMap: THREE.Texture;
-    displacementMap: THREE.Texture;
+  albedoMap: THREE.Texture | null;
+  aoMap: THREE.Texture;
+  roughnessMap: THREE.Texture;
+  metalnessMap: THREE.Texture;
+  normalMap: THREE.Texture;
+  displacementMap: THREE.Texture;
 }
 
 // Global cache
@@ -81,11 +86,11 @@ import rockyTerrainDisp from "../../../assets/textures/rocky_terrain_2/rocky_ter
 import rockyTerrainSpec from "../../../assets/textures/rocky_terrain_2/rocky_terrain_02_spec_4k.png";
 
 interface AssetPaths {
-    diff: string;
-    arm: string;
-    nor: string;
-    disp: string;
-    spec?: string;
+  diff: string;
+  arm: string;
+  nor: string;
+  disp: string;
+  spec?: string;
 }
 
 const ASSET_REGISTRY: Record<string, AssetPaths> = {
@@ -104,7 +109,7 @@ const ASSET_REGISTRY: Record<string, AssetPaths> = {
 };
 
 export const getTextureBundle = (assetName: string): TextureBundle => {
-    if (bundleCache.get(assetName)) return bundleCache.get(assetName)!;
+  if (bundleCache.get(assetName)) return bundleCache.get(assetName)!;
 
     const paths = ASSET_REGISTRY[assetName];
     if (!paths) throw new Error(`Asset ${assetName} not found in registry`);
@@ -114,19 +119,22 @@ export const getTextureBundle = (assetName: string): TextureBundle => {
     const normalMap = loadTextureArgs(paths.nor, { name: `${assetName}-normal`, colorSpace: THREE.NoColorSpace, flipY: false });
     const dispMap = loadTextureArgs(paths.disp, { name: `${assetName}-disp`, colorSpace: THREE.NoColorSpace });
 
-    const specMap = paths.spec
-        ? loadTextureArgs(paths.spec, { name: `${assetName}-spec`, colorSpace: THREE.NoColorSpace })
-        : armMap;
+  const specMap = paths.spec
+    ? loadTextureArgs(paths.spec, {
+        name: `${assetName}-spec`,
+        colorSpace: THREE.NoColorSpace,
+      })
+    : armMap;
 
-    const bundle: TextureBundle = {
-        albedoMap: diffuseMap,
-        aoMap: armMap,
-        roughnessMap: specMap,
-        metalnessMap: specMap,
-        normalMap: normalMap,
-        displacementMap: dispMap,
-    };
+  const bundle: TextureBundle = {
+    albedoMap: diffuseMap,
+    aoMap: armMap,
+    roughnessMap: specMap,
+    metalnessMap: specMap,
+    normalMap: normalMap,
+    displacementMap: dispMap,
+  };
 
-    bundleCache.set(assetName, bundle);
-    return bundle;
+  bundleCache.set(assetName, bundle);
+  return bundle;
 };

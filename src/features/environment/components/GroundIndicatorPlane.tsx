@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import * as THREE from "three";
 import { createTerrainSurfacePreset, buildSurfaceMaterial } from "../presets";
-import { parseAssetMaterial } from "../../../engine/MaterialParser";
+import { parseRoomMaterial } from "../../../engine/MaterialParser";
 
 export interface GroundIndicatorPlaneProps {
   position?: [number, number, number];
@@ -36,7 +36,12 @@ export const GroundIndicatorPlane: React.FC<GroundIndicatorPlaneProps> = ({
   const preset = useMemo(() => createTerrainSurfacePreset(), []);
 
   const material = useMemo(() => {
-    const base = parseAssetMaterial("rocky_terrain_2", "#ffffff");
+    const base = parseRoomMaterial({
+      albedo: "#ffffff",
+      roughness: 1.0,
+      metalness: 0.0,
+      wallTexture: "rocky_terrain_2",
+    });
     const clone = base.clone() as THREE.MeshPhysicalMaterial;
     const built = buildSurfaceMaterial(
       clone,

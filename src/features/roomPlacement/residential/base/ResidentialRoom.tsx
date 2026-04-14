@@ -37,7 +37,7 @@ interface ResidentialRoomProps {
 
 /**
  * ResidentialRoom: The primary dwelling unit component.
- * 
+ *
  * Orchestrates placement and encapsulation, delegating visual
  * rendering to modular room entities.
  */
@@ -63,7 +63,8 @@ export const ResidentialRoom: React.FC<ResidentialRoomProps> = ({
     return w;
   }, [width, hasLeftWall, hasRightWall]);
 
-  const insetHeight = height - STRUCTURE_FLOOR_THICKNESS - STRUCTURE_CEILING_THICKNESS;
+  const insetHeight =
+    height - STRUCTURE_FLOOR_THICKNESS - STRUCTURE_CEILING_THICKNESS;
   const insetDepth = depth - STRUCTURE_WALL_THICKNESS;
 
   const roomPosition = useMemo<[number, number, number]>(() => {
@@ -78,17 +79,22 @@ export const ResidentialRoom: React.FC<ResidentialRoomProps> = ({
     ];
   }, [position, hasLeftWall, hasRightWall]);
 
-  const showPlacementGrid = useSimulationStore((state) => state.showPlacementGrid);
+  const showPlacementGrid = useSimulationStore(
+    (state) => state.showPlacementGrid,
+  );
   const selectedId = useSimulationStore((state) => state.selectedId);
-  const isSelected = structuralRoom ? (structuralRoom.roomId === selectedId) : false;
+  const isSelected = structuralRoom
+    ? structuralRoom.roomId === selectedId
+    : false;
   const isGridVisible = isSelected && showPlacementGrid;
 
   const placementGrid = useInteriorSubgrid(
-    structuralRoom?.roomId || `room_${position[0]}_${position[1]}_${position[2]}`,
+    structuralRoom?.roomId ||
+      `room_${position[0]}_${position[1]}_${position[2]}`,
     insetWidth,
     insetDepth,
     position[1],
-    'tenth'
+    "tenth",
   );
 
   return (

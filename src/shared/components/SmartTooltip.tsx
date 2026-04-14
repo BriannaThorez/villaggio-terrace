@@ -229,56 +229,58 @@ export const SmartTooltip: React.FC<SmartTooltipProps> = ({
             zIndex: 99999,
             pointerEvents: "none",
             willChange: "transform, opacity",
-            // Use fixed width if provided, otherwise max-content for dynamic sizing
             width: width || "max-content",
             maxWidth: "calc(100vw - 48px)",
           }}
-          className="flex items-center"
+          className="relative flex items-center"
         >
-          {/* Arrow */}
-          {actualPosition === "right" && (
-            <div className="w-0 h-0 border-y-[6px] border-y-transparent border-r-[8px] border-r-primary/20 mr-[-1px]" />
-          )}
-          {actualPosition === "left" && (
-            <div className="w-0 h-0 border-y-[6px] border-y-transparent border-l-[8px] border-l-primary/20 ml-[-1px] order-2" />
-          )}
-          {actualPosition === "top" && (
-            <div className="w-0 h-0 border-x-[6px] border-x-transparent border-t-[8px] border-t-primary/20 mt-[-1px] order-2" />
-          )}
-          {actualPosition === "bottom" && (
-            <div className="w-0 h-0 border-x-[6px] border-x-transparent border-b-[8px] border-b-primary/20 mb-[-1px]" />
-          )}
+          <div
+            className={`absolute top-1/2 -translate-y-1/2 ${actualPosition === "right" ? "left-0 -ml-[-1px]" : actualPosition === "left" ? "right-0 -mr-[-1px] order-2" : ""}`}
+          >
+            {actualPosition === "right" && (
+              <div className="w-0 h-0 border-y-[6px] border-y-transparent border-r-[8px] border-r-primary/20 mr-[-1px]" />
+            )}
+            {actualPosition === "left" && (
+              <div className="w-0 h-0 border-y-[6px] border-y-transparent border-l-[8px] border-l-primary/20 ml-[-1px] order-2" />
+            )}
+            {actualPosition === "top" && (
+              <div className="absolute left-1/2 -translate-x-1/2 -top-[7px] w-0 h-0 border-x-[6px] border-x-transparent border-t-[8px] border-t-primary/20" />
+            )}
+            {actualPosition === "bottom" && (
+              <div className="absolute left-1/2 -translate-x-1/2 -bottom-[7px] w-0 h-0 border-x-[6px] border-x-transparent border-b-[8px] border-b-primary/20" />
+            )}
 
-          <div className="bg-background/90 backdrop-blur-2xl border border-primary/30 rounded-xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.4)] relative overflow-hidden h-max w-full box-border">
-            {/* Decorative background glow */}
-            <div className="absolute -top-10 -right-10 w-20 h-20 bg-primary/10 blur-3xl rounded-full" />
+            <div className="bg-background/90 backdrop-blur-2xl border border-primary/30 rounded-xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.4)] relative overflow-hidden h-max w-full box-border">
+              <div className="absolute -top-10 -right-10 w-20 h-20 bg-primary/10 blur-3xl rounded-full" />
 
-            <div className="flex flex-col gap-2 relative z-10">
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-[11px] font-bold text-text tracking-tight uppercase">
-                  {content}
-                </span>
-                {shortcut && (
-                  <span className="px-1.5 py-0.5 rounded bg-text/10 border border-text/5 text-[9px] font-mono text-primary font-bold">
-                    {shortcut}
+              <div
+                className={`flex flex-col gap-2 relative z-10 min-w-0 ${description ? "min-w-[10rem]" : ""}`}
+              >
+                <div className="flex items-center justify-between gap-4 min-w-0">
+                  <span className="text-[11px] font-bold text-text tracking-tight uppercase whitespace-nowrap flex-shrink-0">
+                    {content}
                   </span>
+                  {shortcut && (
+                    <span className="px-1.5 py-0.5 rounded bg-text/10 border border-text/5 text-[9px] font-mono text-primary font-bold whitespace-nowrap flex-shrink-0">
+                      {shortcut}
+                    </span>
+                  )}
+                </div>
+
+                {description && (
+                  <div className="text-[10px] text-text/50 leading-relaxed font-medium break-words">
+                    {description}
+                  </div>
                 )}
               </div>
 
-              {description && (
-                <div className="text-[10px] text-text/50 leading-relaxed font-medium">
-                  {description}
-                </div>
-              )}
+              <motion.div
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ delay: 0.1, duration: 0.4 }}
+                className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r via-primary/40 to-transparent origin-center"
+              />
             </div>
-
-            {/* Animated border line */}
-            <motion.div
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ delay: 0.1, duration: 0.4 }}
-              className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/40 to-transparent origin-center"
-            />
           </div>
         </motion.div>
       )}

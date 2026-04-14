@@ -66,7 +66,7 @@ export const getPaintedPlasterBundle = (): PaintedPlasterTextureBundle => {
 
   const albedoMap = loadPaintedPlasterTexture(paintedPlasterArmUrl, {
     name: "painted-plaster-arm",
-    colorSpace: THREE.SRGBColorSpace,
+    colorSpace: THREE.NoColorSpace,
   });
 
   const normalMap = loadPaintedPlasterTexture(paintedPlasterNormalUrl, {

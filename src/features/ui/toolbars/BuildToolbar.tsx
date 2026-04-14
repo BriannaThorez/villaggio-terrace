@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { Star } from "lucide-react";
 import { useSimulationStore } from "../../../shared/utils/store";
 import {
   Cursor01Icon,
@@ -65,26 +66,40 @@ const COLOR_REGISTRY: Record<string, string> = {
   Unknown: "#ef4444",
 };
 
-const HEADER_VERTICAL_SCALE = 0.9;
-const HEADER_VERTICAL_GAP_REM = 1.5;
-const HEADER_PADDING_BOTTOM_REM = 0.5;
-
 const formatDisplayPart = (value?: string) =>
   (value || "").replace(/\b\w/g, (char) => char.toUpperCase());
 
+const getRoomSizeOrder = (rooms: any[]) =>
+  Array.from(
+    new Map(
+      rooms
+        .map((room) => room?.metadata?.size)
+        .filter(Boolean)
+        .map((size) => [size, size]),
+    ).values(),
+  );
+
+const QUALITY_STAR_MAP: Record<string, number> = {
+  Basic: 2,
+  Standard: 3,
+  Deluxe: 3,
+  Luxury: 4,
+  Gourmet: 5,
+};
+
 const buildRoomDisplayName = (room: any) => {
-  const size = formatDisplayPart(room?.metadata?.size);
   const specialization = formatDisplayPart(room?.metadata?.specialization);
   const form = formatDisplayPart(room?.metadata?.form);
   const quality = formatDisplayPart(room?.metadata?.quality);
   const className = formatDisplayPart(room?.class);
 
-  const topLine = [size, specialization, form].filter(Boolean).join(" ");
+  const topLine = [quality, specialization, form].filter(Boolean).join(" ");
   const bottomLine = [quality, className].filter(Boolean).join(" ");
 
   return {
     topLine,
     bottomLine,
+    qualityStars: QUALITY_STAR_MAP[quality] ?? 2,
   };
 };
 
@@ -92,7 +107,7 @@ const RoomInfoTooltip = ({ metadata }: { metadata: any }) => {
   if (!metadata) return null;
   const { utilities, services } = resolveTraitsByCategory(metadata.metadata);
 
-  const { topLine, bottomLine } = buildRoomDisplayName(metadata);
+  const { topLine, bottomLine, qualityStars } = buildRoomDisplayName(metadata);
 
   return (
     <div className="flex flex-col gap-2 max-w-full">
@@ -103,6 +118,11 @@ const RoomInfoTooltip = ({ metadata }: { metadata: any }) => {
         <span className="text-[9px] font-bold text-text/30 uppercase tracking-tighter leading-tight">
           {bottomLine}
         </span>
+        <div className="flex items-center gap-0.5 pt-0.5">
+          {Array.from({ length: qualityStars }).map((_, index) => (
+            <Star key={index} className="text-amber-400" size={10} />
+          ))}
+        </div>
       </div>
 
       <p className="text-[10px] leading-relaxed text-text/60 italic border-l-2 border-primary/20 pl-2">
@@ -141,12 +161,14 @@ type BuildCategory = {
   icon: any;
   label: string;
   description?: string;
+  sizes?: string[];
   subTypes?: Array<{
     id: string;
     label: string;
     color?: string;
     type?: string;
     size?: number[];
+    metadata?: any;
   }>;
 };
 
@@ -159,7 +181,19 @@ export const BuildToolbar = () => {
   const activeModuleId = useSimulationStore((state) => state.activeModuleId);
 
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [activeSizeTab, setActiveSizeTab] = useState<Record<string, string>>(
+    {},
+  );
   const [memoryState, setMemoryState] = useState<Record<string, string>>({});
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (wrapperRef.current) {
+        wrapperRef.current = null;
+      }
+    };
+  }, []);
 
   const categories = useMemo(() => {
     const rooms = roomMetadata.rooms as any[];
@@ -205,6 +239,7 @@ export const BuildToolbar = () => {
       _rawClass: cls,
       icon: ICON_REGISTRY[cls] || ICON_REGISTRY.Settings,
       label: cls,
+      sizes: getRoomSizeOrder(grouped[cls]),
       subTypes: grouped[cls],
     }));
 
@@ -228,18 +263,35 @@ export const BuildToolbar = () => {
       const cat = categories.find((c) =>
         (c as any).subTypes?.some((s: any) => s.id === activeModuleId),
       );
-      if (cat)
+      if (cat) {
         setMemoryState((prev) => ({ ...prev, [cat.id]: activeModuleId }));
+        if (!activeTool || activeTool === "select") {
+          setActiveModuleId(null);
+        }
+      }
     }
-  }, [activeTool, activeModuleId, categories]);
+  }, [activeTool, activeModuleId, categories, setActiveModuleId]);
 
   const handleCategoryClick = (cat: BuildCategory) => {
     if (cat.subTypes && cat.subTypes.length > 0) {
-      const lastSelectedId = memoryState[cat.id] || cat.subTypes[0].id;
+      const sizeTabs = cat.sizes && cat.sizes.length > 0 ? cat.sizes : [];
+      const preferredSize = activeSizeTab[cat.id] || sizeTabs[0] || "";
+      const sizeFiltered = preferredSize
+        ? cat.subTypes.filter(
+            (sub: any) =>
+              formatDisplayPart(sub?.metadata?.size).toLowerCase() ===
+              preferredSize.toLowerCase(),
+          )
+        : cat.subTypes;
+      const lastSelectedId =
+        memoryState[cat.id] || sizeFiltered[0]?.id || cat.subTypes[0].id;
       const sub = cat.subTypes.find((s: any) => s.id === lastSelectedId);
       if (sub) {
         setActiveTool(normalizeToolType(sub.type, cat.id));
         setActiveModuleId(sub.id);
+      }
+      if (sizeTabs.length > 0 && !activeSizeTab[cat.id]) {
+        setActiveSizeTab((prev) => ({ ...prev, [cat.id]: sizeTabs[0] }));
       }
     } else {
       setActiveTool(normalizeToolType(undefined, cat.id));
@@ -247,8 +299,35 @@ export const BuildToolbar = () => {
     }
   };
 
+  useEffect(() => {
+    if (activeTool === "select") {
+      setActiveModuleId(null);
+    }
+  }, [activeTool, setActiveModuleId]);
+
+  const clearCloseTimer = () => {
+    setExpandedCategory((current) => current);
+  };
+
+  const scheduleCloseDrawer = () => {
+    setExpandedCategory((current) => current);
+  };
+
   return (
-    <div className="absolute inset-x-0 bottom-4 flex justify-center z-50 pointer-events-none">
+    <div
+      ref={wrapperRef}
+      className="absolute inset-x-0 bottom-4 flex justify-center z-50 pointer-events-none"
+      onPointerMove={(event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+
+        const category = target.closest("[data-build-category]");
+        if (category) {
+          setExpandedCategory(category.getAttribute("data-build-category"));
+        }
+      }}
+      onPointerLeave={() => setExpandedCategory(null)}
+    >
       <div className="pointer-events-auto inline-flex flex-col items-stretch bg-background/80 backdrop-blur-2xl px-4 py-3 rounded-[2.5rem] border border-white/10 shadow-[0_32px_64px_rgba(0,0,0,0.5)] gap-3 transition-all duration-500">
         <div className="flex items-center gap-4">
           {categories.map((cat) => {
@@ -256,58 +335,122 @@ export const BuildToolbar = () => {
             const isExpanded = expandedCategory === cat.id;
             const isActive =
               activeTool === cat.id ||
-              cat.subTypes?.some((s) => s.id === activeModuleId);
+              (activeTool !== "select" &&
+                !!activeModuleId &&
+                cat.subTypes?.some((s) => s.id === activeModuleId));
 
             return (
               <div
                 key={cat.id}
+                data-build-category={cat.id}
                 className="relative group"
-                onMouseEnter={() => setExpandedCategory(cat.id)}
-                onMouseLeave={() => setExpandedCategory(null)}
+                onPointerEnter={() => setExpandedCategory(cat.id)}
               >
-                {cat.subTypes && (
+                {cat.subTypes && cat.subTypes.length > 0 && (
                   <div
-                    className={`absolute bottom-full left-1/2 -translate-x-1/2 flex flex-col gap-2 p-3 bg-background/90 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl transition-all duration-300 origin-bottom pb-8 -mb-6 ${isExpanded ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-4 scale-95 pointer-events-none"}`}
+                    className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-3 flex flex-col gap-2 p-3 bg-background/90 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl transition-all duration-300 origin-bottom ${isExpanded ? "opacity-100 translate-y-0 scale-100 pointer-events-auto" : "opacity-0 translate-y-4 scale-95 pointer-events-none"}`}
+                    onPointerEnter={() => setExpandedCategory(cat.id)}
                   >
-                    {cat.subTypes.map((sub) => {
-                      const display = buildRoomDisplayName(sub);
-                      return (
-                        <SmartTooltip
-                          key={sub.id}
-                          content={display.topLine}
-                          description={
-                            <div className="flex flex-col gap-1 max-w-full">
-                              <div className="text-[10px] font-mono font-bold text-emerald-400 leading-tight">
-                                {display.topLine}
-                              </div>
-                              <div className="text-[9px] font-bold text-text/30 uppercase tracking-tighter leading-tight">
-                                {display.bottomLine}
-                              </div>
-                            </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {(cat.sizes && cat.sizes.length > 0
+                        ? cat.sizes
+                        : ["Small"]
+                      ).map((size) => (
+                        <button
+                          key={size}
+                          onClick={() =>
+                            setActiveSizeTab((prev) => ({
+                              ...prev,
+                              [cat.id]: size,
+                            }))
                           }
-                          position="right"
-                          width="308px"
+                          className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-colors ${
+                            (activeSizeTab[cat.id] ||
+                              (cat.sizes && cat.sizes[0]) ||
+                              "Small") === size
+                              ? "bg-primary text-background border-primary"
+                              : "bg-background/70 text-text/60 border-white/10 hover:border-primary/30 hover:text-primary"
+                          }`}
                         >
-                          <button
-                            onClick={() => {
-                              setActiveTool(
-                                normalizeToolType(sub.type, cat.id),
-                              );
-                              setActiveModuleId(sub.id);
-                            }}
-                            className="whitespace-nowrap px-4 py-2 text-[11px] font-medium text-text/70 hover:text-primary hover:bg-primary/10 rounded-xl transition-colors flex items-center gap-3 border border-transparent hover:border-primary/20"
-                          >
-                            <div
-                              className="w-1.5 h-1.5 rounded-full"
-                              style={{
-                                background: sub.color || "var(--primary)",
-                              }}
-                            />
-                            {display.topLine}
-                          </button>
-                        </SmartTooltip>
-                      );
-                    })}
+                          {size}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      {cat.subTypes
+                        ?.filter((sub: any) => {
+                          const selectedSize =
+                            activeSizeTab[cat.id] || cat.sizes?.[0] || "";
+                          return (
+                            !selectedSize ||
+                            formatDisplayPart(
+                              sub?.metadata?.size,
+                            ).toLowerCase() === selectedSize.toLowerCase()
+                          );
+                        })
+                        .map((sub) => {
+                          const display = buildRoomDisplayName(sub);
+                          return (
+                            <SmartTooltip
+                              key={sub.id}
+                              content={display.topLine}
+                              description={
+                                <div className="flex flex-col gap-1 max-w-full">
+                                  <div className="text-[10px] font-mono font-bold text-emerald-400 leading-tight">
+                                    {display.topLine}
+                                  </div>
+                                  <div className="text-[9px] font-bold text-text/30 uppercase tracking-tighter leading-tight">
+                                    {display.bottomLine}
+                                  </div>
+                                  <div className="flex items-center gap-0.5 pt-0.5">
+                                    {Array.from({
+                                      length: display.qualityStars,
+                                    }).map((_, index) => (
+                                      <Star
+                                        key={index}
+                                        className="text-amber-400"
+                                        size={10}
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                              }
+                              position="right"
+                              width="308px"
+                            >
+                              <button
+                                onClick={() => {
+                                  setActiveTool(
+                                    normalizeToolType(sub.type, cat.id),
+                                  );
+                                  setActiveModuleId(sub.id);
+                                }}
+                                className="whitespace-nowrap px-4 py-2 text-[11px] font-medium text-text/70 hover:text-primary hover:bg-primary/10 rounded-full transition-colors flex items-center gap-3 border border-white/10 hover:border-primary/20 shadow-sm"
+                              >
+                                <div
+                                  className="w-1.5 h-1.5 rounded-full"
+                                  style={{
+                                    background: sub.color || "var(--primary)",
+                                  }}
+                                />
+                                {display.topLine}
+                                <span className="ml-2 inline-flex items-center gap-0.5">
+                                  {Array.from({
+                                    length: display.qualityStars,
+                                  }).map((_, index) => (
+                                    <Star
+                                      key={index}
+                                      className="text-amber-400"
+                                      size={10}
+                                    />
+                                  ))}
+                                </span>
+                              </button>
+                            </SmartTooltip>
+                          );
+                        })}
+                    </div>
                   </div>
                 )}
 

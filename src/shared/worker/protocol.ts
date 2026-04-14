@@ -466,6 +466,7 @@ export function createWorkerTaskEnvelope<TType extends string, TPayload>(
     clientRevision?: number;
     role?: string;
     priority?: number;
+    silent?: boolean;
     cancellation?: WorkerCancellationMetadata;
     fallback?: WorkerFallbackMetadata;
   } = {},

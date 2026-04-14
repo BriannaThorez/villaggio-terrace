@@ -451,9 +451,7 @@ const handleEnvelope = (envelope: WorkerEnvelope) => {
     envelope.kind === WORKER_MESSAGE_KIND.Task ||
     envelope.kind === WORKER_MESSAGE_KIND.Request
   ) {
-    const taskEnvelope = envelope as
-      | WorkerTaskRequestEnvelope
-      | WorkerRequestEnvelope;
+    const taskEnvelope = envelope as any;
     void handleTask({
       requestId: taskEnvelope.requestId,
       taskType: taskEnvelope.type,
@@ -462,7 +460,7 @@ const handleEnvelope = (envelope: WorkerEnvelope) => {
       clientRevision: taskEnvelope.clientRevision,
       role: (taskEnvelope.role as WorkerRole | undefined) ?? runtimeRole,
       priority: taskEnvelope.priority,
-      silent: taskEnvelope.silent,
+      silent: !!taskEnvelope.silent,
       createdAt: taskEnvelope.createdAtMs,
     });
     return;
@@ -544,8 +542,8 @@ const WORKER_RUNTIME_PROFILER_THRESHOLD_MS = 50;
 
 export const initWorkerRuntime = (options: WorkerRuntimeOptions = {}) => {
   // Detect role from URL if available
-  if (globalScope && globalScope.location.search) {
-    const params = new URLSearchParams(globalScope.location.search);
+  if (globalScope && (globalScope as any).location?.search) {
+    const params = new URLSearchParams((globalScope as any).location.search);
     const urlRole = params.get("role") as WorkerRole;
     if (urlRole) {
       options.role = urlRole;

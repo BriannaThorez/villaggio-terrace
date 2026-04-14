@@ -2,6 +2,7 @@
 // All other theme-related definitions (sizing, components, etc.)
 // are considered legacy and will be removed.
 
+export const themeTokens = {
   "--theme-main-toolbar-button-icon-size":
     theme.sizing.components.mainToolbar.button.iconSize,
   "--theme-main-toolbar-button-stroke-width":
@@ -132,7 +133,7 @@
     theme.sizing.components.mainToolbar.menu.checkIconSize,
   "--theme-main-toolbar-menu-check-icon-foreground":
     theme.sizing.components.mainToolbar.menu.checkIconForeground,
-});
+};
 
 export const getThemeTokens = (mode: ThemeMode = "dark"): ThemeTokens =>
   themeTokens[mode];

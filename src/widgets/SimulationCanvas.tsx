@@ -17,6 +17,7 @@ import { InternetConnectivity } from "../features/roomPlacement/visuals/Internet
 import { SolarSystem } from "../features/lighting/ui/SolarSystem";
 import { RainField, RainMist } from "../features/weather/ui/WeatherEffects";
 import { WeatherPanel } from "../features/weather/ui/WeatherPanel";
+import { AssetPreloader } from "../features/assetPreloader/ui/AssetPreloader";
 // [DISABLED] SimPeople — re-enable after grass shader integration
 // import { SimPeopleManager } from "../features/simPeople/components/SimPeopleManager";
 // import { usePeopleSpawner } from "../features/simPeople/store/usePeopleSpawner";
@@ -666,20 +667,36 @@ const CanvasScene = () => {
   };
 
   useEffect(() => {
-    const handleGlobalUp = (e: PointerEvent) => {
-      setIsPanning(false);
-      setIsRotating(false);
-      setIsDragging(false);
+    const handleGlobalDown = (e: PointerEvent) => {
+      if (e.button === 2) {
+        // Prevent default context menu on right click
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("contextmenu", (e) => e.preventDefault());
+    window.addEventListener("pointerdown", handleGlobalDown);
+    return () => {
+      window.removeEventListener("contextmenu", (e) => e.preventDefault());
+      window.removeEventListener("pointerdown", handleGlobalDown);
+    };
+  }, []);
 
-      // Global right-click tool cancellation (Industry leading stability)
-      // This ensures that right-click ALWAYS dismisses the active tool,
-      // even if a sub-component mesh stopped propagation of the Three.js event.
+  useEffect(() => {
+    const handleGlobalUp = (e: PointerEvent) => {
+      // Right-click exclusively: deselect/cancel active tool
       if (e.button === 2) {
         const currentTool = useSimulationStore.getState().activeTool;
         if (currentTool !== "select") {
           setActiveTool("select");
-          setSelectedId(null);
         }
+        setSelectedId(null);
+        setIsPanning(false);
+        setIsRotating(false);
+        setIsDragging(false);
+      } else {
+        setIsPanning(false);
+        setIsRotating(false);
+        setIsDragging(false);
       }
 
       setLinkingFrom(null);
@@ -1155,10 +1172,11 @@ export const SimulationCanvas = () => {
       gl={{
         antialias: true,
         toneMapping: THREE.ACESFilmicToneMapping,
-        toneMappingExposure: showWeather ? 0.4 : 0.7, // Dynamic exposure for weather mood
+        toneMappingExposure: showWeather ? 0.4 : 0.52, // Calibrated for deep architectural contrast without albedo-tinting baseline
         outputColorSpace: THREE.SRGBColorSpace,
       }}
     >
+      <AssetPreloader />
       <CanvasScene />
     </Canvas>
   );
