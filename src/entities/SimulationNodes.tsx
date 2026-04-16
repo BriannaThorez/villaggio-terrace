@@ -84,45 +84,6 @@ const RotateHandle = ({ rotation }: { rotation: number }) => {
   );
 };
 
-const VertexHandle = ({
-  position,
-  onDrag,
-  onDragStart,
-  color,
-}: {
-  position: [number, number];
-  onDrag: (pos: [number, number]) => void;
-  onDragStart: () => void;
-  color: string;
-}) => {
-  const [hovered, setHovered] = useState(false);
-
-  const themeName = useSimulationStore((state) => state.themeName);
-  const currentTheme = (themes as any)[themeName];
-
-  return (
-    <mesh
-      position={[position[0], position[1], 0.1]}
-      onPointerOver={() => setHovered(true)}
-      onPointerOut={() => setHovered(false)}
-      onPointerDown={(e) => {
-        e.stopPropagation();
-        onDragStart();
-      }}
-      onClick={(e) => e.stopPropagation()}
-      onPointerMove={(e) => {
-        if (e.buttons === 1) {
-          // Left click dragging
-          onDrag([e.point.x, e.point.y]);
-        }
-      }}
-      scale={hovered ? 1.5 : 1}
-    >
-      <circleGeometry args={[0.5, 16]} />
-      <meshBasicMaterial color={hovered ? "#fff" : currentTheme.accent} />
-    </mesh>
-  );
-};
 
 const isInsideShape = (
   uv: THREE.Vector2 | undefined,
@@ -639,26 +600,6 @@ export const SimulationNodes = () => {
     }
   };
 
-  const handleVertexDrag = (
-    shapeId: string,
-    vertexIndex: number,
-    newPos: [number, number],
-  ) => {
-    const shape = renderedShapeById.get(shapeId);
-    if (!shape) return;
-
-    const newVertices = [...shape.vertices];
-    // Movement interactions are intentionally disabled for now.
-    // Retain this update path so future node manipulation can be restored without reworking the model.
-    newVertices[vertexIndex] = [
-      newPos[0] - shape.position[0],
-      newPos[1] - shape.position[1],
-    ];
-
-    // Movement interactions are intentionally disabled for now.
-    // Keep this update path in place so future move/edit behavior can be restored without reworking the node model.
-    updateShape(shapeId, { vertices: newVertices }, true);
-  };
 
   const [cursorVisible, setCursorVisible] = useState(true);
 
@@ -1032,19 +973,6 @@ export const SimulationNodes = () => {
                 );
               })()}
 
-            {activeTool === "vertex" &&
-              selectedId === shape.id &&
-              shape.vertices.map((vertex, index) => (
-                <VertexHandle
-                  key={index}
-                  position={[vertex[0], vertex[1]]}
-                  onDragStart={() =>
-                    useSimulationStore.getState().pushToHistory()
-                  }
-                  onDrag={(pos) => handleVertexDrag(shape.id, index, pos)}
-                  color="#39ff14"
-                />
-              ))}
           </group>
         );
       })}

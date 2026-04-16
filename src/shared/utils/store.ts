@@ -126,6 +126,9 @@ export interface SimulationNode {
   themeColors?: Record<string, string>; // themeName -> hexColor
   material?: "plastic" | "glass";
   rotation?: number; // in radians
+  structuralSettings?: {
+    openings: any[];
+  };
   structuralMetadata?: {
     adjacencies: string[]; // IDs of touching units
     wallMask: number; // Bitmask for left/right/top/bottom wall presence
@@ -152,11 +155,8 @@ export interface SimulationState {
   activeModuleId: string | null; // The specific ID from roomMetadata.json
   selectedId: string | null;
   editingId: string | null;
-  isDragging: boolean;
   isRotating: boolean;
   isPanning: boolean;
-  dragOffset: [number, number];
-  preDragPosition: [number, number] | null;
 
   // Drag-to-link state
   linkingFrom: { id: string; port: PortType } | null;
@@ -188,11 +188,8 @@ export interface SimulationState {
   setLastDeletedNodeType: (type: SimulationNodeType | null) => void;
   setSelectedId: (id: string | null) => void;
   setEditingId: (id: string | null) => void;
-  setIsDragging: (isDragging: boolean) => void;
   setIsRotating: (isRotating: boolean) => void;
   setIsPanning: (isPanning: boolean) => void;
-  setDragOffset: (offset: [number, number]) => void;
-  setPreDragPosition: (pos: [number, number] | null) => void;
   checkPlacement: (
     x: number,
     y: number,
@@ -384,11 +381,8 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     lastDeletedNodeType: null,
     selectedId: null,
     editingId: null,
-    isDragging: false,
     isRotating: false,
     isPanning: false,
-    dragOffset: [0, 0],
-    preDragPosition: null,
     linkingFrom: null,
     linkingTo: null,
     shouldResetCamera: false,
@@ -443,6 +437,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       y: number,
       w: number,
       h: number,
+      type: string,
       ignoreId?: string,
     ) => {
       const workerPool = getWorkerPool();
@@ -451,7 +446,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
         CheckPlacementResult
       >({
         taskType: SIMULATION_TASK_TYPE.CheckPlacement,
-        payload: { x, y, w, h, type: "residential", ignoreId },
+        payload: { x, y, w, h, type, ignoreId },
         sceneRevision: 0,
         clientRevision: 0,
       });
@@ -639,7 +634,6 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
         return; // Placements must be strictly non-overlapping
       }
 
-      // ... rest of the existing addShape ...
       if (!skipHistory) {
         pushToHistory();
       }
@@ -655,6 +649,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
               y: shape.position[1],
               w: shape.size[0],
               h: shape.size[1],
+              type: shape.type,
             },
           ],
         },
@@ -831,6 +826,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
                       y: newShape.position[1],
                       w: newShape.size[0] || s.size[0],
                       h: newShape.size[1] || s.size[1],
+                      type: s.type,
                     },
                   ],
                 },
@@ -1004,44 +1000,6 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     setEditingId: (id) => {
       set({ editingId: id });
     },
-    setIsDragging: (isDragging) => {
-      const state = get();
-      if (isDragging) {
-        const shape = state.selectedId
-          ? state.shapes.find((s) => s.id === state.selectedId)
-          : null;
-        set({
-          isDragging,
-          preDragPosition: shape ? [...shape.position] : null,
-        });
-      } else {
-        if (state.isDragging && state.selectedId) {
-          const shape = state.shapes.find((s) => s.id === state.selectedId);
-          if (shape) {
-            if (
-              !state.checkPlacement(
-                shape.position[0],
-                shape.position[1],
-                shape.size[0],
-                shape.size[1],
-                shape.type,
-                shape.id,
-              )
-            ) {
-              if (state.preDragPosition) {
-                state.updateShape(
-                  shape.id,
-                  { position: state.preDragPosition },
-                  true,
-                );
-              }
-            }
-          }
-        }
-        set({ isDragging, preDragPosition: null });
-      }
-    },
-    setPreDragPosition: (preDragPosition) => set({ preDragPosition }),
     setIsRotating: (isRotating) => {
       const state = get();
       if (!isRotating && state.isRotating && state.selectedId) {
@@ -1063,7 +1021,6 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       set({ isRotating });
     },
     setIsPanning: (isPanning) => set({ isPanning }),
-    setDragOffset: (dragOffset) => set({ dragOffset }),
     setLinkingFrom: (linkingFrom) => set({ linkingFrom }),
     setLinkingTo: (linkingTo) => set({ linkingTo }),
     resolveAllOverlaps: () => {

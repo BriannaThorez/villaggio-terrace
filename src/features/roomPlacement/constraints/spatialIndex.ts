@@ -1,4 +1,4 @@
-import type { SimulationNode } from "../../../entities/SimulationNodes";
+import type { SimulationNode } from "../../../shared/utils/store";
 
 // ═══════════════════════════════════════════════════════════
 // Industry-Leading Floor Bucket Spatial Index

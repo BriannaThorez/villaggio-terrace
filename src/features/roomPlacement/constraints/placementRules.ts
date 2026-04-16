@@ -1,4 +1,4 @@
-import type { SimulationNode } from "../../../../shared/utils/store";
+import type { SimulationNode } from "../../../shared/utils/store";
 import { checkStructuralIntegrity } from "./structuralIntegrity";
 import { FloorBucketIndex, STRUCTURAL_CONSTANTS } from "./spatialIndex";
 

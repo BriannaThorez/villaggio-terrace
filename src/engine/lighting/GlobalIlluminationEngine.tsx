@@ -5,7 +5,22 @@ import { GlobalIlluminationShader } from './GlobalIlluminationShader';
 import { createBlueNoiseTexture } from './BlueNoise';
 import { GICompositorShader } from './GICompositorShader';
 
-export const GlobalIlluminationEngine: React.FC<{ gBuffer: THREE.WebGLRenderTarget }> = ({ gBuffer }) => {
+export interface GlobalIlluminationEngineProps {
+  gBuffer: THREE.WebGLRenderTarget;
+  isPrimed?: boolean;
+  debugMode?: number;
+  intensity?: number;
+  emissionMultiplier?: number;
+  temporalBlend?: number;
+}
+
+export const GlobalIlluminationEngine: React.FC<GlobalIlluminationEngineProps> = ({ 
+  gBuffer,
+  isPrimed = true,
+  debugMode = 0,
+  intensity = 1.0,
+  temporalBlend = 0.95
+}) => {
     const { gl, size, camera } = useThree();
     const [frameIndex, setFrameIndex] = useState(0);
 

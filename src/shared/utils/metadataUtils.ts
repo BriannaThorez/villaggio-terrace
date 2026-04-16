@@ -78,5 +78,20 @@ export const resolveTraitsByCategory = (metadata: any) => {
         }
     });
 
+    // Resolve Provided Services (Directly from the module)
+    if (traits.services_provided && Array.isArray(traits.services_provided)) {
+        traits.services_provided.forEach((key: string) => {
+            const def = getTraitDefinition(key);
+            // Avoid duplicates if already resolved via trait map
+            if (!result.services.some(s => s.key === key)) {
+                result.services.push({
+                    key,
+                    value: 'provided',
+                    label: def.label
+                });
+            }
+        });
+    }
+
     return result;
 };

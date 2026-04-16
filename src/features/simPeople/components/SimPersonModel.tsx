@@ -5,7 +5,7 @@ Command: npx gltfjsx@6.5.3 c:\AIDev\AiDev_LLM\villaggio-terrace\src\assets\Femal
 
 import * as THREE from 'three'
 import React from 'react'
-import { useGraph } from '@react-three/fiber'
+import { useGraph, ThreeElements } from '@react-three/fiber'
 import { useAnimations, useGLTF } from '@react-three/drei'
 import { GLTF, SkeletonUtils } from 'three-stdlib'
 
@@ -179,11 +179,11 @@ type GLTFResult = GLTF & {
   animations: GLTFAction[]
 }
 
-export function Model({ tint = '#ffffff', skinTint = '#ffffff', ...props }: JSX.IntrinsicElements['group'] & { tint?: string, skinTint?: string }) {
+export function Model({ tint = '#ffffff', skinTint = '#ffffff', ...props }: ThreeElements['group'] & { tint?: string, skinTint?: string }) {
   const group = React.useRef<THREE.Group>(null)
   const { scene, animations } = useGLTF(`${(import.meta as any).env.BASE_URL}Female_Casual.fbx.glb`)
   const clone = React.useMemo(() => SkeletonUtils.clone(scene), [scene])
-  const { nodes, materials } = useGraph(clone) as GLTFResult
+  const { nodes, materials } = useGraph(clone) as unknown as GLTFResult
   const { actions } = useAnimations(animations, group)
 
   // Apply tints to materials for variety

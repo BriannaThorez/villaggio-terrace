@@ -1,35 +1,44 @@
 import json
 import os
 
-file_path = 'src/entities/rooms/roomMetadata.json'
+def migrate_metadata():
+    path = r'c:\AIDev\AiDev_LLM\villaggio-terrace\src\entities\rooms\roomMetadata.json'
+    if not os.path.exists(path):
+        print(f"File not found: {path}")
+        return
 
-with open(file_path, 'r', encoding='utf-8') as f:
-    data = json.load(f)
+    with open(path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
 
-modified_count = 0
-for room in data.get('rooms', []):
-    if room.get('class') == 'Store':
-        metadata = room.get('metadata', {})
-        # If size is missing, try to get it from 'type'
-        if 'size' not in metadata:
-            if 'type' in metadata:
-                metadata['size'] = metadata['type']
-            else:
-                # Fallback: check ID or Name for keywords
-                room_id = room.get('id', '').lower()
-                if 'small' in room_id:
+    count = 0
+    for room in data.get('rooms', []):
+        if room.get('class') == 'Store':
+            metadata = room.get('metadata', {})
+            # Determine size from name or ID if missing
+            if 'size' not in metadata:
+                name = room.get('name', '').lower()
+                id_str = room.get('id', '').lower()
+                
+                if 'small' in name or 'small' in id_str:
                     metadata['size'] = 'Small'
-                elif 'medium' in room_id:
+                elif 'medium' in name or 'medium' in id_str:
                     metadata['size'] = 'Medium'
-                elif 'large' in room_id:
+                elif 'large' in name or 'large' in id_str:
                     metadata['size'] = 'Large'
-                elif 'luxury' in room_id:
-                    metadata['size'] = 'Luxury'
                 else:
-                    metadata['size'] = 'Standard'
-            modified_count += 1
+                    # Default based on dimensions if possible
+                    w = room.get('dimensions', {}).get('width', 0)
+                    if w <= 1: metadata['size'] = 'Small'
+                    elif w <= 3: metadata['size'] = 'Medium'
+                    else: metadata['size'] = 'Large'
+                
+                room['metadata'] = metadata
+                count += 1
 
-print(f"Modified {modified_count} Store rooms.")
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=2)
+    
+    print(f"Migrated {count} Store entries.")
 
-with open(file_path, 'w', encoding='utf-8') as f:
-    json.dump(data, f, indent=2, ensure_ascii=False)
+if __name__ == "__main__":
+    migrate_metadata()

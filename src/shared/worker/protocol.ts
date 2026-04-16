@@ -295,6 +295,7 @@ export interface SyncSpatialHashPayload {
     y: number;
     w: number;
     h: number;
+    type: string;
   }>;
   removes?: Array<{
     id: string;

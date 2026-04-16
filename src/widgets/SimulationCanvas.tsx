@@ -90,6 +90,11 @@ const PlacementIndicator = () => {
 
   const { camera, pointer, raycaster, size } = useThree();
 
+  const [isValid, setIsValid] = useState(true);
+  const isValidRef = useRef(true);
+  const lastCheckPos = useRef<string>("");
+  const isChecking = useRef(false);
+
   useFrame((state) => {
     if (
       !groupRef.current ||
@@ -130,17 +135,22 @@ const PlacementIndicator = () => {
 
       groupRef.current.position.z = 0.5;
 
-      const isValid = useSimulationStore
+      // UNIFIED BUILDING LOGIC: Direct Main-Thread Validation
+      // We use the same 'checkPlacement' that handleBuild uses, ensuring 100% parity.
+      const isValidSync = useSimulationStore
         .getState()
         .checkPlacement(
           snappedX,
           snappedY,
           clashSize[0],
           clashSize[1],
-          activeTool,
+          activeTool
         );
 
-      const color = !isValid ? "#ff4444" : currentTheme.accent;
+      isValidRef.current = isValidSync;
+
+      // VITAL FIX: Update materials immediately
+      const color = !isValidRef.current ? "#ff4444" : currentTheme.accent;
 
       // Pulse animation for spectacular feedback
       const pulse = 1 + Math.sin(state.clock.elapsedTime * 6) * 0.05;
@@ -233,7 +243,6 @@ const CanvasScene = () => {
   // useSimPeopleLoop();
 
   const wasLinkingRef = useRef(false);
-  const wasDraggingRef = useRef(false);
   const wasPanningRef = useRef(false);
   const pointerDownPos = useRef<[number, number] | null>(null);
   const lastStampedCellKey = useRef<string | null>(null);
@@ -247,13 +256,10 @@ const CanvasScene = () => {
   const editingId = useSimulationStore((state) => state.editingId);
   const setEditingId = useSimulationStore((state) => state.setEditingId);
   const deleteShape = useSimulationStore((state) => state.deleteShape);
-  const isDragging = useSimulationStore((state) => state.isDragging);
-  const setIsDragging = useSimulationStore((state) => state.setIsDragging);
   const isRotating = useSimulationStore((state) => state.isRotating);
   const setIsRotating = useSimulationStore((state) => state.setIsRotating);
   const isPanning = useSimulationStore((state) => state.isPanning);
   const setIsPanning = useSimulationStore((state) => state.setIsPanning);
-  const dragOffset = useSimulationStore((state) => state.dragOffset);
   const linkingFrom = useSimulationStore((state) => state.linkingFrom);
   const setLinkingFrom = useSimulationStore((state) => state.setLinkingFrom);
   const setLinkingTo = useSimulationStore((state) => state.setLinkingTo);
@@ -448,12 +454,10 @@ const CanvasScene = () => {
     const shouldIgnoreClick =
       !forceStamp &&
       (wasLinkingRef.current ||
-        wasDraggingRef.current ||
         wasPanningRef.current ||
         isClickMovedRef.current);
     if (shouldIgnoreClick) {
       wasLinkingRef.current = false;
-      wasDraggingRef.current = false;
       wasPanningRef.current = false;
       pointerDownPos.current = null;
       isClickMovedRef.current = false;
@@ -693,11 +697,9 @@ const CanvasScene = () => {
         setSelectedId(null);
         setIsPanning(false);
         setIsRotating(false);
-        setIsDragging(false);
       } else {
         setIsPanning(false);
         setIsRotating(false);
-        setIsDragging(false);
       }
 
       setLinkingFrom(null);
@@ -708,7 +710,6 @@ const CanvasScene = () => {
   }, [
     setIsPanning,
     setIsRotating,
-    setIsDragging,
     setLinkingFrom,
     setLinkingTo,
     setActiveTool,
@@ -716,17 +717,11 @@ const CanvasScene = () => {
   ]);
 
   const handlePointerMove = (e: any) => {
-    let currentIsDragging = isDragging;
     let currentIsPanning = isPanning;
     let currentIsRotating = isRotating;
     let currentLinkingFrom = linkingFrom;
 
     if (e.nativeEvent.buttons === 0) {
-      if (isDragging) {
-        setIsDragging(false);
-        currentIsDragging = false;
-        wasDraggingRef.current = true;
-      }
       if (isPanning) {
         setIsPanning(false);
         currentIsPanning = false;
@@ -788,23 +783,6 @@ const CanvasScene = () => {
 
     const zoom = (camera as THREE.OrthographicCamera).zoom;
 
-    if (currentIsRotating && selectedId && e.nativeEvent.buttons !== 0) {
-      const shapes = useSimulationStore.getState().shapes;
-      const shape = shapes.find((s) => s.id === selectedId);
-      if (shape) {
-        const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-        const intersectPoint = new THREE.Vector3();
-        e.ray.intersectPlane(plane, intersectPoint);
-
-        const dx = intersectPoint.x - shape.position[0];
-        const dy = intersectPoint.y - shape.position[1];
-        const currentAngle = Math.atan2(dy, dx);
-        const [startAngle, startRotation] = dragOffset;
-        const delta = currentAngle - startAngle;
-        updateShape(selectedId, { rotation: startRotation + delta }, true);
-      }
-      return;
-    }
 
     if (currentIsPanning && e.nativeEvent.buttons !== 0) {
       const dx = e.nativeEvent.movementX / zoom;
@@ -818,49 +796,9 @@ const CanvasScene = () => {
       return;
     }
 
-    if (currentIsDragging || currentLinkingFrom) {
-      const zoom = (camera as THREE.OrthographicCamera).zoom;
-      const dx = e.nativeEvent.movementX / zoom;
-      const dy = -e.nativeEvent.movementY / zoom;
-
-      camera.position.x += dx;
-      camera.position.y += dy;
-      if (controls) {
-        (controls as any).target.x += dx;
-        (controls as any).target.y += dy;
-      }
-    }
-
     if (currentLinkingFrom && e.point) {
       setLinkingTo([e.point.x, e.point.y]);
       return;
-    }
-
-    const isDraggableTool = activeTool !== "link" && activeTool !== "vertex";
-    if (!selectedId || !isDraggableTool || !currentIsDragging) return;
-
-    if (e.point) {
-      const targetX = e.point.x - dragOffset[0];
-      const targetY = e.point.y - dragOffset[1];
-
-      const shape = useSimulationStore
-        .getState()
-        .shapes.find((s) => s.id === selectedId);
-      if (!shape) return;
-
-      const snappedX = snapX(targetX, shape.size[0]);
-      const snappedY =
-        shape.type === "lobby"
-          ? 0
-          : getPlacementCenterY(targetY, shape.size[1]);
-
-      updateShape(
-        selectedId,
-        {
-          position: [snappedX, snappedY],
-        },
-        true,
-      );
     }
   };
 
@@ -890,7 +828,6 @@ const CanvasScene = () => {
 
   const handlePointerDown = (e: any) => {
     wasPanningRef.current = false;
-    wasDraggingRef.current = false;
     wasLinkingRef.current = false;
     isClickMovedRef.current = false;
     pointerDownPos.current = [e.nativeEvent.clientX, e.nativeEvent.clientY];
@@ -919,7 +856,6 @@ const CanvasScene = () => {
       } else {
         wasStaticClick = true;
         wasPanningRef.current = false;
-        wasDraggingRef.current = false;
         wasLinkingRef.current = false;
         isClickMovedRef.current = false;
       }
@@ -932,7 +868,6 @@ const CanvasScene = () => {
     if (e.button === 0 && wasStaticClick && activeTool === "select") {
       // Only deselect if we didn't just finished a drag/pan/move
       if (
-        !wasDraggingRef.current &&
         !wasPanningRef.current &&
         !wasLinkingRef.current &&
         !isClickMovedRef.current
@@ -955,11 +890,6 @@ const CanvasScene = () => {
       }
     }
 
-    if (isDragging) {
-      wasDraggingRef.current = true;
-    }
-
-    setIsDragging(false);
     setLinkingFrom(null);
     setLinkingTo(null);
   };
@@ -1019,7 +949,7 @@ const CanvasScene = () => {
         enableZoom={false}
         enableDamping={true}
         dampingFactor={0.1}
-        enabled={!isDragging && !linkingFrom && !isRotating && !isPanning}
+        enabled={!linkingFrom && !isRotating && !isPanning}
         mouseButtons={{
           LEFT: activeTool === "select" ? THREE.MOUSE.PAN : (undefined as any),
           MIDDLE: THREE.MOUSE.ROTATE,

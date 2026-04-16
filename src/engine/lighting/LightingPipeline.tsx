@@ -33,12 +33,11 @@ export const LightingPipeline: React.FC<LightingPipelineProps> = ({
   const effectiveDebugMode = import.meta.env.DEV ? 3 : (debugMode ?? 0);
   return (
     <GBufferCapture>
-      {({ gBuffer, isPrimed }) => (
+      {({ gBuffer }) => (
         <>
           {children}
           <GlobalIlluminationEngine
             gBuffer={gBuffer}
-            isPrimed={isPrimed}
             debugMode={effectiveDebugMode}
             intensity={intensity}
             emissionMultiplier={emissionMultiplier}

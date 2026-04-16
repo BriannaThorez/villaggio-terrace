@@ -2,6 +2,7 @@ import {
   registerWorkerTask,
   type WorkerTaskContext,
 } from "./runtime";
+import type { SimulationNode } from "../shared/utils/store";
 import { SpatialHash } from "../shared/utils/SpatialHash";
 import {
   SIMULATION_TASK_TYPE,
@@ -10,8 +11,12 @@ import {
   type SyncSpatialHashPayload,
 } from "../shared/worker/protocol";
 import { validatePlacement } from "../features/roomPlacement/constraints/placementRules";
+import { FloorBucketIndex } from "../features/roomPlacement/constraints/spatialIndex";
+
+import { getMaxCantileverLogic, type SimpleNode } from "../features/roomPlacement/constraints/structuralLogic";
 
 const workerHash = new SpatialHash(100);
+const workerNodeState = new Map<string, SimpleNode>();
 
 export type WorkerTaskPayloadMap = {
   "worker/health-check": {
@@ -103,22 +108,61 @@ export const registerFoundationWorkerTasks = () => {
 export const registerLayoutTasks = () => {
   registerWorkerTask<CheckPlacementPayload, CheckPlacementResult>(
     SIMULATION_TASK_TYPE.CheckPlacement,
-    (payload, context) => {
-      // The worker focuses on fast spatial collision detection.
-      // High-fidelity structural checks (overhang/slab support) run on the main thread.
-      const candidates = workerHash.query(payload.x, payload.y, payload.w, payload.h);
-      const colliders = Array.from(candidates).filter(id => id !== payload.ignoreId);
+    (payload) => {
+      // 1. Transform worker state (flat format) into SimulationNode (nested format)
+      // This is VITAL because validatePlacement expects s.position[0] and s.size[0].
+      const nodes = Array.from(workerNodeState.values()).map(n => ({
+        id: n.id,
+        type: n.type,
+        position: [n.x, n.y],
+        size: [n.w, n.h],
+        vertices: [] // Stub for worker-side collision math
+      })) as any as SimulationNode[];
+      
+      // 2. Build the optimized floor bucket index
+      const index = new FloorBucketIndex(nodes);
 
-      return { isValid: colliders.length === 0, collidingId: colliders[0] };
+      // 3. Delegate to master validation engine
+      return validatePlacement(
+        payload.x,
+        payload.y,
+        payload.w,
+        payload.h,
+        nodes,
+        payload.type,
+        payload.ignoreId,
+        false, // isForce
+        index
+      );
     },
   );
 
   registerWorkerTask<SyncSpatialHashPayload, { success: boolean }>(
     SIMULATION_TASK_TYPE.SyncSpatialHash,
     (payload) => {
-      if (payload.clear) workerHash.clear();
-      if (payload.removes) payload.removes.forEach((r) => workerHash.remove(r.id, r.x, r.y, r.w, r.h));
-      if (payload.inserts) payload.inserts.forEach((i) => workerHash.insert(i.id, i.x, i.y, i.w, i.h));
+      if (payload.clear) {
+        workerHash.clear();
+        workerNodeState.clear();
+      }
+      if (payload.removes) {
+        payload.removes.forEach((r) => {
+          workerHash.remove(r.id, r.x, r.y, r.w, r.h);
+          workerNodeState.delete(r.id);
+        });
+      }
+      if (payload.inserts) {
+        payload.inserts.forEach((i) => {
+          workerHash.insert(i.id, i.x, i.y, i.w, i.h);
+          workerNodeState.set(i.id, {
+            id: i.id,
+            x: i.x,
+            y: i.y,
+            w: i.w,
+            h: i.h,
+            type: i.type,
+          });
+        });
+      }
       return { success: true };
     },
   );
@@ -133,3 +177,4 @@ export const registerAnalysisTasks = () => {
 };
 
 registerFoundationWorkerTasks();
+registerLayoutTasks();

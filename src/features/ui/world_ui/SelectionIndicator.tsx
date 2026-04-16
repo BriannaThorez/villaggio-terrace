@@ -195,8 +195,6 @@ const StartLabel = ({
 export const SelectionOverlay: React.FC<SelectionIndicatorProps> = ({
   shape,
 }) => {
-  const setIsDragging = useSimulationStore((state) => state.setIsDragging);
-  const setDragOffset = useSimulationStore((state) => state.setDragOffset);
   const pushToHistory = useSimulationStore((state) => state.pushToHistory);
 
   const roomFace = getRoomFace(shape);
@@ -219,22 +217,10 @@ export const SelectionOverlay: React.FC<SelectionIndicatorProps> = ({
     }
     : undefined;
 
-  const handlePointerDown = (e: {
-    stopPropagation: () => void;
-    point: { x: number; y: number };
-  }) => {
-    if (e.stopPropagation) e.stopPropagation();
-    pushToHistory();
-    setIsDragging(true);
-    setDragOffset([
-      e.point.x - shape.position[0],
-      e.point.y - shape.position[1],
-    ]);
-  };
 
   return (
     <group
-      onPointerDown={handlePointerDown}
+      onPointerDown={(e) => e.stopPropagation()}
       userData={{
         structuralSelection: adjacencyData,
         selectionOverlay: true,
@@ -282,7 +268,7 @@ export const SelectionOverlay: React.FC<SelectionIndicatorProps> = ({
 
       <SelectionControls
         menuPosition={frame.menuPosition}
-        rotatePosition={frame.rotatePosition}
+        tenancyPosition={frame.tenancyPosition}
         shapeId={shape.id}
       />
       <StartLabel
