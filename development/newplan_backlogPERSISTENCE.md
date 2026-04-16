@@ -13,3 +13,6 @@ Ensure each phase concludes with a pause for user feedback and QA checkpoint.
 Upon plan construction, predict connections, features, ideas and requests I am not addressing and output them as suggestions but do not add them to the plan unless explicitly requested.
 Predict more industry standard and industry leading expansive components and ideas to each new feature as enrichment, suggest them but do not add them to the plan unless I explicity request it.
 Requests:
+
+A fully modularized, and in compliance with feature slice design, Persistence solution feature using indexdb to include saving and loading instances via gui elements. If the page refreshes or crashes or anything it will automatically be fully saved and up to date in real time to ensure no progress is lost. Create an 'automatic wipe on reload' toggle on the main menu(persistent) defaulted to on for debugging purposes.
+We want the entire simulation state to save for the user so that if the page refreshes or whatever we can come back to the same game any time. 

@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { createTextureCache } from "../api";
 
 const textureLoader = new THREE.TextureLoader();
 
@@ -30,16 +29,21 @@ const configureTexture = (
 const loadTextureArgs = (
   url: string,
   options: TextureOptions,
-): THREE.Texture => {
-  const texture = textureLoader.load(
-    url,
-    () => {
-      texture.needsUpdate = true;
-    },
-    undefined,
-    (err) => console.warn(`Failed to load texture ${url}`, err),
-  );
-  return configureTexture(texture, options);
+): Promise<THREE.Texture> => {
+  return new Promise((resolve, reject) => {
+    const texture = textureLoader.load(
+      url,
+      (loadedTexture) => {
+        loadedTexture.needsUpdate = true;
+        resolve(configureTexture(loadedTexture, options));
+      },
+      undefined,
+      (err) => {
+        console.warn(`Failed to load texture ${url}`, err);
+        reject(err);
+      },
+    );
+  });
 };
 
 export interface TextureBundle {
@@ -51,14 +55,10 @@ export interface TextureBundle {
   displacementMap: THREE.Texture;
 }
 
-// Global cache
-const bundleCache = createTextureCache<TextureBundle>();
-
 import woodFloorDiff from "../../../assets/textures/wood_floor_1/wood_floor_diff_4k.png";
 import woodFloorArm from "../../../assets/textures/wood_floor_1/wood_floor_arm_4k.png";
 import woodFloorNor from "../../../assets/textures/wood_floor_1/wood_floor_nor_gl_4k.png";
 import woodFloorDisp from "../../../assets/textures/wood_floor_1/wood_floor_disp_4k.png";
-
 import beigeWallDiff from "../../../assets/textures/beige_wall_1/beige_wall_001_diff_4k.png";
 import beigeWallArm from "../../../assets/textures/beige_wall_1/beige_wall_001_arm_4k.png";
 import beigeWallNor from "../../../assets/textures/beige_wall_1/beige_wall_001_nor_gl_4k.png";
@@ -108,33 +108,34 @@ const ASSET_REGISTRY: Record<string, AssetPaths> = {
     },
 };
 
-export const getTextureBundle = (assetName: string): TextureBundle => {
-  if (bundleCache.get(assetName)) return bundleCache.get(assetName)!;
-
+export const getTextureBundle = async (assetName: string): Promise<TextureBundle> => {
     const paths = ASSET_REGISTRY[assetName];
     if (!paths) throw new Error(`Asset ${assetName} not found in registry`);
 
-    const diffuseMap = loadTextureArgs(paths.diff, { name: `${assetName}-diff`, colorSpace: THREE.SRGBColorSpace });
-    const armMap = loadTextureArgs(paths.arm, { name: `${assetName}-arm`, colorSpace: THREE.NoColorSpace });
-    const normalMap = loadTextureArgs(paths.nor, { name: `${assetName}-normal`, colorSpace: THREE.NoColorSpace, flipY: false });
-    const dispMap = loadTextureArgs(paths.disp, { name: `${assetName}-disp`, colorSpace: THREE.NoColorSpace });
+    const diffuseMapLoad = loadTextureArgs(paths.diff, { name: `${assetName}-diff`, colorSpace: THREE.SRGBColorSpace });
+    const armMapLoad = loadTextureArgs(paths.arm, { name: `${assetName}-arm`, colorSpace: THREE.NoColorSpace });
+    const normalMapLoad = loadTextureArgs(paths.nor, { name: `${assetName}-normal`, colorSpace: THREE.NoColorSpace, flipY: false });
+    const dispMapLoad = loadTextureArgs(paths.disp, { name: `${assetName}-disp`, colorSpace: THREE.NoColorSpace });
 
-  const specMap = paths.spec
-    ? loadTextureArgs(paths.spec, {
-        name: `${assetName}-spec`,
-        colorSpace: THREE.NoColorSpace,
-      })
-    : armMap;
+    const specMapLoad = paths.spec
+      ? loadTextureArgs(paths.spec, {
+          name: `${assetName}-spec`,
+          colorSpace: THREE.NoColorSpace,
+        })
+      : armMapLoad;
 
-  const bundle: TextureBundle = {
-    albedoMap: diffuseMap,
-    aoMap: armMap,
-    roughnessMap: specMap,
-    metalnessMap: specMap,
-    normalMap: normalMap,
-    displacementMap: dispMap,
-  };
+    const [diffuseMap, armMap, normalMap, dispMap, specMap] = await Promise.all([
+      diffuseMapLoad, armMapLoad, normalMapLoad, dispMapLoad, specMapLoad
+    ]);
 
-  bundleCache.set(assetName, bundle);
-  return bundle;
+    const bundle: TextureBundle = {
+      albedoMap: diffuseMap,
+      aoMap: armMap,
+      roughnessMap: specMap,
+      metalnessMap: specMap,
+      normalMap: normalMap,
+      displacementMap: dispMap,
+    };
+
+    return bundle;
 };

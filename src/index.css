@@ -1,7 +1,9 @@
-@import url("https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 @theme {
+  --font-sans: "Lexend Deca", sans-serif;
+  --font-mono: "Lexend Deca", monospace;
   --color-background: var(--background);
   --color-primary: var(--primary);
   --color-secondary: var(--secondary);
@@ -27,6 +29,7 @@
   --theme-primary: var(--primary);
   --theme-secondary: var(--secondary);
   --theme-accent: var(--accent);
+  --theme-font-family: 'Lexend Deca', sans-serif;
   --theme-neutral-light: var(--neutral-light);
   --theme-neutral-dark: var(--neutral-dark);
   --theme-background: var(--background);
@@ -62,5 +65,5 @@
 body {
   background-color: var(--background);
   color: var(--text);
-  font-family: "Lexend", "Inter", "Segoe UI", system-ui, sans-serif;
+  font-family: 'Lexend Deca', sans-serif;
 }

@@ -35,15 +35,44 @@ export const validatePlacement = (
 
   for (const s2 of candidates) {
     if (s2.id === ignoreId) continue;
-    if (s2.type === "structure") continue;
-    if (type !== "empty_floor" && s2.type === "empty_floor") continue;
 
+    // RULE: Structural elements (scaffolds, empty floors) bypass regular collision 
+    // to allow real rooms to be built "over" them.
+    // BUT: To solve the 'sidequest', we MUST block placing a structural element 
+    // over another structural element of the same type (redundant stacking).
+    const isS1Structural = type === "structure" || type === "empty_floor" || type === "lobby";
+    const isS2Structural = s2.type === "structure" || s2.type === "empty_floor" || s2.type === "lobby";
+    
+    // If placing a room over a structural element, always allow (continue)
+    if (type !== "structure" && type !== "empty_floor" && type !== "lobby" && isS2Structural) continue;
+    
+    // If placing a structural element over a DIFFERENT type, or if isForce, we skip regular collision
+    // Actually, we want to allow structural elements to coexist EXCEPT if they are redundant.
+    if (isS1Structural && isS2Structural) {
+      // If they are exactly the same type and overlapping, block it.
+      if (type === s2.type) {
+        const w2 = s2.size[0];
+        const h2 = s2.size[1];
+        const cx2 = s2.position[0];
+        const cy2 = s2.position[1];
+
+        if (
+          Math.abs(x - cx2) < (width + w2) / 2 - COLLISION_EPSILON &&
+          Math.abs(y - cy2) < (height + h2) / 2 - COLLISION_EPSILON
+        ) {
+          return { isValid: false, error: "collision", collidingId: s2.id };
+        }
+      }
+      // Otherwise, allow them to overlap (e.g. lobby over structure)
+      continue;
+    }
+
+    // Standard Room-on-Room collision
     const w2 = s2.size[0];
     const h2 = s2.size[1];
     const cx2 = s2.position[0];
     const cy2 = s2.position[1];
 
-    // Standard AABB overlap with epsilon
     if (
       Math.abs(x - cx2) < (width + w2) / 2 - COLLISION_EPSILON &&
       Math.abs(y - cy2) < (height + h2) / 2 - COLLISION_EPSILON

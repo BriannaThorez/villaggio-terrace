@@ -12,7 +12,7 @@ import {
   disposePaintedPlasterBundles,
   getPaintedPlasterBundle,
 } from "../features/materialsEngine/presets/paintedPlaster";
-import { getTextureBundle } from "../features/materialsEngine/presets/materials";
+import { textureLODHandler } from "../features/materialsEngine/TextureLODHandler";
 
 type RoomSurfaceTextureKey = "wallTexture" | "floorTexture" | "ceilingTexture";
 
@@ -87,18 +87,18 @@ const createRoomSurfaceMaterial = (
   tintHex: string,
   fallbackTextureName: string,
 ) => {
-  const bundle = getTextureBundle(
-    normalizeTextureName(textureName ?? fallbackTextureName),
+  const { progressive, promise } = textureLODHandler.getBundleProgressiveSync(
+    normalizeTextureName(textureName ?? fallbackTextureName), tintHex
   );
 
   const material = new THREE.MeshPhysicalMaterial({
-    map: bundle.albedoMap,
+    map: progressive.albedoMap,
     color: "#ffffff",
-    aoMap: bundle.aoMap,
-    roughnessMap: bundle.roughnessMap,
-    metalnessMap: bundle.metalnessMap,
-    normalMap: bundle.normalMap,
-    displacementMap: bundle.displacementMap,
+    aoMap: progressive.aoMap,
+    roughnessMap: progressive.roughnessMap,
+    metalnessMap: progressive.metalnessMap,
+    normalMap: progressive.normalMap,
+    displacementMap: progressive.displacementMap,
     displacementScale: 0.01,
     displacementBias: -0.005,
     side: THREE.FrontSide,
@@ -116,12 +116,23 @@ const createRoomSurfaceMaterial = (
 
   material.aoMapIntensity = 1.8;
   material.needsUpdate = true;
+  
+  // SWAP HEAVY TEXTURES LATER: Prevents main-thread/VRAM stall on room placement drag
+  promise.then((heavyBundle) => {
+      material.map = heavyBundle.albedoMap;
+      material.aoMap = heavyBundle.aoMap;
+      material.roughnessMap = heavyBundle.roughnessMap;
+      material.metalnessMap = heavyBundle.metalnessMap;
+      material.normalMap = heavyBundle.normalMap;
+      material.displacementMap = heavyBundle.displacementMap;
+      material.needsUpdate = true;
+  });
 
   const managed = createManagedMaterial(material, [
-    bundle.albedoMap,
-    bundle.aoMap,
-    bundle.normalMap,
-    bundle.roughnessMap,
+    progressive.albedoMap,
+    progressive.aoMap,
+    progressive.normalMap,
+    progressive.roughnessMap,
   ]);
 
   return managed.material as THREE.MeshPhysicalMaterial;

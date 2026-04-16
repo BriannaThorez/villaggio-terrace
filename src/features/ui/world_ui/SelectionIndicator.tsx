@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { Html, Line } from "@react-three/drei";
 import * as THREE from "three";
 import { useSimulationStore, type SimulationNode } from "../../../shared/utils/store";
+import { TYPOGRAPHY } from "../constants/typography";
 import type {
   StructuralCanonicalFace,
   StructuralFace,
@@ -180,10 +181,12 @@ const StartLabel = ({
       portal={{ current: document.body }}
     >
       <div
-        className="pointer-events-none rounded-full px-8 py-3 text-[112px] font-semibold uppercase tracking-[0.35em] whitespace-nowrap"
+        className="pointer-events-none rounded-full px-8 py-3 text-[112px] uppercase tracking-[0.35em] whitespace-nowrap"
         style={{
           color: START_LABEL_COLOR,
           textShadow: START_LABEL_SHADOW,
+          fontFamily: TYPOGRAPHY.CONTEXTS.SIMULATION_3D.fontFamily,
+          fontWeight: TYPOGRAPHY.CONTEXTS.SIMULATION_3D.fontWeight,
         }}
       >
         {name || type}

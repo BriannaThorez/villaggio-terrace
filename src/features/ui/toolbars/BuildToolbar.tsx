@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Star } from "lucide-react";
 import { useSimulationStore } from "../../../shared/utils/store";
+import { audioEngine } from "../../audio-engine/AudioEngine";
 import {
   Cursor01Icon,
   Home01Icon,
@@ -321,6 +322,7 @@ export const BuildToolbar = () => {
         memoryState[cat.id] || sizeFiltered[0]?.id || cat.subTypes[0].id;
       const sub = cat.subTypes.find((s: any) => s.id === lastSelectedId);
       if (sub) {
+        audioEngine.triggerUIClick();
         setActiveTool(normalizeToolType(sub.type, cat.id));
         setActiveModuleId(sub.id);
       }
@@ -328,6 +330,7 @@ export const BuildToolbar = () => {
         setActiveSizeTab((prev) => ({ ...prev, [cat.id]: sizeTabs[0] }));
       }
     } else {
+      audioEngine.triggerUIClick();
       setActiveTool(normalizeToolType(undefined, cat.id));
       setActiveModuleId(null);
     }
@@ -374,12 +377,15 @@ export const BuildToolbar = () => {
                 cat.subTypes?.some((s) => s.id === activeModuleId));
 
             return (
-              <div
-                key={cat.id}
-                data-build-category={cat.id}
-                className="relative group"
-                onPointerEnter={() => setExpandedCategory(cat.id)}
-              >
+                <div
+                  key={cat.id}
+                  data-build-category={cat.id}
+                  className="relative group"
+                  onPointerEnter={() => {
+                    audioEngine.triggerMenuExpand();
+                    setExpandedCategory(cat.id);
+                  }}
+                >
                 {cat.subTypes && cat.subTypes.length > 0 && (
                   <div
                     className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-3 flex flex-col gap-2 p-3 bg-background/90 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl transition-all duration-300 origin-bottom ${isExpanded ? "opacity-100 translate-y-0 scale-100 pointer-events-auto" : "opacity-0 translate-y-4 scale-95 pointer-events-none"}`}
@@ -392,12 +398,13 @@ export const BuildToolbar = () => {
                       ).map((size) => (
                         <button
                           key={size}
-                          onClick={() =>
+                          onClick={() => {
+                            audioEngine.triggerUIClick();
                             setActiveSizeTab((prev) => ({
                               ...prev,
                               [cat.id]: size,
                             }))
-                          }
+                          }}
                           className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-colors ${
                             (activeSizeTab[cat.id] ||
                               (cat.sizes && cat.sizes[0]) ||
@@ -435,7 +442,9 @@ export const BuildToolbar = () => {
                               width="308px"
                             >
                               <button
+                                onPointerEnter={() => audioEngine.triggerMenuExpand()}
                                 onClick={() => {
+                                  audioEngine.triggerSubSelect();
                                   setActiveTool(
                                     normalizeToolType(sub.type, cat.id),
                                   );

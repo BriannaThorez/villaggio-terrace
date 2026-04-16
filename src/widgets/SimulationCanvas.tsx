@@ -25,17 +25,14 @@ import { AssetPreloader } from "../features/assetPreloader/ui/AssetPreloader";
 import { GrassField } from "../features/environment/components/GrassField";
 import { TimeEngine } from "../features/time/components/TimeEngine";
 import { SimulationLinks } from "../entities/SimulationLinks";
-import {
-  useSimulationStore,
-  GRID_SIZE_X,
-  GRID_SIZE_Y,
-  snapX,
-  getPlacementCenterY,
-  getFloorBaseY,
-} from "../shared/utils/store";
+import { useSimulationStore, GRID_SIZE_X, GRID_SIZE_Y, snapX, getPlacementCenterY, getFloorBaseY } from "../shared/utils/store";
 import roomMetadata from "../entities/rooms/roomMetadata.json";
 import * as THREE from "three";
 import { useRef, useEffect, useMemo, useState } from "react";
+import { useToolPreloader } from "../features/assetPreloader/hooks/useToolPreloader";
+import { useAudioController } from "../features/audio-engine/hooks/useAudioController";
+import { audioEngine } from "../features/audio-engine/AudioEngine";
+import { AudioListenerSync } from "../features/audio-engine/components/AudioListenerSync";
 
 // RAIN_COUNT constants moved to modular features/weather.
 
@@ -238,6 +235,9 @@ const CanvasScene = () => {
 
   const currentTheme = useMemo(() => (themes as any)[themeName], [themeName]);
   const isDark = currentTheme.mode === "dark";
+
+  useToolPreloader();
+  useAudioController();
 
   // usePeopleSpawner();
   // useSimPeopleLoop();
@@ -663,6 +663,12 @@ const CanvasScene = () => {
       true, // Force exact position since we already checked existence
     );
 
+    // [AUDIO] Trigger a juicy, harmonically warm "Thud" upon successful placement
+    // Non-blocking: Wrap in zero-delay timeout to uncouple audio scheduling from frame instantiation logic
+    setTimeout(() => {
+      audioEngine.triggerBuildThud();
+    }, 0);
+
     setSelectedId(id);
 
     if (activeTool === "text") {
@@ -943,6 +949,7 @@ const CanvasScene = () => {
         )}
       </Environment>
 
+      <AudioListenerSync />
       <OrbitControls
         makeDefault
         enableRotate={true}

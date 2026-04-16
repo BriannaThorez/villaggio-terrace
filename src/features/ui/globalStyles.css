@@ -3,6 +3,12 @@
   /* Automatically matches browser base size (usually 16px)
        but clamps it so Windows scaling can't push it past 20px. */
   font-size: clamp(14px, 0.6rem, 10px);
+  --theme-font-family: 'Lexend Deca', sans-serif;
+}
+
+button, input, select, textarea {
+  font-family: var(--theme-font-family);
+}
 
   /*
   INDEX
@@ -255,6 +261,7 @@
   font-size: var(--ui-main-toolbar-menu-header-text-size);
   font-weight: var(--ui-main-toolbar-menu-header-font-weight);
   letter-spacing: var(--ui-main-toolbar-menu-header-tracking);
+  font-family: var(--theme-font-family);
   text-transform: uppercase;
 }
 

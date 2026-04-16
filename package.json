@@ -31,6 +31,8 @@
     "three": "^0.183.2",
     "three-custom-shader-material": "^6.4.0",
     "three-stdlib": "^2.36.1",
+    "tonal": "^6.4.3",
+    "tone": "^15.1.22",
     "vite": "^6.2.0",
     "zustand": "^5.0.12"
   },

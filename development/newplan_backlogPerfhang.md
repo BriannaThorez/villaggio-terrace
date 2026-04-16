@@ -13,3 +13,7 @@ Ensure each phase concludes with a pause for user feedback and QA checkpoint.
 Upon plan construction, predict connections, features, ideas and requests I am not addressing and output them as suggestions but do not add them to the plan unless explicitly requested.
 Predict more industry standard and industry leading expansive components and ideas to each new feature as enrichment, suggest them but do not add them to the plan unless I explicity request it.
 Requests:
+
+lag spike on room placement- determine if this is purely React Virtual DOM Reconciliation. Every time you place a room, it adds a new object to the Zustand state array. React then forcibly recalculates the entire SimulationNodes tree, the shadow casting, the WebAudio nodes, and the HTML GUI overlays to re-draw the world.
+Identify other room placement related lag spikes and determine if they are related to the same issue or something else and fix them.
+

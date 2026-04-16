@@ -1,4 +1,5 @@
 import { useSimulationStore } from "../../../shared/utils/store";
+import { audioEngine } from "../../audio-engine/AudioEngine";
 import {
   Menu01Icon,
   FlashIcon,
@@ -131,7 +132,10 @@ export const MainToolbar = () => {
   ) => (
     <SmartTooltip content={tooltip} description={description} position="top">
       <button
-        onClick={onClick}
+        onClick={() => {
+          audioEngine.triggerUIClick();
+          onClick();
+        }}
         className={`${toolbarButtonClass} ${isActive ? activeButtonClasses : idleButtonClasses
           }`}
         style={toolbarButtonStyle}
@@ -148,7 +152,10 @@ export const MainToolbar = () => {
     <div className="relative">
       <SmartTooltip content="Open Menu">
         <button
-          onClick={() => setShowMainMenu(!showMainMenu)}
+          onClick={() => {
+            audioEngine.triggerUIClick();
+            setShowMainMenu(!showMainMenu);
+          }}
           className={`${toolbarButtonClass} ${showMainMenu
             ? "bg-primary/20 text-primary"
             : "text-text/60 hover:bg-primary/10 hover:text-primary"
@@ -335,7 +342,10 @@ export const MainToolbar = () => {
             position="top"
           >
             <button
-              onClick={() => setShowThemeMenu(!showThemeMenu)}
+              onClick={() => {
+                audioEngine.triggerUIClick();
+                setShowThemeMenu(!showThemeMenu);
+              }}
               className={`${toolbarButtonClass} ${showThemeMenu
                 ? "bg-primary/10 text-primary"
                 : "text-text/40 hover:text-primary hover:bg-primary/5"
@@ -448,7 +458,10 @@ export const MainToolbar = () => {
             </SmartTooltip>
             <SmartTooltip content="Super (10x)" description="100 in-game minutes = 1 real-world second. (A full 24h day takes ~14s)" position="top">
               <button
-                onClick={() => setGameSpeed(10)}
+                onClick={() => {
+                  audioEngine.triggerUIClick();
+                  setGameSpeed(10);
+                }}
                 className={`p-1.5 rounded-lg transition-all ${gameSpeed === 10 ? 'bg-primary text-background' : 'text-text/40 hover:text-text hover:bg-white/10'}`}
               >
                 <Rocket size={16} />
