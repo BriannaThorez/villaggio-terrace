@@ -1736,8 +1736,7 @@
         "type": "Small",
         "variant": "Food and Beverages",
         "serviceDomain": "Store",
-        "average_rent": 21000,
-        "size": "Small"
+        "average_rent": 21000
       },
       "specificDescription": "A high-efficiency food and beverages store module."
     },
@@ -1762,8 +1761,7 @@
         "type": "Small",
         "variant": "Portable Electronics",
         "serviceDomain": "Store",
-        "average_rent": 27000,
-        "size": "Small"
+        "average_rent": 27000
       },
       "specificDescription": "A high-efficiency portable electronics store module."
     },
@@ -1787,8 +1785,7 @@
         "type": "Small",
         "variant": "Books, News, etc.",
         "serviceDomain": "Store",
-        "average_rent": 21000,
-        "size": "Small"
+        "average_rent": 21000
       },
       "specificDescription": "A high-efficiency books, news, etc. store module."
     },
@@ -1813,8 +1810,7 @@
         "type": "Small",
         "variant": "Drugstores",
         "serviceDomain": "Store",
-        "average_rent": 27000,
-        "size": "Small"
+        "average_rent": 27000
       },
       "specificDescription": "A high-efficiency drugstores store module."
     },
@@ -1838,8 +1834,7 @@
         "type": "Small",
         "variant": "Flower Stores",
         "serviceDomain": "Store",
-        "average_rent": 21000,
-        "size": "Small"
+        "average_rent": 21000
       },
       "specificDescription": "A high-efficiency flower stores store module."
     },
@@ -1863,8 +1858,7 @@
         "type": "Small",
         "variant": "Wine and Spirits",
         "serviceDomain": "Store",
-        "average_rent": 21000,
-        "size": "Small"
+        "average_rent": 21000
       },
       "specificDescription": "A high-efficiency wine and spirits store module."
     },
@@ -1889,8 +1883,7 @@
         "type": "Medium",
         "variant": "Clothing",
         "serviceDomain": "Store",
-        "average_rent": 32000,
-        "size": "Medium"
+        "average_rent": 32000
       },
       "specificDescription": "A high-efficiency clothing store module."
     },
@@ -1916,8 +1909,7 @@
         "type": "Medium",
         "variant": "Electronics",
         "serviceDomain": "Store",
-        "average_rent": 50000,
-        "size": "Medium"
+        "average_rent": 50000
       },
       "specificDescription": "A high-efficiency electronics store module."
     },
@@ -1942,8 +1934,7 @@
         "type": "Medium",
         "variant": "Shoes",
         "serviceDomain": "Store",
-        "average_rent": 33000,
-        "size": "Medium"
+        "average_rent": 33000
       },
       "specificDescription": "A high-efficiency shoes store module."
     },
@@ -1968,8 +1959,7 @@
         "type": "Medium",
         "variant": "Bags and Briefcases",
         "serviceDomain": "Store",
-        "average_rent": 37000,
-        "size": "Medium"
+        "average_rent": 37000
       },
       "specificDescription": "A high-efficiency bags and briefcases store module."
     },
@@ -1994,8 +1984,7 @@
         "type": "Medium",
         "variant": "Appliances",
         "serviceDomain": "Store",
-        "average_rent": 33000,
-        "size": "Medium"
+        "average_rent": 33000
       },
       "specificDescription": "A high-efficiency appliances store module."
     },
@@ -2022,8 +2011,7 @@
         "type": "Large",
         "variant": "Department Stores",
         "serviceDomain": "Store",
-        "average_rent": 79000,
-        "size": "Large"
+        "average_rent": 79000
       },
       "specificDescription": "A high-efficiency department stores store module."
     },
@@ -2050,8 +2038,7 @@
         "type": "Large",
         "variant": "Furniture",
         "serviceDomain": "Store",
-        "average_rent": 79000,
-        "size": "Large"
+        "average_rent": 79000
       },
       "specificDescription": "A high-efficiency furniture store module."
     },
@@ -2078,8 +2065,7 @@
         "type": "Large",
         "variant": "Big Box Electronics",
         "serviceDomain": "Store",
-        "average_rent": 79000,
-        "size": "Large"
+        "average_rent": 79000
       },
       "specificDescription": "A high-efficiency big box electronics store module."
     },
@@ -2106,8 +2092,7 @@
         "type": "Large",
         "variant": "Fancy Grocery Stores",
         "serviceDomain": "Store",
-        "average_rent": 79000,
-        "size": "Large"
+        "average_rent": 79000
       },
       "specificDescription": "A high-efficiency fancy grocery stores store module."
     },
@@ -2135,8 +2120,7 @@
         "type": "Luxury Goods",
         "variant": "China Shops",
         "serviceDomain": "Store",
-        "average_rent": 79000,
-        "size": "Luxury Goods"
+        "average_rent": 79000
       },
       "specificDescription": "A high-efficiency china shops store module."
     },
@@ -2164,8 +2148,7 @@
         "type": "Luxury Goods",
         "variant": "Cosmetics Boutiques",
         "serviceDomain": "Store",
-        "average_rent": 77000,
-        "size": "Luxury Goods"
+        "average_rent": 77000
       },
       "specificDescription": "A high-efficiency cosmetics boutiques store module."
     },
@@ -2193,8 +2176,7 @@
         "type": "Luxury Goods",
         "variant": "Jewelers",
         "serviceDomain": "Store",
-        "average_rent": 78000,
-        "size": "Luxury Goods"
+        "average_rent": 78000
       },
       "specificDescription": "A high-efficiency jewelers store module."
     },
@@ -2222,8 +2204,7 @@
         "type": "Luxury Goods",
         "variant": "Fine Art Stores",
         "serviceDomain": "Store",
-        "average_rent": 80000,
-        "size": "Luxury Goods"
+        "average_rent": 80000
       },
       "specificDescription": "A high-efficiency fine art stores store module."
     },
@@ -2251,8 +2232,7 @@
         "type": "Luxury Goods",
         "variant": "Antique Books",
         "serviceDomain": "Store",
-        "average_rent": 79000,
-        "size": "Luxury Goods"
+        "average_rent": 79000
       },
       "specificDescription": "A high-efficiency antique books store module."
     },
@@ -2280,21 +2260,21 @@
         "type": "Luxury Goods",
         "variant": "Fine Wine Merchants",
         "serviceDomain": "Store",
-        "average_rent": 79000,
-        "size": "Luxury Goods"
+        "average_rent": 79000
       },
       "specificDescription": "A high-efficiency fine wine merchants store module."
     },
     {
       "id": "services-courier-services-basic",
       "class": "Services",
-      "name": "Courier Services None",
+      "name": "Courier Services",
       "price": 0,
       "dimensions": {
         "width": 5,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Office",
@@ -2309,13 +2289,14 @@
     {
       "id": "services-office-supply-services-basic",
       "class": "Services",
-      "name": "Office Supply Services None",
+      "name": "Office Supply Services",
       "price": 0,
       "dimensions": {
         "width": 5,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Office",
@@ -2330,13 +2311,14 @@
     {
       "id": "services-bottled-water-services-basic",
       "class": "Services",
-      "name": "Bottled Water Services None",
+      "name": "Bottled Water Services",
       "price": 0,
       "dimensions": {
         "width": 5,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Office",
@@ -2351,13 +2333,14 @@
     {
       "id": "services-janitorial-services-basic",
       "class": "Services",
-      "name": "Janitorial Services None",
+      "name": "Janitorial Services",
       "price": 0,
       "dimensions": {
         "width": 5,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Office",
@@ -2372,13 +2355,14 @@
     {
       "id": "services-copy-services-basic",
       "class": "Services",
-      "name": "Copy Services None",
+      "name": "Copy Services",
       "price": 0,
       "dimensions": {
         "width": 5,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Office",
@@ -2393,13 +2377,14 @@
     {
       "id": "services-computer-and-it-services-basic",
       "class": "Services",
-      "name": "Computer and IT Services None",
+      "name": "Computer and IT Services",
       "price": 0,
       "dimensions": {
         "width": 9,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Office",
@@ -2414,13 +2399,14 @@
     {
       "id": "services-commercial-printing-services-basic",
       "class": "Services",
-      "name": "Commercial Printing Services None",
+      "name": "Commercial Printing Services",
       "price": 0,
       "dimensions": {
         "width": 9,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Office",
@@ -2435,13 +2421,14 @@
     {
       "id": "services-file-storage-services-basic",
       "class": "Services",
-      "name": "File Storage Services None",
+      "name": "File Storage Services",
       "price": 0,
       "dimensions": {
         "width": 9,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Office",
@@ -2456,13 +2443,14 @@
     {
       "id": "services-catering-services-basic",
       "class": "Services",
-      "name": "Catering Services None",
+      "name": "Catering Services",
       "price": 0,
       "dimensions": {
         "width": 9,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Office",
@@ -2477,13 +2465,14 @@
     {
       "id": "services-professional-auditing-services-basic",
       "class": "Services",
-      "name": "Professional Auditing Services None",
+      "name": "Professional Auditing Services",
       "price": 0,
       "dimensions": {
         "width": 12,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Office",
@@ -2498,13 +2487,14 @@
     {
       "id": "services-corporate-communication-services-basic",
       "class": "Services",
-      "name": "Corporate Communication Services None",
+      "name": "Corporate Communication Services",
       "price": 0,
       "dimensions": {
         "width": 12,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Office",
@@ -2519,13 +2509,14 @@
     {
       "id": "services-temporary-staffing-services-basic",
       "class": "Services",
-      "name": "Temporary Staffing Services None",
+      "name": "Temporary Staffing Services",
       "price": 0,
       "dimensions": {
         "width": 12,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Office",
@@ -2540,13 +2531,14 @@
     {
       "id": "services-security-services-basic",
       "class": "Services",
-      "name": "Security Services None",
+      "name": "Security Services",
       "price": 0,
       "dimensions": {
         "width": 12,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Office",
@@ -2561,13 +2553,14 @@
     {
       "id": "services-fitness-&-health-services-basic",
       "class": "Services",
-      "name": "Fitness & Health Services None",
+      "name": "Fitness & Health Services",
       "price": 0,
       "dimensions": {
         "width": 12,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Office",
@@ -2582,13 +2575,14 @@
     {
       "id": "services-executive-club-basic",
       "class": "Services",
-      "name": "Executive Club None",
+      "name": "Executive Club",
       "price": 0,
       "dimensions": {
         "width": 8,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Office",
@@ -2603,13 +2597,14 @@
     {
       "id": "services-helicopter-charters-basic",
       "class": "Services",
-      "name": "Helicopter Charters None",
+      "name": "Helicopter Charters",
       "price": 0,
       "dimensions": {
         "width": 8,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Office",
@@ -2624,13 +2619,14 @@
     {
       "id": "services-limousine-services-basic",
       "class": "Services",
-      "name": "Limousine Services None",
+      "name": "Limousine Services",
       "price": 0,
       "dimensions": {
         "width": 8,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Office",
@@ -2645,13 +2641,14 @@
     {
       "id": "services-handyman-services-basic",
       "class": "Services",
-      "name": "Handyman Services None",
+      "name": "Handyman Services",
       "price": 0,
       "dimensions": {
         "width": 5,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Apartment",
@@ -2666,13 +2663,14 @@
     {
       "id": "services-plumber-basic",
       "class": "Services",
-      "name": "Plumber None",
+      "name": "Plumber",
       "price": 0,
       "dimensions": {
         "width": 5,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Apartment",
@@ -2687,13 +2685,14 @@
     {
       "id": "services-laundromat-basic",
       "class": "Services",
-      "name": "Laundromat None",
+      "name": "Laundromat",
       "price": 0,
       "dimensions": {
         "width": 5,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Apartment",
@@ -2708,13 +2707,14 @@
     {
       "id": "services-dog-walking-services-basic",
       "class": "Services",
-      "name": "Dog Walking Services None",
+      "name": "Dog Walking Services",
       "price": 0,
       "dimensions": {
         "width": 9,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Apartment",
@@ -2729,13 +2729,14 @@
     {
       "id": "services-housekeeping-services-basic",
       "class": "Services",
-      "name": "Housekeeping Services None",
+      "name": "Housekeeping Services",
       "price": 0,
       "dimensions": {
         "width": 9,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Apartment",
@@ -2750,13 +2751,14 @@
     {
       "id": "services-dry-cleaning-services-basic",
       "class": "Services",
-      "name": "Dry Cleaning Services None",
+      "name": "Dry Cleaning Services",
       "price": 0,
       "dimensions": {
         "width": 12,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Apartment",
@@ -2771,13 +2773,14 @@
     {
       "id": "services-floral-arrangement-services-basic",
       "class": "Services",
-      "name": "Floral Arrangement Services None",
+      "name": "Floral Arrangement Services",
       "price": 0,
       "dimensions": {
         "width": 12,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Apartment",
@@ -2792,13 +2795,14 @@
     {
       "id": "services-tailoring-services-basic",
       "class": "Services",
-      "name": "Tailoring Services None",
+      "name": "Tailoring Services",
       "price": 0,
       "dimensions": {
         "width": 12,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Apartment",
@@ -2813,13 +2817,14 @@
     {
       "id": "services-daycare-center-basic",
       "class": "Services",
-      "name": "Daycare Center None",
+      "name": "Daycare Center",
       "price": 0,
       "dimensions": {
         "width": 12,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Apartment",
@@ -2834,13 +2839,14 @@
     {
       "id": "services-dog-sitting-services-basic",
       "class": "Services",
-      "name": "Dog Sitting Services None",
+      "name": "Dog Sitting Services",
       "price": 0,
       "dimensions": {
         "width": 12,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Apartment",
@@ -2855,13 +2861,14 @@
     {
       "id": "services-personal-training-services-basic",
       "class": "Services",
-      "name": "Personal Training Services None",
+      "name": "Personal Training Services",
       "price": 0,
       "dimensions": {
         "width": 12,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Apartment",
@@ -2876,13 +2883,14 @@
     {
       "id": "services-yoga-services-basic",
       "class": "Services",
-      "name": "Yoga Services None",
+      "name": "Yoga Services",
       "price": 0,
       "dimensions": {
         "width": 10,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Apartment",
@@ -2897,13 +2905,14 @@
     {
       "id": "services-home-decor-services-basic",
       "class": "Services",
-      "name": "Home Decor Services None",
+      "name": "Home Decor Services",
       "price": 0,
       "dimensions": {
         "width": 10,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Apartment",
@@ -2918,13 +2927,14 @@
     {
       "id": "services-wealth-adviser-services-basic",
       "class": "Services",
-      "name": "Wealth Adviser Services None",
+      "name": "Wealth Adviser Services",
       "price": 0,
       "dimensions": {
         "width": 10,
         "height": 1
       },
       "metadata": {
+        "tenancy_table": "src/entities/tenants/tenancy_tabel.json",
         "type": "Standard",
         "variant": "Basic",
         "serviceDomain": "Apartment",

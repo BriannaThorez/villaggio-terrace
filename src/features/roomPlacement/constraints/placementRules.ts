@@ -40,11 +40,11 @@ export const validatePlacement = (
     // to allow real rooms to be built "over" them.
     // BUT: To solve the 'sidequest', we MUST block placing a structural element 
     // over another structural element of the same type (redundant stacking).
-    const isS1Structural = type === "structure" || type === "empty_floor" || type === "lobby";
-    const isS2Structural = s2.type === "structure" || s2.type === "empty_floor" || s2.type === "lobby";
+    const isS1Structural = type === "structure" || type === "empty_floor";
+    const isS2Structural = s2.type === "structure" || s2.type === "empty_floor";
     
     // If placing a room over a structural element, always allow (continue)
-    if (type !== "structure" && type !== "empty_floor" && type !== "lobby" && isS2Structural) continue;
+    if (type !== "structure" && type !== "empty_floor" && isS2Structural) continue;
     
     // If placing a structural element over a DIFFERENT type, or if isForce, we skip regular collision
     // Actually, we want to allow structural elements to coexist EXCEPT if they are redundant.

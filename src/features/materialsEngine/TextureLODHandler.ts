@@ -139,6 +139,18 @@ class TextureLODManager {
   public purgeRedundant() {
     this.memoryCache.prune(64, 300000); // Purge older than 5 mins or exceeding 64 items
   }
+
+  /**
+   * INJECTION POINT (Phase 1.5.5)
+   * Hand over pre-warmed bundles from the startup preloader or hover-warming
+   * to the persistent memory cache.
+   */
+  public injectBundle(assetName: string, bundle: TextureBundle): void {
+    if (!this.memoryCache.has(assetName)) {
+      console.debug(`[TextureLOD] Injected warm bundle for: ${assetName}`);
+      this.memoryCache.set(assetName, bundle);
+    }
+  }
 }
 
 export const textureLODHandler = new TextureLODManager();

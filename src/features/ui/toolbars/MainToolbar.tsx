@@ -486,8 +486,8 @@ export const MainToolbar = () => {
           <div style={{ ...separatorStyle, height: '16px' }} />
 
           {/* Digital Clock */}
-          <div className="flex flex-col items-end min-w-[60px]">
-            <span className="text-xs font-mono font-black text-primary tracking-tight">
+          <div className="flex flex-col items-end">
+            <span className="text-xl font-black tracking-tight min-w-[4rem]">
               {(() => {
                 const totalMinutes = Math.floor(sunTime * 1440);
                 const hours = Math.floor(totalMinutes / 60);
@@ -495,8 +495,26 @@ export const MainToolbar = () => {
                 return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
               })()}
             </span>
-            <span className="text-[8px] font-mono text-text/40 uppercase tracking-widest leading-none">
-              Game Time
+            <span className="text-xs font-black tracking-tight min-w-[4rem]">
+              {(() => {
+                const totalMinutes = Math.floor(sunTime * 1440);
+                const hours = Math.floor(totalMinutes / 60);
+                if (hours >= 6 && hours < 18) {
+                  return (
+                    <div className="flex items-center gap-1 text-amber-400/60">
+                      <Zap size={10} fill="currentColor" />
+                      <span className="uppercase">Daylight</span>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div className="flex items-center gap-1 text-blue-400/60">
+                      <div className="w-2 h-2 rounded-full border-2 border-current border-r-transparent -rotate-45" />
+                      <span className="uppercase">Night</span>
+                    </div>
+                  );
+                }
+              })()}
             </span>
           </div>
         </div>

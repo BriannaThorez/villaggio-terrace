@@ -1,0 +1,72 @@
+{
+  "project": {
+    "project_name": "villaggio-terrace",
+    "type_checking": "@codemirror/lint",
+    "linting_package": "ESLint",
+    "project_architecture": "feature-sliced-design",
+  },
+  "project_naming_standards": {
+    "enforce_strict_casing": true,
+    "naming_conventions": {
+      "directories": {
+        "rule": "kebab-case",
+        "description": "All folders, including FSD layers, slices, and segments, must use hyphens.",
+        "regex": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+      },
+      "files": [
+        {
+          "type": "react_component",
+          "extensions": [".tsx", ".jsx"],
+          "rule": "PascalCase",
+          "regex": "^[A-Z][a-zA-Z0-9]*\\.(tsx|jsx)$",
+          "description": "Files exporting JSX/React components."
+        },
+        {
+          "type": "react_hook",
+          "extensions": [".ts", ".js"],
+          "match_prefix": "use",
+          "rule": "camelCase",
+          "regex": "^use[A-Z][a-zA-Z0-9]*\\.(ts|js)$",
+          "description": "Custom hooks managing state or lifecycle."
+        },
+        {
+          "type": "standard_logic",
+          "extensions": [".ts", ".js"],
+          "exclude_prefix": "use",
+          "rule": "kebab-case",
+          "regex": "^[a-z0-9]+(?:-[a-z0-9]+)*\\.(ts|js)$",
+          "description": "Framework-agnostic logic, parsers, and physics utilities."
+        },
+        {
+          "type": "stylesheet",
+          "extensions": [".css"],
+          "rule": "kebab-case",
+          "regex": "^[a-z0-9]+(?:-[a-z0-9]+)*\\.css$",
+          "description": "Standard global CSS files."
+        }
+      ],
+      "internal": {
+        "variables": {
+          "rule": "camelCase",
+          "description": "Local variables must use camelCase.",
+          "regex": "^[a-z][a-zA-Z0-9]*$"
+        },
+        "constants": {
+          "rule": "UPPER_SNAKE_CASE",
+          "description": "Constants must use UPPER_SNAKE_CASE.",
+          "regex": "^[A-Z][A-Z0-9_]*$"
+        },
+        "functions": {
+          "rule": "camelCase",
+          "description": "Functions must use camelCase, unless they are React components (PascalCase).",
+          "regex": "^([a-z][a-zA-Z0-9]*|[A-Z][a-zA-Z0-9]*)$"
+        },
+        "interfaces_types": {
+          "rule": "PascalCase",
+          "description": "Interfaces and Types must use PascalCase.",
+          "regex": "^[A-Z][a-zA-Z0-9]*$"
+        }
+      }
+    }
+  }
+}

@@ -55,36 +55,6 @@ export interface TextureBundle {
   displacementMap: THREE.Texture;
 }
 
-import woodFloorDiff from "../../../assets/textures/wood_floor_1/wood_floor_diff_4k.png";
-import woodFloorArm from "../../../assets/textures/wood_floor_1/wood_floor_arm_4k.png";
-import woodFloorNor from "../../../assets/textures/wood_floor_1/wood_floor_nor_gl_4k.png";
-import woodFloorDisp from "../../../assets/textures/wood_floor_1/wood_floor_disp_4k.png";
-import beigeWallDiff from "../../../assets/textures/beige_wall_1/beige_wall_001_diff_4k.png";
-import beigeWallArm from "../../../assets/textures/beige_wall_1/beige_wall_001_arm_4k.png";
-import beigeWallNor from "../../../assets/textures/beige_wall_1/beige_wall_001_nor_gl_4k.png";
-import beigeWallDisp from "../../../assets/textures/beige_wall_1/beige_wall_001_disp_4k.png";
-
-import paintedConcreteFloorDiff from "../../../assets/textures/concrete_floor_1/concrete_floor_worn_001_diff_4k.png";
-import paintedConcreteFloorArm from "../../../assets/textures/concrete_floor_1/concrete_floor_worn_001_arm_4k.png";
-import paintedConcreteFloorNor from "../../../assets/textures/concrete_floor_1/concrete_floor_worn_001_nor_gl_4k.png";
-import paintedConcreteFloorDisp from "../../../assets/textures/concrete_floor_1/concrete_floor_worn_001_disp_4k.png";
-
-import concreteWallDiff from "../../../assets/textures/concrete_wall_1/concrete_wall_1_diff_4k.png";
-import concreteWallArm from "../../../assets/textures/concrete_wall_1/concrete_wall_1_arm_4k.png";
-import concreteWallNor from "../../../assets/textures/concrete_wall_1/concrete_wall_1_nor_gl_4k.png";
-import concreteWallDisp from "../../../assets/textures/concrete_wall_1/concrete_wall_1_disp_4k.png";
-
-import greyCartagoDiff from "../../../assets/textures/grey_cartago_tiles/grey_cartago_03_diff_4k.png";
-import greyCartagoArm from "../../../assets/textures/grey_cartago_tiles/grey_cartago_03_arm_4k.png";
-import greyCartagoNor from "../../../assets/textures/grey_cartago_tiles/grey_cartago_03_nor_gl_4k.png";
-import greyCartagoDisp from "../../../assets/textures/grey_cartago_tiles/grey_cartago_03_disp_4k.png";
-
-import rockyTerrainDiff from "../../../assets/textures/rocky_terrain_2/rocky_terrain_02_diff_4k.png";
-import rockyTerrainArm from "../../../assets/textures/rocky_terrain_2/rocky_terrain_02_arm_4k.png";
-import rockyTerrainNor from "../../../assets/textures/rocky_terrain_2/rocky_terrain_02_nor_gl_4k.png";
-import rockyTerrainDisp from "../../../assets/textures/rocky_terrain_2/rocky_terrain_02_disp_4k.png";
-import rockyTerrainSpec from "../../../assets/textures/rocky_terrain_2/rocky_terrain_02_spec_4k.png";
-
 interface AssetPaths {
   diff: string;
   arm: string;
@@ -93,20 +63,72 @@ interface AssetPaths {
   spec?: string;
 }
 
-const ASSET_REGISTRY: Record<string, AssetPaths> = {
-    "wood_floor_1": { diff: woodFloorDiff, arm: woodFloorArm, nor: woodFloorNor, disp: woodFloorDisp },
-    "beige_wall_1": { diff: beigeWallDiff, arm: beigeWallArm, nor: beigeWallNor, disp: beigeWallDisp },
-    "concrete_floor_1": { diff: paintedConcreteFloorDiff, arm: paintedConcreteFloorArm, nor: paintedConcreteFloorNor, disp: paintedConcreteFloorDisp },
-    "concrete_wall_1": { diff: concreteWallDiff, arm: concreteWallArm, nor: concreteWallNor, disp: concreteWallDisp },
-    "grey_cartago_tiles": { diff: greyCartagoDiff, arm: greyCartagoArm, nor: greyCartagoNor, disp: greyCartagoDisp },
-    "rocky_terrain_2": {
-        diff: rockyTerrainDiff,
-        arm: rockyTerrainArm,
-        nor: rockyTerrainNor,
-        disp: rockyTerrainDisp,
-        spec: rockyTerrainSpec,
-    },
+// AUTO-DISCOVERY ENGINE (import.meta.glob)
+// Scans assets/textures/**/* at build time. 
+// Zero manual entry required for new textures.
+const _textureGlob = import.meta.glob(
+  "../../../assets/textures/**/*.png",
+  { query: "?url", import: "default", eager: true }
+) as Record<string, string>;
+
+const buildRegistryFromGlob = (glob: Record<string, string>): Record<string, AssetPaths> => {
+  const registry: Record<string, AssetPaths> = {};
+
+  Object.keys(glob).forEach((path) => {
+    const url = glob[path];
+    // Path looks like: "../../../assets/textures/wood_floor_1/wood_floor_diff_4k.png"
+    const parts = path.split("/");
+    const texturesIndex = parts.indexOf("textures");
+    if (texturesIndex === -1 || texturesIndex + 1 >= parts.length) return;
+
+    const folderName = parts[texturesIndex + 1];
+    const fileName = parts[parts.length - 1].toLowerCase();
+
+    if (!registry[folderName]) {
+      registry[folderName] = { diff: "", arm: "", nor: "", disp: "" };
+    }
+
+    if (fileName.includes("_diff")) registry[folderName].diff = url;
+    else if (fileName.includes("_arm")) registry[folderName].arm = url;
+    else if (fileName.includes("_nor")) registry[folderName].nor = url;
+    else if (fileName.includes("_disp")) registry[folderName].disp = url;
+    else if (fileName.includes("_spec")) registry[folderName].spec = url;
+  });
+
+  return registry;
 };
+
+const ASSET_REGISTRY = buildRegistryFromGlob(_textureGlob);
+
+// Pipeline Audit Utility
+// Lists discovered textures and warns about missing maps.
+export const printTextureRegistryAudit = () => {
+  console.group("%c 🎨 [TexturePipeline]: Architectural Registry Audit ", "background: #222; color: #bada55; padding: 4px;");
+  
+  const entries = Object.entries(ASSET_REGISTRY);
+  console.log(`Discovered ${entries.length} texture sets.`);
+  
+  entries.forEach(([name, paths]) => {
+    const missing = [];
+    if (!paths.diff) missing.push("diff");
+    if (!paths.arm) missing.push("arm");
+    if (!paths.nor) missing.push("nor");
+    if (!paths.disp) missing.push("disp");
+
+    if (missing.length > 0) {
+      console.warn(`[${name}] Missing maps: ${missing.join(", ")}`);
+    } else {
+      console.log(`%c[${name}] %cComplete`, "font-weight: bold", "color: #4caf50");
+    }
+  });
+  
+  console.groupEnd();
+};
+
+// Auto-run audit in DEV mode
+if (import.meta.env.DEV) {
+  printTextureRegistryAudit();
+}
 
 export const getTextureBundle = async (assetName: string): Promise<TextureBundle> => {
     const paths = ASSET_REGISTRY[assetName];

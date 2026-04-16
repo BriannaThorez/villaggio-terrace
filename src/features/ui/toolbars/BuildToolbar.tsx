@@ -22,6 +22,7 @@ import {
   resolveTraitsByCategory,
   getIconComponent,
 } from "../../../shared/utils/metadataUtils";
+import { useHoverPreloader } from "../../assetPreloader/hooks/useHoverPreloader";
 
 const TOOL_ALIASES: Record<string, string> = {
   studio: "residential",
@@ -214,6 +215,7 @@ export const BuildToolbar = () => {
   );
   const activeTool = useSimulationStore((state) => state.activeTool);
   const activeModuleId = useSimulationStore((state) => state.activeModuleId);
+  const { warmForModule } = useHoverPreloader();
 
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [activeSizeTab, setActiveSizeTab] = useState<Record<string, string>>(
@@ -442,7 +444,10 @@ export const BuildToolbar = () => {
                               width="308px"
                             >
                               <button
-                                onPointerEnter={() => audioEngine.triggerMenuExpand()}
+                                onPointerEnter={() => {
+                                  audioEngine.triggerMenuExpand();
+                                  warmForModule(sub.id);
+                                }}
                                 onClick={() => {
                                   audioEngine.triggerSubSelect();
                                   setActiveTool(

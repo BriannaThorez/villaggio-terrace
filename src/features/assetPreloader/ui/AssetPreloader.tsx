@@ -1,43 +1,81 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useThree } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import { preloadAllAssets } from "../api/preload";
+import { loadingGate } from "../api/LoadingGate";
 
 /**
  * PREMIUM ASSET PRELOADER UI
  * 
  * Provides visual feedback during the critical asset warming phase.
- * Following Feature Slice Design, this is a self-contained optimization module.
+ * Uses a RAFLoop LERP to ensure progress feels smooth and premium.
  */
 export const AssetPreloader: React.FC = () => {
     const { gl } = useThree();
     const [isLoaded, setIsLoaded] = useState(false);
-    const [progress, setProgress] = useState(0);
+    const [smoothProgress, setSmoothProgress] = useState(0);
+    const targetProgress = useRef(0);
+
+    const [statusLabel, setStatusLabel] = useState("Initializing Architectural Assets");
 
     useEffect(() => {
         let isCancelled = false;
+        let rafId: number;
+
+        // Map loading phases to truthful progress percentages and labels
+        const phaseMap: Record<string, { p: number, l: string }> = {
+            fetching_textures: { p: 15, l: "Loading High-Res Textures" },
+            warming_materials: { p: 45, l: "Warming Physical Materials" },
+            compiling_shaders: { p: 85, l: "Compiling GPU Shaders" },
+            ready: { p: 100, l: "Engine Ready" }
+        };
+
+        const unsubscribe = loadingGate.subscribe((phase) => {
+            if (isCancelled) return;
+            const config = phaseMap[phase];
+            if (config) {
+                targetProgress.current = config.p;
+                setStatusLabel(config.l);
+                if (phase === 'ready') {
+                    setTimeout(() => setIsLoaded(true), 1200); // Slightly more breath for the finish
+                }
+            }
+        });
+
+        // RAFLoop LERP: Glides smoothly toward the target percentage
+        const updateProgress = () => {
+            if (isCancelled) return;
+            
+            setSmoothProgress(prev => {
+                const diff = targetProgress.current - prev;
+                // Premium lerp: move by 8% of the distance each frame
+                const next = prev + diff * 0.08;
+                
+                // Snap to target if very close
+                if (Math.abs(diff) < 0.1) return targetProgress.current;
+                return next;
+            });
+
+            rafId = requestAnimationFrame(updateProgress);
+        };
+
+        rafId = requestAnimationFrame(updateProgress);
 
         const runPreload = async () => {
-            // Simulate progress for UI smoothness while the async loading happens
-            const interval = setInterval(() => {
-                setProgress(prev => Math.min(prev + Math.random() * 5, 95));
-            }, 100);
-
             try {
                 await preloadAllAssets(gl);
-                if (!isCancelled) {
-                    setProgress(100);
-                    setTimeout(() => setIsLoaded(true), 800);
-                }
             } catch (err) {
                 console.error("Asset Preloading Failed:", err);
-            } finally {
-                clearInterval(interval);
             }
         };
 
         runPreload();
-        return () => { isCancelled = true; };
+        
+        return () => { 
+            isCancelled = true;
+            unsubscribe();
+            cancelAnimationFrame(rafId);
+        };
     }, [gl]);
 
     if (isLoaded) return null;
@@ -48,31 +86,31 @@ export const AssetPreloader: React.FC = () => {
                 position: "fixed",
                 inset: 0,
                 zIndex: 9999,
-                backgroundColor: "rgba(10, 10, 12, 0.96)",
+                backgroundColor: "rgba(10, 10, 12, 0.98)",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
                 fontFamily: "'Inter', system-ui, sans-serif",
                 color: "#ffffff",
-                backdropFilter: "blur(20px)",
-                transition: "opacity 0.8s ease-in-out"
+                backdropFilter: "blur(40px)",
+                transition: "opacity 1s ease-in-out"
             }}>
                 <div style={{
                     fontSize: "0.8rem",
                     letterSpacing: "0.4em",
                     textTransform: "uppercase",
-                    marginBottom: "2rem",
+                    marginBottom: "2.5rem",
                     opacity: 0.6,
                     fontWeight: 300
                 }}>
-                    Initializing Architectural Assets
+                    {statusLabel}
                 </div>
 
                 <div style={{
-                    width: "300px",
-                    height: "2px",
-                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                    width: "400px",
+                    height: "1px",
+                    backgroundColor: "rgba(255, 255, 255, 0.05)",
                     position: "relative",
                     overflow: "hidden"
                 }}>
@@ -81,20 +119,20 @@ export const AssetPreloader: React.FC = () => {
                         left: 0,
                         top: 0,
                         height: "100%",
-                        width: `${progress}%`,
+                        width: `${smoothProgress}%`,
                         backgroundColor: "#ffffff",
-                        boxShadow: "0 0 20px rgba(255, 255, 255, 0.5)",
-                        transition: "width 0.4s cubic-bezier(0.1, 0.5, 0.1, 1)"
+                        boxShadow: "0 0 30px rgba(255, 255, 255, 0.6)",
                     }} />
                 </div>
 
                 <div style={{
-                    marginTop: "1.5rem",
-                    fontSize: "0.7rem",
-                    opacity: 0.4,
+                    marginTop: "2rem",
+                    fontSize: "0.6rem",
+                    letterSpacing: "0.2em",
+                    opacity: 0.3,
                     fontFamily: "monospace"
                 }}>
-                    WARMING GPU PIPELINE {Math.round(progress)}%
+                    {Math.round(smoothProgress)}% COMPLETE
                 </div>
             </div>
         </Html>
