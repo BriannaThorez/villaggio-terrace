@@ -69,7 +69,8 @@ class TextureLODManager {
       roughnessMap: armTex,
       metalnessMap: armTex,
       normalMap: normalTex,
-      displacementMap: nullDisp
+      displacementMap: nullDisp,
+      isPlaceholder: true
     };
 
     this.lowResPlaceholders.set(colorHex, bundle);
@@ -150,6 +151,25 @@ class TextureLODManager {
       console.debug(`[TextureLOD] Injected warm bundle for: ${assetName}`);
       this.memoryCache.set(assetName, bundle);
     }
+  }
+
+  /**
+   * PROMOTION POINT (Phase 3)
+   * If a load is already in-flight (e.g. from hover-warming), 
+   * returns that existing promise to the caller. Ensures the 
+   * UI can prioritize the high-fidelity asset over the placeholder.
+   */
+  public promoteToForeground(assetName: string): Promise<TextureBundle> {
+    const cached = this.memoryCache.get(assetName);
+    if (cached) return Promise.resolve(cached);
+
+    const active = this.activeLoads.get(assetName);
+    if (active) {
+      return active;
+    }
+
+    // Default: Return the promise from a fresh load
+    return this.getBundleProgressiveSync(assetName).promise;
   }
 }
 

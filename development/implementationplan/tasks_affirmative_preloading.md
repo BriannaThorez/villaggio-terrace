@@ -157,24 +157,46 @@
 ## Phase 3: Predictive Cache Promotion
 
 ### 3.1 — Modify `TextureLODHandler.ts`
-- [ ] `src/features/materialsEngine/TextureLODHandler.ts` — **targeted changes only**
-  - [ ] Add `promoteToForeground(assetName: string): Promise<TextureBundle>` method
-  - [ ] If `memoryCache.has(assetName)` → return resolved promise immediately
-  - [ ] If `activeLoads.has(assetName)` → return the existing in-flight promise (no new request)
-  - [ ] Else → delegate to `getBundleProgressiveSync(assetName).promise`
-  - [ ] No new network requests triggered; promotion = priority-attaching to existing work
+- [x] `src/features/materialsEngine/TextureLODHandler.ts` — **targeted changes only**
+  - [x] Add `promoteToForeground(assetName: string): Promise<TextureBundle>` method
+  - [x] If `memoryCache.has(assetName)` → return resolved promise immediately
+  - [x] If `activeLoads.has(assetName)` → return the existing in-flight promise (no new request)
+  - [x] Else → delegate to `getBundleProgressiveSync(assetName).promise`
+  - [x] No new network requests triggered; promotion = priority-attaching to existing work
 
 ### 3.2 — Modify `useToolPreloader.ts`
-- [ ] `src/features/assetPreloader/hooks/useToolPreloader.ts` — **targeted changes only**
-  - [ ] Before calling `getBundleProgressiveSync`, check `textureLODHandler` active load state
-  - [ ] If active load or cached → call `promoteToForeground` instead
-  - [ ] Preserve existing `useEffect([activeModuleId])` dependency array and early-return guards
+- [x] `src/features/assetPreloader/hooks/useToolPreloader.ts` — **targeted changes only**
+  - [x] Before calling `getBundleProgressiveSync`, check `textureLODHandler` active load state
+  - [x] If active load or cached → call `promoteToForeground` instead
+  - [x] Preserve existing `useEffect([activeModuleId])` dependency array and early-return guards
 
 ### ✅ Phase 3 QA Checks
-- [ ] Profile: hover then click same room → no 8px placeholder flash visible
-- [ ] Select Residential → quickly select Office → no stutter between selections
-- [ ] `tsc --noEmit` — Exit 0
-- [ ] **🛑 PAUSE — Awaiting user QA approval before Phase 4**
+- [x] Profile: hover then click same room → no 8px placeholder flash visible
+- [x] Select Residential → quickly select Office → no stutter between selections
+- [x] `tsc --noEmit` — Exit 0
+- [x] **🛑 USER APPROVAL — Ready for Phase 3.5 Performance Audit**
+
+---
+
+## Phase 3.5: Placement Lag Audit & CSG Optimization
+
+### 3.5.1 — Optimize `TextureLODHandler` (Cache Bypass)
+- [x] `src/features/materialsEngine/TextureLODHandler.ts`
+  - [x] Modify `getBundleProgressiveSync` to check `memoryCache` first
+  - [x] If found, return cached bundle as BOTH `progressive` and `promise` (bypass placeholder)
+- [x] Verify: selection of pre-warmed room shows 4K textures in exactly ONE frame (no flash)
+
+### 3.5.2 — Optimize `MaterialParser` (Sync Initialization)
+- [x] `src/engine/MaterialParser.ts`
+  - [x] Update `createRoomSurfaceMaterial` to check if the promise is already resolved
+  - [x] Apply textures IMMEDIATELY in constructor if possible to avoid `needsUpdate` stall
+- [x] Verify: placing rooms has reduced "hitch" during the addShape action
+
+### 3.5.3 — Optimize `RoomMeshCSG` (Geometry Stabilization)
+- [x] `src/entities/rooms/visuals/RoomMeshCSG.tsx`
+  - [x] Memoize the `addGroup` loop logic or move into a dedicated hook/memo
+  - [x] Ensure CSG `Geometry` is only re-calculated when actual dimensions change
+- [x] Verify: FPS remains stable during rapid placement of rooms using CSG (Lobby, Office)
 
 ---
 

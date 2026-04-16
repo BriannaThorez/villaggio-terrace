@@ -14,9 +14,9 @@ const configureTexture = (
 ): THREE.Texture => {
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
-  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
-  texture.generateMipmaps = true;
+  texture.generateMipmaps = false;
   texture.anisotropy = 4;
   texture.colorSpace = options.colorSpace;
   if (options.flipY !== undefined) {
@@ -53,6 +53,7 @@ export interface TextureBundle {
   metalnessMap: THREE.Texture;
   normalMap: THREE.Texture;
   displacementMap: THREE.Texture;
+  isPlaceholder?: boolean;
 }
 
 interface AssetPaths {

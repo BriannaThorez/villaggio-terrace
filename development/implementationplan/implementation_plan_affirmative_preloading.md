@@ -334,7 +334,7 @@ onPointerEnter={() => {
 
 ---
 
-## Phase 3: Predictive Cache Promotion
+## Phase 3: Predictive Cache Promotion [COMPLETED]
 
 **Goal**: When a user clicks a tool that was already partially warming (due to Startup Preloader or Hover Warming), immediately promote that load to priority resolution and return the best available texture instantly.
 
@@ -545,3 +545,4 @@ registerWorkerTask<ResolveOverlapsPayload, ResolveOverlapsResult>(
 | 2026-04-16 | Phase 1 | COMPLETED: Truthful progress gated by real XHR/GPU compilation. |
 | 2026-04-16 | Phase 1.5 | COMPLETED: Automated registry via glob, deduplicated shaders, fixed lobbies, and bridged cache. |
 | 2026-04-16 | Phase 2 | COMPLETED: Implemented speculative hover-warming via BuildToolbar integration. |
+| 2026-04-16 | Phase 3 | COMPLETED: Predictive Cache Promotion wired via `promoteToForeground`. |

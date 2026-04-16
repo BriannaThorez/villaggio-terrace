@@ -115,18 +115,20 @@ const createRoomSurfaceMaterial = (
   });
 
   material.aoMapIntensity = 1.8;
-  material.needsUpdate = true;
   
   // SWAP HEAVY TEXTURES LATER: Prevents main-thread/VRAM stall on room placement drag
-  promise.then((heavyBundle) => {
-      material.map = heavyBundle.albedoMap;
-      material.aoMap = heavyBundle.aoMap;
-      material.roughnessMap = heavyBundle.roughnessMap;
-      material.metalnessMap = heavyBundle.metalnessMap;
-      material.normalMap = heavyBundle.normalMap;
-      material.displacementMap = heavyBundle.displacementMap;
-      material.needsUpdate = true;
-  });
+  // PHASE 3.5: Avoid redundant needsUpdate if asset is already hot in cache
+  if (progressive.isPlaceholder) {
+    promise.then((heavyBundle) => {
+        material.map = heavyBundle.albedoMap;
+        material.aoMap = heavyBundle.aoMap;
+        material.roughnessMap = heavyBundle.roughnessMap;
+        material.metalnessMap = heavyBundle.metalnessMap;
+        material.normalMap = heavyBundle.normalMap;
+        material.displacementMap = heavyBundle.displacementMap;
+        material.needsUpdate = true;
+    });
+  }
 
   const managed = createManagedMaterial(material, [
     progressive.albedoMap,

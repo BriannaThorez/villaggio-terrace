@@ -26,10 +26,9 @@ export const useToolPreloader = () => {
             if (room.metadata.ceilingTexture) texturesToWarm.add(room.metadata.ceilingTexture as string);
 
             // Fetch via the established async LOD handler workflow to warm the cache.
-            // By the time the user clicks to place the room, the promise will have resolved
-            // and the 4K textures will natively attach without any placeholder swaps needed!
+            // Phase 3: We use promoteToForeground to prioritize assets already in-flight from hover-preloading.
             texturesToWarm.forEach(txName => {
-                textureLODHandler.getBundleProgressiveSync(txName);
+                textureLODHandler.promoteToForeground(txName);
             });
         }
     }, [activeModuleId]);

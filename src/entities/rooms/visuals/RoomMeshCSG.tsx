@@ -98,43 +98,48 @@ const RoomMeshCSGInner: React.FC<RoomMeshCSGProps> = ({
 
   const meshRef = React.useRef<THREE.Mesh>(null);
 
+  const lastGeoRef = React.useRef<THREE.BufferGeometry | null>(null);
+
   React.useLayoutEffect(() => {
     if (!meshRef.current || !Array.isArray(material)) return;
     const geo = meshRef.current.geometry;
+    
+    // PHASE 3.5 Optimization: Only re-calc groups if the identity of the geometry has changed
+    // (e.g. after a CSG operation finishes and swaps the geometry buffer)
+    if (lastGeoRef.current === geo) return;
+    lastGeoRef.current = geo;
+
     if (!geo.attributes.normal) return;
 
-    const floorIdx = 2; // Floor is index 2 (+Y in interior cavity)
-    const ceilingIdx = 3; // Ceiling is index 3 (-Y in interior cavity)
+    const floorIdx = 2; 
+    const ceilingIdx = 3; 
     const wallIdx = 0;
 
     const normals = geo.attributes.normal;
     const count = normals.count;
     
-    // Clear existing groups
     geo.clearGroups();
 
-    // In a hollowed room, we need to sort or group triangles by their normal
-    // For BoxGeometry CSG, we can often rely on simple thresholding
-    // However, to be industry-leading, we should create a mask or multi-draw
+    // Batch group creation to avoid re-calculating on every frame
+    const groups: { start: number, count: number, materialIndex: number }[] = [];
     
-    // Simplified robust approach for Box-based rooms:
-    // We'll iterate through triangles and add groups. 
-    // This is most efficient when faces are contiguous, which CSG tries to do.
-    
-    // For the sake of this fix, we will re-group based on the first vertex of each triangle
     for (let i = 0; i < count; i += 3) {
       const ny = normals.getY(i);
       let targetIdx = wallIdx;
       
-      // LOGIC: 
-      // Floor normal points UP (+Y) relative to the room floor.
-      // Ceiling normal points DOWN (-Y) relative to the room ceiling.
       if (ny > 0.5) targetIdx = floorIdx;
       else if (ny < -0.5) targetIdx = ceilingIdx;
       
-      geo.addGroup(i, 3, targetIdx);
+      // Merge contiguous triangles with same material index into one group for performance
+      const lastGroup = groups[groups.length - 1];
+      if (lastGroup && lastGroup.materialIndex === targetIdx) {
+        lastGroup.count += 3;
+      } else {
+        groups.push({ start: i, count: 3, materialIndex: targetIdx });
+      }
     }
-    
+
+    groups.forEach(g => geo.addGroup(g.start, g.count, g.materialIndex));
     meshRef.current.material = material;
   }, [material, width, height, depth]);
 
