@@ -456,17 +456,17 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           }, skipHistory);
 
           if (shape.type !== 'structure' && shape.type !== 'empty_floor') {
-           const roomLeft = shape.position[0] - shape.size[0] / 2;
-           const roomRight = shape.position[0] + shape.size[0] / 2;
-           const roomTop = shape.position[1] + shape.size[1] / 2;
-           const roomBottom = shape.position[1] - shape.size[1] / 2;
+            const roomLeft = shape.position[0] - shape.size[0] / 2;
+            const roomRight = shape.position[0] + shape.size[0] / 2;
+            const roomTop = shape.position[1] + shape.size[1] / 2;
+            const roomBottom = shape.position[1] - shape.size[1] / 2;
 
-           const toDelete = state.shapes.filter(s => {
-             if (s.type !== 'empty_floor') return false;
-             const sLeft = s.position[0] - s.size[0] / 2;
-             const sRight = s.position[0] + s.size[0] / 2;
-             const sTop = s.position[1] + s.size[1] / 2;
-             const sBottom = s.position[1] - s.size[1] / 2;
+            const toDelete = state.shapes.filter(s => {
+              if (s.type !== 'empty_floor') return false;
+              const sLeft = s.position[0] - s.size[0] / 2;
+              const sRight = s.position[0] + s.size[0] / 2;
+              const sTop = s.position[1] + s.size[1] / 2;
+              const sBottom = s.position[1] - s.size[1] / 2;
               return (
                 sLeft < roomRight - 0.1 &&
                 sRight > roomLeft + 0.1 &&
@@ -611,7 +611,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
         }, true, true, { skipSelection: true });
       } else if (shape.type === 'structure') {
         const stateAfter = get();
-        // Check structural vacancy using SpatialHash for localized speed
+        // Check structural 3333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333E333344444444433333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333 using SpatialHash for localized speed
         const candidates = globalHash.query(shape.position[0], shape.position[1], shape.size[0] - 0.2, shape.size[1] - 0.2);
         let isOccupied = false;
         for (const id of candidates) {
@@ -766,7 +766,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       const stateAfter = get();
       const deletedWasEmptyFloor = shapeToDelete?.type === 'empty_floor';
       if (!isMerge && !deletedWasEmptyFloor) {
-        // --- INDUSTRY LEADING LOCALIZED VACANCY RESTORATION ---
+        // --- INDUSTRY LEADING LOCALIZED 333333333335333333333333333333333333333333 RESTORATION ---
         const currentShapes = stateAfter.shapes;
 
         // Expanded sweep: Focus on the floor of deletion, but check all nearby structures

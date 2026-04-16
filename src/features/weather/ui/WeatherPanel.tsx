@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState } from "react";
 import { useSimulationStore } from "../../../shared/utils/store";
+import { useTimeStore } from "../../time/store/timeStore";
 import { CloudRain, Sun, Cloud, X } from "lucide-react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 
@@ -18,10 +19,13 @@ export const WeatherPanel: React.FC = () => {
   );
   const showWeather = useSimulationStore((state) => state.showWeather);
   const setShowWeather = useSimulationStore((state) => state.setShowWeather);
-  const sunTime = useSimulationStore((state) => state.sunTime);
-  const setSunTime = useSimulationStore((state) => state.setSunTime);
-  const sunIntensity = useSimulationStore((state) => state.sunIntensity);
-  const setSunIntensity = useSimulationStore((state) => state.setSunIntensity);
+  
+  const sunTime = useTimeStore((state) => state.sunTime);
+  const setSunTime = useTimeStore((state) => state.setSunTime);
+  
+  const sunIntensity = useTimeStore((state) => state.sunIntensity);
+  const setSunIntensity = useTimeStore((state) => state.setSunIntensity);
+  
   const uiPositions = useSimulationStore((state) => state.uiPositions);
   const setUIPosition = useSimulationStore((state) => state.setUIPosition);
 

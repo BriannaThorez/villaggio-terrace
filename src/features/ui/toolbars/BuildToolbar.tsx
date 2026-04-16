@@ -93,7 +93,15 @@ const buildRoomDisplayName = (room: any) => {
   const quality = formatDisplayPart(room?.metadata?.quality);
   const className = formatDisplayPart(room?.class);
 
-  const topLine = [quality, specialization, form].filter(Boolean).join(" ");
+  let topLine = [quality, specialization, form].filter(Boolean).join(" ");
+  
+  // Custom naming rules
+  if (room?.class === "Services") {
+    topLine = room.name;
+  } else if (room?.class === "Store") {
+    topLine = `${formatDisplayPart(room?.metadata?.size)} ${room.name}`;
+  }
+
   const bottomLine = [quality, className].filter(Boolean).join(" ");
 
   return {
@@ -108,6 +116,10 @@ const RoomInfoTooltip = ({ metadata }: { metadata: any }) => {
   const { utilities, services } = resolveTraitsByCategory(metadata.metadata);
 
   const { topLine, bottomLine, qualityStars } = buildRoomDisplayName(metadata);
+  
+  const priceText = metadata.price ? `$${(metadata.price).toLocaleString()}` : "Free";
+  const income = metadata.metadata?.average_rent || 0;
+  const upkeep = metadata.metadata?.upkeep_cost || 0;
 
   return (
     <div className="flex flex-col gap-2 max-w-full">
@@ -115,15 +127,23 @@ const RoomInfoTooltip = ({ metadata }: { metadata: any }) => {
         <span className="text-[10px] font-mono font-bold text-emerald-400 leading-tight">
           {topLine}
         </span>
-        <span className="text-[9px] font-bold text-text/30 uppercase tracking-tighter leading-tight">
-          {bottomLine}
+        <span className="text-[9px] font-bold text-text/30 uppercase tracking-tighter leading-tight flex justify-between">
+          <span>{bottomLine}</span>
+          <span className="text-text/50">Build: <span className="text-primary font-mono">{priceText}</span></span>
         </span>
-        <div className="flex items-center gap-0.5 pt-0.5">
+        <div className="flex items-center gap-0.5 pt-0.5 mt-1">
           {Array.from({ length: qualityStars }).map((_, index) => (
             <Star key={index} className="text-amber-400" size={10} />
           ))}
         </div>
       </div>
+      
+      {(income > 0 || upkeep > 0) && (
+        <div className="flex items-center gap-2 text-[9px] font-mono font-bold">
+          {income > 0 && <span className="text-emerald-400">Est. Income: +${income.toLocaleString()}/wk</span>}
+          {upkeep > 0 && <span className="text-red-400">Upkeep: -${upkeep.toLocaleString()}/wk</span>}
+        </div>
+      )}
 
       <p className="text-[10px] leading-relaxed text-text/60 italic border-l-2 border-primary/20 pl-2">
         {metadata.specificDescription}
@@ -150,6 +170,20 @@ const RoomInfoTooltip = ({ metadata }: { metadata: any }) => {
               {s.label}
             </span>
           ))}
+        </div>
+      )}
+      
+      {/* Services expressly provided by this room */}
+      {metadata.metadata?.services_provided && metadata.metadata.services_provided.length > 0 && (
+        <div className="flex flex-col mt-1">
+          <span className="text-[9px] font-bold text-text/30 uppercase tracking-tighter">Provides Services:</span>
+          <div className="flex flex-wrap gap-1.5 mt-0.5">
+            {metadata.metadata.services_provided.map((svc: string) => (
+               <span key={svc} className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 rounded text-[9px] font-bold text-emerald-400 whitespace-nowrap">
+                  {formatDisplayPart(svc)}
+               </span>
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -391,31 +425,12 @@ export const BuildToolbar = () => {
                         })
                         .map((sub) => {
                           const display = buildRoomDisplayName(sub);
+                          const priceStr = sub.price ? `$${(sub.price / 1000).toFixed(0)}k` : "";
                           return (
                             <SmartTooltip
                               key={sub.id}
                               content={display.topLine}
-                              description={
-                                <div className="flex flex-col gap-1 max-w-full">
-                                  <div className="text-[10px] font-mono font-bold text-emerald-400 leading-tight">
-                                    {display.topLine}
-                                  </div>
-                                  <div className="text-[9px] font-bold text-text/30 uppercase tracking-tighter leading-tight">
-                                    {display.bottomLine}
-                                  </div>
-                                  <div className="flex items-center gap-0.5 pt-0.5">
-                                    {Array.from({
-                                      length: display.qualityStars,
-                                    }).map((_, index) => (
-                                      <Star
-                                        key={index}
-                                        className="text-amber-400"
-                                        size={10}
-                                      />
-                                    ))}
-                                  </div>
-                                </div>
-                              }
+                              description={<RoomInfoTooltip metadata={sub} />}
                               position="right"
                               width="308px"
                             >
@@ -435,6 +450,7 @@ export const BuildToolbar = () => {
                                   }}
                                 />
                                 {display.topLine}
+                                {priceStr && <span className="ml-1 text-[10px] text-emerald-400 font-mono">{priceStr}</span>}
                                 <span className="ml-2 inline-flex items-center gap-0.5">
                                   {Array.from({
                                     length: display.qualityStars,

@@ -8,6 +8,7 @@ import type {
 } from "../../roomPlacement/structural/graph";
 import { StructuralRoomMetadata } from "../../roomPlacement/structural/graph";
 import { RadialMenu } from "./RadialMenu";
+import { TenancyRadialMenu } from "./TenancyRadialMenu";
 
 const START_LABEL_COLOR = "#ffffff";
 const START_LABEL_SHADOW = "0 0 12px rgba(0, 0, 0, 0.45)";
@@ -15,7 +16,7 @@ const START_LABEL_TOP_OFFSET = 10;
 const START_LABEL_FRONT_FACE_OFFSET = 0;
 const START_LABEL_SCALE = 4;
 const MENU_BUTTON_SCALE = 1.0;
-const ROTATE_BUTTON_SCALE = 1.0;
+const TENANCY_BUTTON_SCALE = 1.0;
 
 const FRONT_FRAME_COLOR = "#39ff14";
 const FRONT_FRAME_EDGE = "#39ff14";
@@ -42,7 +43,7 @@ type OverlayFrame = {
   planeRotation: [number, number, number];
   planeSize: [number, number];
   menuPosition: [number, number, number];
-  rotatePosition: [number, number, number];
+  tenancyPosition: [number, number, number];
   startPosition: [number, number, number];
   cornerMarkers: [number, number, number][];
 };
@@ -81,7 +82,7 @@ const getFrontFaceOverlayFrame = (
     planeRotation: [0, 0, 0],
     planeSize: [room.dimensions.width, room.dimensions.height],
     menuPosition: [cornerX - room.dimensions.width * 0.25, topY + topMargin, 0],
-    rotatePosition: [cornerX - room.dimensions.width * 0.25, -topMargin, 0],
+    tenancyPosition: [cornerX - room.dimensions.width * 0.25, -topMargin, 0],
     startPosition: [0, topY + topMargin, START_LABEL_FRONT_FACE_OFFSET],
     cornerMarkers: [],
   };
@@ -106,7 +107,7 @@ const getFallbackOverlayFrame = (shape: SimulationNode): OverlayFrame => {
     planeRotation: [0, 0, 0],
     planeSize: [shape.size[0], shape.size[1]],
     menuPosition: [cornerX - shape.size[0] * 0.25, topY + topMargin, 0],
-    rotatePosition: [
+    tenancyPosition: [
       cornerX - shape.size[0] * 0.25,
       -topMargin,
       0,
@@ -118,11 +119,11 @@ const getFallbackOverlayFrame = (shape: SimulationNode): OverlayFrame => {
 
 const SelectionControls = ({
   menuPosition,
-  rotatePosition,
+  tenancyPosition,
   shapeId,
 }: {
   menuPosition: [number, number, number];
-  rotatePosition: [number, number, number];
+  tenancyPosition: [number, number, number];
   shapeId: string;
 }) => {
   return (
@@ -145,13 +146,15 @@ const SelectionControls = ({
       <Html
         center
         transform
-        scale={ROTATE_BUTTON_SCALE}
-        position={rotatePosition}
+        scale={TENANCY_BUTTON_SCALE}
+        position={tenancyPosition}
         zIndexRange={[10000, 10100]}
         portal={{ current: document.body }}
       >
         <div className="pointer-events-none flex h-40 w-40 items-center justify-center rounded-full border border-white/30 bg-white text-black shadow-[0_0_28px_rgba(255,255,255,0.3)] backdrop-blur-md">
-          <div className="scale-[6]">⟳</div>
+          <div className="scale-[3.2]">
+            <TenancyRadialMenu shapeId={shapeId} />
+          </div>
         </div>
       </Html>
     </>

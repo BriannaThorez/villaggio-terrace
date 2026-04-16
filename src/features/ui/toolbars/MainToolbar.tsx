@@ -7,16 +7,20 @@ import {
   Edit01Icon,
   ViewIcon,
   CheckmarkCircle01Icon,
-  Download01Icon,
+  KeyboardIcon,
+  PlayIcon,
+  PauseIcon,
+  Forward02Icon,
   ArrowTurnBackwardIcon,
   ArrowTurnForwardIcon,
-  KeyboardIcon,
 } from "hugeicons-react";
-import { Droplet, Map, DollarSign } from "lucide-react";
+import { Droplet, Map, DollarSign, Zap, Rocket } from "lucide-react";
 import { SmartTooltip } from "../../../shared/components/SmartTooltip";
-import { generateSVG } from "../../../shared/utils/svgExport";
-import React, { useState, createElement } from "react";
+import React, { useState, createElement, useEffect } from "react";
 import themes from "../themes/palettes/color_palettes.json";
+import { useFinanceStore } from "../../finance/store/financeStore";
+import { useTenancyStore } from "../../tenancy/store/tenancyStore";
+import { useTimeStore } from "../../time/store/timeStore";
 
 const GUI_SPACING_SCALE = 0.85;
 const HEADER_VERTICAL_SCALE = 0.9;
@@ -68,12 +72,21 @@ const formatMoneyDisplay = (value: number) => moneyFormatter.format(value);
 export const MainToolbar = () => {
   const themeName = useSimulationStore((state) => state.themeName);
   const setThemeName = useSimulationStore((state) => state.setThemeName);
-  const resources = useSimulationStore((state) => state.resources);
+  const shapes = useSimulationStore((state) => state.shapes);
   const spendableMoney = useSimulationStore((state) => state.spendableMoney);
   const undo = useSimulationStore((state) => state.undo);
   const redo = useSimulationStore((state) => state.redo);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showMainMenu, setShowMainMenu] = useState(false);
+
+  const { resourceUsage, resourceCapacity, updateBalances } = useFinanceStore();
+  const occupants = useTenancyStore(state => state.occupants);
+
+  const { sunTime, dayOfWeek, gameSpeed, setGameSpeed } = useTimeStore();
+
+  useEffect(() => {
+    updateBalances();
+  }, [shapes, occupants, updateBalances]);
 
   const showControls = useSimulationStore((state) => state.showControls);
   const setShowControls = useSimulationStore((state) => state.setShowControls);
@@ -94,24 +107,6 @@ export const MainToolbar = () => {
   const setShowWeatherPanel = useSimulationStore(
     (state) => state.setShowWeatherPanel,
   );
-
-  const handleExport = () => {
-    const state = useSimulationStore.getState();
-    const shapes = state.shapes;
-    const links = state.links;
-
-    if (shapes.length === 0) return;
-
-    const currentTheme = themes[themeName as keyof typeof themes];
-    const svg = generateSVG(shapes, links, currentTheme, themeName);
-    const blob = new Blob([svg], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `simulation-export-${new Date().getTime()}.svg`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
 
   const formattedSpendableMoney = formatMoneyDisplay(spendableMoney);
   const moneyIndicator = (
@@ -137,9 +132,8 @@ export const MainToolbar = () => {
     <SmartTooltip content={tooltip} description={description} position="top">
       <button
         onClick={onClick}
-        className={`${toolbarButtonClass} ${
-          isActive ? activeButtonClasses : idleButtonClasses
-        }`}
+        className={`${toolbarButtonClass} ${isActive ? activeButtonClasses : idleButtonClasses
+          }`}
         style={toolbarButtonStyle}
       >
         {createElement(icon, {
@@ -155,11 +149,10 @@ export const MainToolbar = () => {
       <SmartTooltip content="Open Menu">
         <button
           onClick={() => setShowMainMenu(!showMainMenu)}
-          className={`${toolbarButtonClass} ${
-            showMainMenu
-              ? "bg-primary/20 text-primary"
-              : "text-text/60 hover:bg-primary/10 hover:text-primary"
-          }`}
+          className={`${toolbarButtonClass} ${showMainMenu
+            ? "bg-primary/20 text-primary"
+            : "text-text/60 hover:bg-primary/10 hover:text-primary"
+            }`}
           style={toolbarButtonStyle}
         >
           <Menu01Icon size={GUI_ICON_SIZE} />
@@ -180,11 +173,10 @@ export const MainToolbar = () => {
 
           <button
             onClick={() => setShowControls(!showControls)}
-            className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${
-              showControls
-                ? "bg-primary/20 text-text"
-                : "text-text/60 hover:text-text hover:bg-primary/5"
-            }`}
+            className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${showControls
+              ? "bg-primary/20 text-text"
+              : "text-text/60 hover:text-text hover:bg-primary/5"
+              }`}
             style={{
               padding: `${GUI_SPACING_REM}rem ${GUI_SPACING_REM * 2}rem`,
             }}
@@ -200,11 +192,10 @@ export const MainToolbar = () => {
 
           <button
             onClick={() => setShowWeatherPanel(!showWeatherPanel)}
-            className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${
-              showWeatherPanel
-                ? "bg-primary/20 text-text"
-                : "text-text/60 hover:text-text hover:bg-primary/5"
-            }`}
+            className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${showWeatherPanel
+              ? "bg-primary/20 text-text"
+              : "text-text/60 hover:text-text hover:bg-primary/5"
+              }`}
             style={{
               padding: `${GUI_SPACING_REM}rem ${GUI_SPACING_REM * 2}rem`,
             }}
@@ -220,11 +211,10 @@ export const MainToolbar = () => {
 
           <button
             onClick={() => setShowPlacementGrid(!showPlacementGrid)}
-            className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${
-              showPlacementGrid
-                ? "bg-primary/20 text-emerald-400"
-                : "text-text/60 hover:text-text hover:bg-primary/5"
-            }`}
+            className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${showPlacementGrid
+              ? "bg-primary/20 text-emerald-400"
+              : "text-text/60 hover:text-text hover:bg-primary/5"
+              }`}
             style={{
               padding: `${GUI_SPACING_REM}rem ${GUI_SPACING_REM * 2}rem`,
             }}
@@ -240,11 +230,10 @@ export const MainToolbar = () => {
 
           <button
             onClick={() => setShowMinimap(!showMinimap)}
-            className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${
-              showMinimap
-                ? "bg-primary/20 text-text"
-                : "text-text/60 hover:text-text hover:bg-primary/5"
-            }`}
+            className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${showMinimap
+              ? "bg-primary/20 text-text"
+              : "text-text/60 hover:text-text hover:bg-primary/5"
+              }`}
             style={{
               padding: `${GUI_SPACING_REM}rem ${GUI_SPACING_REM * 2}rem`,
             }}
@@ -265,7 +254,7 @@ export const MainToolbar = () => {
   const resourceBadge = (
     label: string,
     Icon: React.ComponentType<any>,
-    value: number,
+    value: string | number,
     iconColor: string,
   ) => (
     <SmartTooltip content={label}>
@@ -282,7 +271,7 @@ export const MainToolbar = () => {
             flexShrink: 0,
           }}
         />
-        <span className="whitespace-nowrap">{value}</span>
+        <span className="whitespace-nowrap font-mono">{value}</span>
       </div>
     </SmartTooltip>
   );
@@ -308,11 +297,21 @@ export const MainToolbar = () => {
           {resourceBadge(
             "Power",
             FlashIcon,
-            resources.power,
+            `${resourceUsage.power}/${resourceCapacity.power}`,
             "text-yellow-400",
           )}
-          {resourceBadge("Water", Droplet, resources.water, "text-blue-400")}
-          {resourceBadge("Internet", Wifi01Icon, resources.internet, "#FF5F1F")}
+          {resourceBadge(
+            "Water",
+            Droplet,
+            `${resourceUsage.water}/${resourceCapacity.water}`,
+            "text-blue-400"
+          )}
+          {resourceBadge(
+            "Internet",
+            Wifi01Icon,
+            `${resourceUsage.internet}/${resourceCapacity.internet}`,
+            "#FF5F1F"
+          )}
         </div>
 
         <div style={separatorStyle} />
@@ -337,11 +336,10 @@ export const MainToolbar = () => {
           >
             <button
               onClick={() => setShowThemeMenu(!showThemeMenu)}
-              className={`${toolbarButtonClass} ${
-                showThemeMenu
-                  ? "bg-primary/10 text-primary"
-                  : "text-text/40 hover:text-primary hover:bg-primary/5"
-              }`}
+              className={`${toolbarButtonClass} ${showThemeMenu
+                ? "bg-primary/10 text-primary"
+                : "text-text/40 hover:text-primary hover:bg-primary/5"
+                }`}
               style={toolbarButtonStyle}
             >
               <Settings01Icon
@@ -369,11 +367,10 @@ export const MainToolbar = () => {
                     setThemeName(name);
                     setShowThemeMenu(false);
                   }}
-                  className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${
-                    themeName === name
-                      ? "bg-primary/20 text-primary"
-                      : "text-text/60 hover:text-text hover:bg-primary/5"
-                  }`}
+                  className={`flex items-center justify-between gap-4 rounded-lg text-xs transition-all ${themeName === name
+                    ? "bg-primary/20 text-primary"
+                    : "text-text/60 hover:text-text hover:bg-primary/5"
+                    }`}
                   style={{
                     padding: `${GUI_SPACING_REM}rem ${GUI_SPACING_REM * 2}rem`,
                   }}
@@ -411,13 +408,85 @@ export const MainToolbar = () => {
           showMinimap,
         )}
 
+        {/* Time Control Module */}
         <div style={separatorStyle} />
-        {iconButton(
-          handleExport,
-          Download01Icon,
-          "Export Data",
-          "Download the current simulation as a structured JSON file.",
-        )}
+
+        <div className="flex items-center gap-4 px-3 py-1 bg-white/5 rounded-xl border border-white/5 ml-1">
+          {/* Speed Controls */}
+          <div className="flex items-center gap-1">
+            <SmartTooltip content="Pause" description="Halt time progression." position="top">
+              <button
+                onClick={() => setGameSpeed(0)}
+                className={`p-1.5 rounded-lg transition-all ${gameSpeed === 0 ? 'bg-primary text-background' : 'text-text/40 hover:text-text hover:bg-white/10'}`}
+              >
+                <PauseIcon size={18} />
+              </button>
+            </SmartTooltip>
+            <SmartTooltip content="Normal (1x)" description="10m in-game is 1 real-world second. A day takes 2m 24s" position="top">
+              <button
+                onClick={() => setGameSpeed(1)}
+                className={`p-1.5 rounded-lg transition-all ${gameSpeed === 1 ? 'bg-primary text-background' : 'text-text/40 hover:text-text hover:bg-white/10'}`}
+              >
+                <PlayIcon size={18} />
+              </button>
+            </SmartTooltip>
+            <SmartTooltip content="Fast (2x)" description="20m in-game is 1 real-world second. A day takes 1m 12s" position="top">
+              <button
+                onClick={() => setGameSpeed(2)}
+                className={`p-1.5 rounded-lg transition-all ${gameSpeed === 2 ? 'bg-primary text-background' : 'text-text/40 hover:text-text hover:bg-white/10'}`}
+              >
+                <Forward02Icon size={18} />
+              </button>
+            </SmartTooltip>
+            <SmartTooltip content="Faster (5x)" description="50m in-game is 1 real-world second. A day takes ~29s" position="top">
+              <button
+                onClick={() => setGameSpeed(5)}
+                className={`p-1.5 rounded-lg transition-all ${gameSpeed === 5 ? 'bg-primary text-background' : 'text-text/40 hover:text-text hover:bg-white/10'}`}
+              >
+                <div className="flex -space-x-1"><Forward02Icon size={18} /><Forward02Icon size={18} /></div>
+              </button>
+            </SmartTooltip>
+            <SmartTooltip content="Super (10x)" description="100 in-game minutes = 1 real-world second. (A full 24h day takes ~14s)" position="top">
+              <button
+                onClick={() => setGameSpeed(10)}
+                className={`p-1.5 rounded-lg transition-all ${gameSpeed === 10 ? 'bg-primary text-background' : 'text-text/40 hover:text-text hover:bg-white/10'}`}
+              >
+                <Rocket size={16} />
+              </button>
+            </SmartTooltip>
+          </div>
+
+          <div style={{ ...separatorStyle, height: '16px' }} />
+
+          {/* Weekday Indicator */}
+          <div className="flex gap-1.5">
+            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => (
+              <span
+                key={i}
+                className={`text-[10px] font-black w-4 h-4 flex items-center justify-center rounded-sm transition-all ${dayOfWeek === i + 1 ? 'bg-primary text-background' : 'bg-white/10 text-text/30'}`}
+              >
+                {day}
+              </span>
+            ))}
+          </div>
+
+          <div style={{ ...separatorStyle, height: '16px' }} />
+
+          {/* Digital Clock */}
+          <div className="flex flex-col items-end min-w-[60px]">
+            <span className="text-xs font-mono font-black text-primary tracking-tight">
+              {(() => {
+                const totalMinutes = Math.floor(sunTime * 1440);
+                const hours = Math.floor(totalMinutes / 60);
+                const mins = totalMinutes % 60;
+                return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+              })()}
+            </span>
+            <span className="text-[8px] font-mono text-text/40 uppercase tracking-widest leading-none">
+              Game Time
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -10,13 +10,9 @@ import { validatePlacement } from "../../features/roomPlacement/constraints/plac
 import { FloorBucketIndex } from "../../features/roomPlacement/constraints/spatialIndex";
 import simulationSettings from "@/src/simulationSettings.json";
 import { reconstructVacancy } from "../../features/structuralScaffold/api/emptyRoomsSpawning";
+import roomMetadata from "../../entities/rooms/roomMetadata.json";
 
 const globalHash = new SpatialHash(100);
-const normalizeCircularSolarTime = (value: number) => {
-  if (!Number.isFinite(value)) return 0;
-  const wrapped = value % 1;
-  return wrapped < 0 ? wrapped + 1 : wrapped;
-};
 
 /**
  * Simulation building blocks.
@@ -257,10 +253,6 @@ export interface SimulationState {
   themeName: string;
   setThemeName: (name: string) => void;
 
-  // Tooltip deconfliction
-  activeTooltipId: string | null;
-  setActiveTooltipId: (id: string | null) => void;
-
   // UI Positions
   uiPositions: Record<string, { x: number; y: number }>;
   setUIPosition: (id: string, pos: { x: number; y: number }) => void;
@@ -276,10 +268,6 @@ export interface SimulationState {
   setShowMinimap: (val: boolean) => void;
   showWeatherPanel: boolean;
   setShowWeatherPanel: (val: boolean) => void;
-  sunTime: number;
-  setSunTime: (val: number) => void;
-  sunIntensity: number;
-  setSunIntensity: (val: number) => void;
   setSpendableMoney: (value: number) => void;
   registerStructuralRoom: (
     id: string,
@@ -412,12 +400,6 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     showMinimap: localStorage.getItem("villaggio_show_minimap") !== "false", // Default to true
     showWeatherPanel:
       localStorage.getItem("villaggio_show_weather_panel") === "true",
-    sunTime: normalizeCircularSolarTime(
-      parseFloat(localStorage.getItem("villaggio_sun_time") || "0.55"),
-    ),
-    sunIntensity: parseFloat(
-      localStorage.getItem("villaggio_sun_intensity") || "2.0",
-    ),
     registerStructuralRoom: (id, type, x, y, w, h) => {
       // Industry Leading Structural Registration
       // This builds the adjacency graph for room merging
@@ -485,6 +467,14 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     ) => {
       const state = get();
       const skipSelection = options?.skipSelection ?? false;
+
+      // Construction Price Deduction
+      if (shape.metadataId) {
+        const roomMeta = (roomMetadata.rooms as any[]).find(r => r.id === shape.metadataId);
+        if (roomMeta && roomMeta.price) {
+          set({ spendableMoney: state.spendableMoney - roomMeta.price });
+        }
+      }
 
       // Modular Merging Logic (Industry Leading Foundation)
       const mergeableTypes: SimulationNodeType[] = [
@@ -1188,9 +1178,6 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     themeName: "cozy_cabin",
     setThemeName: (themeName) => set({ themeName }),
 
-    // Tooltip deconfliction
-    activeTooltipId: null,
-    setActiveTooltipId: (id) => set({ activeTooltipId: id }),
     setUIPosition: (id, pos) => {
       set((state) => {
         const next = { ...state.uiPositions, [id]: pos };
@@ -1219,15 +1206,6 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     setShowWeatherPanel: (val) => {
       localStorage.setItem("villaggio_show_weather_panel", String(val));
       set({ showWeatherPanel: val });
-    },
-    setSunTime: (val) => {
-      const normalized = normalizeCircularSolarTime(val);
-      localStorage.setItem("villaggio_sun_time", String(normalized));
-      set({ sunTime: normalized });
-    },
-    setSunIntensity: (val) => {
-      localStorage.setItem("villaggio_sun_intensity", String(val));
-      set({ sunIntensity: val });
     },
     setSpendableMoney: (value) => {
       localStorage.setItem("villaggio_spendable_money", value.toString());

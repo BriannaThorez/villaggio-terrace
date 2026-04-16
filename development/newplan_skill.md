@@ -5,5 +5,8 @@ Determine the axiomatic, axiological, and teleological intent of each of the fol
 Then, in Development>ImplementationPlan, create an industry leading implementationplan and tasks markdown using [x] and [ ] to ensure that each request and solution are brought to a full, error free fruition exactly as intended. 
 Ensure .md file names (plan and tasks) have appropriate file name appends, _descriptive, to ensure other plans are not overwritten. 
 When editing preexisting code, Ensure only careful targeted changes, avoid rewrites of preexisting code unless explicitly requested.
-Ensure each phase has Run linting and verification/QA checks.
+Ensure each phase practices good coding practices where applicable.
+Ensure each phase includes running linting and verification/QA checks, and unit/integration tests where applicable.
+
+Upon plan construction, predict connections, features, ideas and requests I am not addressing and output them as suggestions to selectively add to the plan.
 Requests:

@@ -6,8 +6,10 @@ import {
 } from "hugeicons-react";
 import { motion } from "framer-motion";
 import { useSimulationStore } from "../../../shared/utils/store";
+import { useTenancyStore } from "../../tenancy/store/tenancyStore";
 import roomMetadata from "../../../entities/rooms/roomMetadata.json";
 import { resolveTraitsByCategory, getIconComponent } from "../../../shared/utils/metadataUtils";
+import { UserPlus, UserMinus, Users } from "lucide-react";
 
 export const SelectionPanel = () => {
     const selectedId = useSimulationStore((state) => state.selectedId);
@@ -15,6 +17,8 @@ export const SelectionPanel = () => {
     const updateShape = useSimulationStore((state) => state.updateShape);
     const uiPositions = useSimulationStore((state) => state.uiPositions);
     const setUIPosition = useSimulationStore((state) => state.setUIPosition);
+
+    const { occupants, assignTenant, evictTenant } = useTenancyStore();
 
     const shape = shapes.find((s) => s.id === selectedId);
     const pos = uiPositions["selection-panel"] || { x: 20, y: 80 };
@@ -50,8 +54,21 @@ export const SelectionPanel = () => {
         });
     };
 
-    const income = metadata?.metadata?.average_rent;
-    const incomeText = income ? `+$${income.toLocaleString()}/mo` : "";
+    const tenant = occupants[shape.id];
+    let incomeText = "";
+    let isExpense = false;
+
+    if (metadata?.class === "Services" && metadata?.metadata?.upkeep_cost) {
+        isExpense = true;
+        incomeText = `-$${metadata.metadata.upkeep_cost.toLocaleString()}/wk`;
+    } else {
+        const income = tenant ? tenant.monthlyRent : (metadata?.metadata?.average_rent || 0);
+        if (income > 0) {
+            incomeText = tenant 
+                ? `+$${income.toLocaleString()}/wk` 
+                : `(Est. +$${income.toLocaleString()}/wk)`;
+        }
+    }
 
     // Resolve combined description from library + variant
     const classInfo = metadata ? (roomMetadata.classLibrary as any)[metadata.class] : null;
@@ -95,12 +112,51 @@ export const SelectionPanel = () => {
                         </span>
                     </div>
                     {incomeText && (
-                        <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-emerald-400">
+                        <div className={`flex items-center gap-1 text-[10px] font-mono font-bold ${isExpense ? 'text-red-400' : 'text-emerald-400'}`}>
                             <Coins01Icon size={12} strokeWidth={2.5} />
                             {incomeText}
                         </div>
                     )}
                 </div>
+
+                {/* Tenancy Section */}
+                {['Apartment', 'Office', 'Restaurant', 'Store'].includes(metadata?.class) && (
+                    <div className="flex flex-col gap-2">
+                    <span className="text-[9px] font-bold text-text/30 uppercase tracking-[0.2em]">Tenancy Status</span>
+                    {tenant ? (
+                        <div className="flex items-center justify-between p-3 bg-primary/5 border border-primary/20 rounded-xl">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                                    <Users size={16} />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-bold text-text">{tenant.name}</span>
+                                    <span className="text-[9px] text-text/40">Since {new Date(tenant.moveInDate).toLocaleDateString()}</span>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => evictTenant(shape.id)}
+                                className="p-2 text-text/40 hover:text-red-400 transition-colors"
+                            >
+                                <UserMinus size={14} />
+                            </button>
+                        </div>
+                    ) : (
+                        <button 
+                            onClick={() => assignTenant(shape.id, {
+                                tenantId: `t_${Math.random().toString(36).substr(2, 9)}`,
+                                name: "Prospect Candidate",
+                                moveInDate: Date.now(),
+                                monthlyRent: metadata?.metadata?.average_rent || 1000
+                            })}
+                            className="flex items-center justify-center gap-2 w-full p-3 bg-white/5 border border-dashed border-white/20 rounded-xl text-text/40 hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-all text-xs font-bold"
+                        >
+                            <UserPlus size={14} />
+                            Assign Occupant
+                        </button>
+                    )}
+                </div>
+                )}
 
                 {/* [Description] */}
                 <div className="relative">
@@ -119,12 +175,13 @@ export const SelectionPanel = () => {
                                 const Icon = getIconComponent(util.icon);
                                 return (
                                     <div key={util.key} className="group/util relative">
-                                        <div className="p-2 bg-white/5 border border-white/10 rounded-lg text-text/60 hover:text-primary hover:border-primary/50 transition-all">
+                                        <div className="p-2 bg-white/5 border border-white/10 rounded-lg text-text/60 hover:text-primary hover:border-primary/50 transition-all flex items-center gap-1">
                                             {Icon && <Icon size={16} strokeWidth={1.5} />}
+                                            <span className="text-[10px] font-mono font-bold text-text/80">{util.value}</span>
                                         </div>
                                         {/* Tooltip on tiny icons */}
-                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-background border border-white/10 rounded text-[9px] opacity-0 group-hover/util:opacity-100 pointer-events-none whitespace-nowrap transition-opacity">
-                                            {util.label}
+                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-background border border-white/10 rounded text-[9px] opacity-0 group-hover/util:opacity-100 pointer-events-none whitespace-nowrap transition-opacity font-mono">
+                                            {util.label}: {util.value}/cycle
                                         </div>
                                     </div>
                                 );

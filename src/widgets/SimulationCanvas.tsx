@@ -23,6 +23,7 @@ import { AssetPreloader } from "../features/assetPreloader/ui/AssetPreloader";
 // import { usePeopleSpawner } from "../features/simPeople/store/usePeopleSpawner";
 // import { useSimPeopleLoop } from "../features/simPeople/animations/useSimPeopleLoop";
 import { GrassField } from "../features/environment/components/GrassField";
+import { TimeEngine } from "../features/time/components/TimeEngine";
 import { SimulationLinks } from "../entities/SimulationLinks";
 import {
   useSimulationStore,
@@ -1177,6 +1178,7 @@ export const SimulationCanvas = () => {
       }}
     >
       <AssetPreloader />
+      <TimeEngine />
       <CanvasScene />
     </Canvas>
   );

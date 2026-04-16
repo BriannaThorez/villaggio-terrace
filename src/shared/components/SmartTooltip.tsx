@@ -9,6 +9,7 @@ import React, {
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSimulationStore } from "../utils/store";
+import { useTooltipStore } from "./tooltipStore";
 import themes from "../../features/ui/themes/palettes/color_palettes.json";
 
 interface SmartTooltipProps {
@@ -29,8 +30,8 @@ export const SmartTooltip: React.FC<SmartTooltipProps> = ({
   width,
 }) => {
   const id = useId();
-  const activeTooltipId = useSimulationStore((state) => state.activeTooltipId);
-  const setActiveTooltipId = useSimulationStore(
+  const activeTooltipId = useTooltipStore((state) => state.activeTooltipId);
+  const setActiveTooltipId = useTooltipStore(
     (state) => state.setActiveTooltipId,
   );
   const isVisible = activeTooltipId === id;

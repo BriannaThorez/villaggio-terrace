@@ -1,10 +1,11 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { useSimulationStore } from '../../../shared/utils/store';
+import { useTimeStore } from '../../time/store/timeStore';
 
 export const SolarSystem: React.FC = () => {
-    const time = useSimulationStore((state) => state.sunTime);
-    const baseIntensity = useSimulationStore((state) => state.sunIntensity);
+    const time = useTimeStore((state) => state.sunTime);
+    const baseIntensity = useTimeStore((state) => state.sunIntensity);
     const showWeather = useSimulationStore((state) => state.showWeather);
 
     // 24-Hour Solar Orbit (360 Degree Logic)

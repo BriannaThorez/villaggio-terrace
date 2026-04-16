@@ -40,10 +40,10 @@ export const resolveTraitsByCategory = (metadata: any) => {
 
     // Resolve Preferences
     schema.preferences.forEach((key: string) => {
-        if (traits[key] !== undefined) {
+        if (traits.preferences && traits.preferences[key] !== undefined) {
             result.preferences.push({
                 key,
-                value: traits[key],
+                value: traits.preferences[key],
                 label: getTraitDefinition(key).label
             });
         }
@@ -51,11 +51,11 @@ export const resolveTraitsByCategory = (metadata: any) => {
 
     // Resolve Utilities
     schema.utilities.forEach((key: string) => {
-        if (traits[key] !== undefined) {
+        if (traits.utilities && traits.utilities[key] !== undefined) {
             const def = getTraitDefinition(key);
             result.utilities.push({
                 key,
-                value: traits[key],
+                value: traits.utilities[key],
                 label: def.label,
                 icon: def.icon
             });
@@ -69,10 +69,10 @@ export const resolveTraitsByCategory = (metadata: any) => {
     ];
 
     allServiceKeys.forEach((key: string) => {
-        if (traits[key] !== undefined) {
+        if (traits.services && traits.services[key] !== undefined) {
             result.services.push({
                 key,
-                value: traits[key],
+                value: traits.services[key],
                 label: getTraitDefinition(key).label
             });
         }
