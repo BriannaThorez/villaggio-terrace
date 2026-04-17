@@ -54,9 +54,9 @@ export const HolographicWidthScale: React.FC = () => {
                     [maxUnits, 0, 0],
                 ]}
                 color="#00ffcc"
-                lineWidth={3}
+                lineWidth={2}
                 transparent
-                opacity={0.7}
+                opacity={0.8}
                 blending={THREE.AdditiveBlending}
             />
 
@@ -65,19 +65,19 @@ export const HolographicWidthScale: React.FC = () => {
                     <Line
                         points={[
                             [mark.x, 0, 0],
-                            [mark.x, 0, -mark.depth],
+                            [mark.x, 0, mark.depth],
                         ]}
                         color="#00ffcc"
-                        lineWidth={mark.isTens ? 3 : 1}
+                        lineWidth={mark.isTens ? 2 : 1}
                         transparent
-                        opacity={mark.isTens ? 0.9 : (mark.isFives ? 0.6 : 0.2)}
+                        opacity={mark.isTens ? 0.7 : (mark.isFives ? 0.6 : 0.5)}
                         blending={THREE.AdditiveBlending}
                     />
                     {(mark.isFives && mark.x > 0) && (
                         <Text
-                            position={[mark.x, 0, -mark.depth - 1.5]}
+                            position={[mark.x, 0, mark.depth + 5.5]}
                             color="#00ffcc"
-                            fontSize={3.0}
+                            fontSize={4.0}
                             rotation={[-Math.PI / 2, 0, 0]}
                             anchorX="center"
                             anchorY="bottom"
@@ -92,19 +92,19 @@ export const HolographicWidthScale: React.FC = () => {
                             <Line
                                 points={[
                                     [-mark.x, 0, 0],
-                                    [-mark.x, 0, -mark.depth],
+                                    [-mark.x, 0, mark.depth],
                                 ]}
                                 color="#00ffcc"
-                                lineWidth={mark.isTens ? 3 : 1}
+                                lineWidth={mark.isTens ? 2 : 1}
                                 transparent
-                                opacity={mark.isTens ? 0.9 : (mark.isFives ? 0.6 : 0.2)}
+                                opacity={mark.isTens ? 0.9 : (mark.isFives ? 0.6 : 0.3)}
                                 blending={THREE.AdditiveBlending}
                             />
                             {mark.isFives && (
                                 <Text
-                                    position={[-mark.x, 0, -mark.depth - 1.5]}
+                                    position={[-mark.x, 0, mark.depth + 5.5]}
                                     color="#00ffcc"
-                                    fontSize={3.0}
+                                    fontSize={4.0}
                                     rotation={[-Math.PI / 2, 0, 0]}
                                     anchorX="center"
                                     anchorY="bottom"
@@ -123,19 +123,19 @@ export const HolographicWidthScale: React.FC = () => {
                     <Line
                         points={[
                             [mark.x, 0, 0],
-                            [mark.x, 0, -mark.depth * 1.5],
+                            [mark.x, 0, mark.depth * 1.5],
                         ]}
                         color="#ff66cc"
-                        lineWidth={mark.isTens ? 3 : 1}
+                        lineWidth={mark.isTens ? 2 : 1}
                         transparent
                         opacity={mark.isTens ? 0.9 : (mark.isFives ? 0.6 : 0.3)}
                         blending={THREE.AdditiveBlending}
                     />
                     {mark.m > 0 && (
                         <Text
-                            position={[mark.x, 0, -(mark.depth * 1.5) - 1.5]}
+                            position={[mark.x, 0, (mark.depth * 1.5) + 2.5]}
                             color="#ff66cc"
-                            fontSize={3.0}
+                            fontSize={4.0}
                             rotation={[-Math.PI / 2, 0, 0]}
                             anchorX="center"
                             anchorY="bottom"
@@ -150,18 +150,18 @@ export const HolographicWidthScale: React.FC = () => {
                             <Line
                                 points={[
                                     [-mark.x, 0, 0],
-                                    [-mark.x, 0, -mark.depth * 1.5],
+                                    [-mark.x, 0, mark.depth * 1.5],
                                 ]}
                                 color="#ff66cc"
-                                lineWidth={mark.isTens ? 3 : 1}
+                                lineWidth={mark.isTens ? 2 : 1}
                                 transparent
                                 opacity={mark.isTens ? 0.9 : (mark.isFives ? 0.6 : 0.3)}
                                 blending={THREE.AdditiveBlending}
                             />
                             <Text
-                                position={[-mark.x, 0, -(mark.depth * 1.5) - 1.5]}
+                                position={[-mark.x, 0, (mark.depth * 1.5) + 2.5]}
                                 color="#ff66cc"
-                                fontSize={3.0}
+                                fontSize={4.0}
                                 rotation={[-Math.PI / 2, 0, 0]}
                                 anchorX="center"
                                 anchorY="bottom"

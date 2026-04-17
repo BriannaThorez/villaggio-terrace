@@ -23,6 +23,7 @@ const GrassMaterial = shaderMaterial(
     bottomColor: new THREE.Color(0.02, 0.08, 0.11), // Deep shadow with blue hint
     uMaxDistance: 350.0,
     uPoolSize: 1000.0,
+    uCameraTarget: new THREE.Vector3(0, 0, 0),
     cullRects: new Array(64).fill(new THREE.Vector4(0, 0, 0, 0)),
     cullCount: 0,
   },
@@ -39,6 +40,7 @@ const GrassMaterial = shaderMaterial(
   uniform float bladeHeight;
   uniform float uMaxDistance;
   uniform float uPoolSize;
+  uniform vec3 uCameraTarget;
   uniform vec4 cullRects[64];
   uniform int cullCount;
 
@@ -107,8 +109,10 @@ const GrassMaterial = shaderMaterial(
     
     // Account for the Group's world position (modelMatrix translation)
     vec3 origin = vec3(modelMatrix[3][0], modelMatrix[3][1], modelMatrix[3][2]);
-    worldRoot.x = floor((cameraPosition.x - (offset.x + origin.x)) / uPoolSize + 0.5) * uPoolSize + offset.x + origin.x;
-    worldRoot.z = floor((cameraPosition.z - (offset.z + origin.z)) / uPoolSize + 0.5) * uPoolSize + offset.z + origin.z;
+    // Pool tiles around the camera's focal point (orbit target), not the camera eye.
+    // This ensures blades render in the forward view, not under the camera rig.
+    worldRoot.x = floor((uCameraTarget.x - (offset.x + origin.x)) / uPoolSize + 0.5) * uPoolSize + offset.x + origin.x;
+    worldRoot.z = floor((uCameraTarget.z - (offset.z + origin.z)) / uPoolSize + 0.5) * uPoolSize + offset.z + origin.z;
     worldRoot.y = offset.y + origin.y;
 
     // ── Per-Instance Frustum Culling ──
@@ -120,8 +124,9 @@ const GrassMaterial = shaderMaterial(
         return;
     }
 
-    // ── Distant Culling ──
-    float dist = distance(cameraPosition, worldRoot + position);
+    // ── Distant Culling (XZ only — focal point Y varies per floor, grass is always at Y≈0) ──
+    vec2 focalXZ = vec2(uCameraTarget.x, uCameraTarget.z);
+    float dist = distance(focalXZ, vec2(worldRoot.x + position.x, worldRoot.z + position.z));
     if (dist > uMaxDistance) {
         gl_Position = vec4(0.0);
         return;

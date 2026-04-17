@@ -171,9 +171,9 @@ const PlacementIndicator = () => {
       }).promise.then(result => {
         const res = result as any;
         if (res.isValid !== isValidSync) {
-           console.warn('[PI-Worker-Mismatch] sync=%s worker=%s pos=%s,%s', isValidSync, res.isValid, snappedX, snappedY);
+          console.warn('[PI-Worker-Mismatch] sync=%s worker=%s pos=%s,%s', isValidSync, res.isValid, snappedX, snappedY);
         } else {
-           console.debug('[PI-Worker-ACK] valid=%s', res.isValid);
+          console.debug('[PI-Worker-ACK] valid=%s', res.isValid);
         }
       }).catch(() => {
         // Task cancelled (normal behavior for 60fps queue)
@@ -833,6 +833,9 @@ const CanvasScene = () => {
       if (controls) {
         (controls as any).target.x -= dx;
         (controls as any).target.y -= dy;
+        // Guide-rail: focal point locked to X/Y plane (tower-sim constraint)
+        (controls as any).target.z = 0;
+        (controls as any).update();
       }
       return;
     }
@@ -844,26 +847,23 @@ const CanvasScene = () => {
   };
 
   const gridRef = useRef<any>(null);
-  const groundPlane = useMemo(
-    () => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0),
-    [],
-  );
-  const raycastResult = useMemo(() => new THREE.Vector3(), []);
 
   useFrame((state) => {
-    if (gridRef.current) {
-      // Find the screen center in world space on the ground plane (y=0)
-      state.raycaster.setFromCamera(new THREE.Vector2(0, 0), state.camera);
-      const intersect = state.raycaster.ray.intersectPlane(
-        groundPlane,
-        raycastResult,
-      );
-
-      if (intersect) {
-        // Snap the grid center to 10-unit increments to prevent line-shifting
-        gridRef.current.position.x = Math.round(intersect.x / 10) * 10;
-        gridRef.current.position.z = Math.round(intersect.z / 10) * 10;
+    // Guide-rail safety: ensure the orbit focal point never drifts in Z.
+    // Enforced here as a continuous backstop — primary enforcement is in onChange + pan handler.
+    if (state.controls) {
+      const orbitTarget = (state.controls as any).target as THREE.Vector3;
+      if (Math.abs(orbitTarget.z) > 0.001) {
+        orbitTarget.z = 0;
+        (state.controls as any).update();
       }
+    }
+
+    // Grid follows the camera focal point directly — no raycaster needed.
+    if (gridRef.current && state.controls) {
+      const target = (state.controls as any).target as THREE.Vector3;
+      gridRef.current.position.x = Math.round(target.x / 10) * 10;
+      gridRef.current.position.z = Math.round(target.z / 10) * 10;
     }
   });
 
@@ -1003,6 +1003,12 @@ const CanvasScene = () => {
         onChange={() => {
           wasPanningRef.current = true;
 
+          // Guide-rail: focal point must stay in X/Y plane regardless of orbit angle.
+          // Clamp before syncing camera state so Z drift never persists to the store.
+          if (controls) {
+            (controls as any).target.z = 0;
+          }
+
           // Event-driven camera sync (Industry Leading Optimization)
           const now = performance.now();
           if (now - lastSyncTimeRef.current > 100) {
@@ -1066,12 +1072,12 @@ const CanvasScene = () => {
       {/* <SimPeopleManager /> */}
       <GrassField
         width={1000}
-        instances={250000}
+        instances={300000}
         joints={3}
         bladeWidth={0.25}
-        bladeHeight={1.0}
+        bladeHeight={0.5}
         position={[0, 0.2, 0]}
-        uMaxDistance={380}
+        uMaxDistance={880}
       />
 
       <mesh

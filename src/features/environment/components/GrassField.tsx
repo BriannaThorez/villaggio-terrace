@@ -164,13 +164,13 @@ import { useSimulationStore, getFloorIndex } from "../../../shared/utils/store";
 
 export const GrassField: React.FC<GrassFieldProps> = ({
   width = 100,
-  instances = 150000,
+  instances = 1500,
   bladeWidth = 0.15,
   bladeHeight = 1.0,
   joints = 5,
   position = [0, 0, 0],
   renderOrder = 20,
-  uMaxDistance = 450,
+  uMaxDistance = 850,
 }) => {
   const groupRef = useRef<THREE.Group>(null);
   const materialRef = useRef<any>(null);
@@ -223,6 +223,12 @@ export const GrassField: React.FC<GrassFieldProps> = ({
       materialRef.current.uniforms.cullCount.value = cullData.count;
       materialRef.current.uniforms.uMaxDistance.value = uMaxDistance;
       materialRef.current.uniforms.uPoolSize.value = width;
+      // Anchor the grass pool to the camera's focal point (orbit target), not the eye position.
+      // This ensures blades tile around the visual centre of the scene, not the camera rig.
+      const orbitTarget = (state.controls as any)?.target as THREE.Vector3 | undefined;
+      if (orbitTarget) {
+        materialRef.current.uniforms.uCameraTarget.value.copy(orbitTarget);
+      }
     }
   });
 
