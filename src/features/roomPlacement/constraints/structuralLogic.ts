@@ -65,6 +65,7 @@ export const getMaxCantileverLogic = (
   width: number,
   floorNodes: SimpleNode[],
   supportsBelow: SimpleNode[],
+  supportsAbove: SimpleNode[] = [],
 ): number => {
   if (y < GROUND_THRESHOLD) return 0;
 

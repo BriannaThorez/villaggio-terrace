@@ -33,6 +33,8 @@ import { useToolPreloader } from "../features/assetPreloader/hooks/useToolPreloa
 import { useAudioController } from "../features/audio-engine/hooks/useAudioController";
 import { audioEngine } from "../features/audio-engine/AudioEngine";
 import { AudioListenerSync } from "../features/audio-engine/components/AudioListenerSync";
+import { getWorkerPool } from "../worker/client";
+import { SIMULATION_TASK_TYPE } from "../shared/worker/protocol";
 
 // RAIN_COUNT constants moved to modular features/weather.
 
@@ -143,6 +145,39 @@ const PlacementIndicator = () => {
           clashSize[1],
           activeTool
         );
+
+      // Phase 4.4a: Baseline Diagnostic
+      console.debug('[PI-Sync] valid=%s pos=%s,%s', isValidSync, snappedX, snappedY);
+
+      // Phase 4.4b: Worker Mirror as Secondary
+      // We dispatch the task but do NOT await it for the UI path.
+      // The worker result is logged only for correctness parity verification.
+      const pool = getWorkerPool();
+      const taskKey = `pi-check-${activeTool}`;
+      pool.submit({
+        taskType: SIMULATION_TASK_TYPE.CheckPlacement,
+        payload: {
+          x: snappedX,
+          y: snappedY,
+          w: clashSize[0],
+          h: clashSize[1],
+          type: activeTool,
+        },
+        sceneRevision: state.clock.elapsedTime, // Use clock for pseudo-revision
+        clientRevision: 0,
+        role: "layout",
+        key: taskKey, // Aggressive cancellation of stale frames
+        silent: true
+      }).promise.then(result => {
+        const res = result as any;
+        if (res.isValid !== isValidSync) {
+           console.warn('[PI-Worker-Mismatch] sync=%s worker=%s pos=%s,%s', isValidSync, res.isValid, snappedX, snappedY);
+        } else {
+           console.debug('[PI-Worker-ACK] valid=%s', res.isValid);
+        }
+      }).catch(() => {
+        // Task cancelled (normal behavior for 60fps queue)
+      });
 
       isValidRef.current = isValidSync;
 

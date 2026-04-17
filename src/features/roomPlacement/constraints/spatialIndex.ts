@@ -98,4 +98,10 @@ export class FloorBucketIndex {
     const belowY = y - STRUCTURAL_CONSTANTS.FLOOR_HEIGHT;
     return this.buckets.get(floorBucketKey(belowY)) ?? [];
   }
+
+  /** Returns nodes on the floor directly ABOVE the given Y. */
+  getAboveNodes(y: number): SimulationNode[] {
+    const aboveY = y + STRUCTURAL_CONSTANTS.FLOOR_HEIGHT;
+    return this.buckets.get(floorBucketKey(aboveY)) ?? [];
+  }
 }

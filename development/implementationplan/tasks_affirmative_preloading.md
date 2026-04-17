@@ -205,17 +205,17 @@
 > ⚠️ **Additive-only**. No existing methods or callers change. New method follows identical pattern to `getSupportNodes`.
 
 ### 4.0.1 — Add `getAboveNodes()` to `FloorBucketIndex`
-- [ ] `src/features/roomPlacement/constraints/spatialIndex.ts` — **targeted change only**
-  - [ ] Add `getAboveNodes(y: number): SimulationNode[]` method directly below `getSupportNodes`
-  - [ ] Implementation: `return this.buckets.get(floorBucketKey(y + STRUCTURAL_CONSTANTS.FLOOR_HEIGHT)) ?? []`
-  - [ ] Do NOT touch `getSupportNodes`, `getFloorNodes`, `getStructuralFloorNodes`, or `floorBucketKey`
+- [x] `src/features/roomPlacement/constraints/spatialIndex.ts` — **targeted change only**
+  - [x] Add `getAboveNodes(y: number): SimulationNode[]` method directly below `getSupportNodes`
+  - [x] Implementation: `return this.buckets.get(floorBucketKey(y + STRUCTURAL_CONSTANTS.FLOOR_HEIGHT)) ?? []`
+  - [x] Do NOT touch `getSupportNodes`, `getFloorNodes`, `getStructuralFloorNodes`, or `floorBucketKey`
 
 ### 4.0.2 — Wire `getAboveNodes()` into `checkStructuralIntegrity`
-- [ ] `src/features/roomPlacement/constraints/structuralIntegrity.ts` — **targeted change only**
-  - [ ] Review `getMaxCantileverLogic` signature — confirm it can accept optional above-nodes arg
-  - [ ] Add `nodesAbove` query: `const nodesAbove = index ? index.getAboveNodes(y) : allShapes.filter(...)`
-  - [ ] Wire `nodesAbove` into `getMaxCantileverLogic` (or add adjacency guard at `checkStructuralIntegrity` level if signature doesn't support it cleanly)
-  - [ ] Do NOT change `maxOverhang` constant or return shape of `checkStructuralIntegrity`
+- [x] `src/features/roomPlacement/constraints/structuralIntegrity.ts` — **targeted change only**
+  - [x] Review `getMaxCantileverLogic` signature — confirm it can accept optional above-nodes arg
+  - [x] Add `nodesAbove` query: `const nodesAbove = index ? index.getAboveNodes(y) : allShapes.filter(...)`
+  - [x] Wire `nodesAbove` into `getMaxCantileverLogic` (or add adjacency guard at `checkStructuralIntegrity` level if signature doesn't support it cleanly)
+  - [x] Do NOT change `maxOverhang` constant or return shape of `checkStructuralIntegrity`
 
 ### ✅ Phase 4.0 QA Checks
 - [ ] `tsc --noEmit` — Exit 0 before and after change
@@ -228,24 +228,24 @@
 ## Phase 4: Worker Pool Expansion
 
 ### 4.1 — Protocol: Add New Task Types
-- [ ] `src/shared/worker/protocol.ts` — **targeted changes only**
-  - [ ] Add `ValidateStructuralIntegrity: 'simulation/validate-structural-integrity'` to `SIMULATION_TASK_TYPE`
-  - [ ] Add `StructuralIntegrityPayload` interface (mirrors `checkStructuralIntegrity` params)
-  - [ ] Add `StructuralIntegrityResult` interface (mirrors `PlacementResult`)
-  - [ ] Preserve all existing type exports
+- [x] `src/shared/worker/protocol.ts` — **targeted changes only**
+  - [x] Add `ValidateStructuralIntegrity: 'simulation/validate-structural-integrity'` to `SIMULATION_TASK_TYPE`
+  - [x] Add `StructuralIntegrityPayload` interface (mirrors `checkStructuralIntegrity` params)
+  - [x] Add `StructuralIntegrityResult` interface (mirrors `PlacementResult`)
+  - [x] Preserve all existing type exports
 
 ### 4.2 — Register Analysis Task
-- [ ] `src/worker/workerTasks.ts` — **targeted changes only**
-  - [ ] Implement `registerAnalysisTasks()` (currently placeholder)
-  - [ ] Register `simulation/validate-structural-integrity` task
-  - [ ] Must use the updated 3-bucket `FloorBucketIndex` (from Phase 4.0 — above/same/below)
-  - [ ] Import and call `checkStructuralIntegrity` from `structuralIntegrity.ts`
+- [x] `src/worker/workerTasks.ts` — **targeted changes only**
+  - [x] Implement `registerAnalysisTasks()` (currently placeholder)
+  - [x] Register `simulation/validate-structural-integrity` task
+  - [x] Must use the updated 3-bucket `FloorBucketIndex` (from Phase 4.0 — above/same/below)
+  - [x] Import and call `checkStructuralIntegrity` from `structuralIntegrity.ts`
 
 ### 4.3 — Register Routing Task: Resolve Overlaps
-- [ ] `src/worker/workerTasks.ts` — **targeted changes only**
-  - [ ] Implement `registerRoutingTasks()` (currently empty placeholder)
-  - [ ] Register `SIMULATION_TASK_TYPE.ResolveOverlaps` using existing `ResolveOverlapsPayload` / `ResolveOverlapsResult` types
-  - [ ] Implement AABB de-overlap algorithm using `workerNodeState`
+- [x] `src/worker/workerTasks.ts` — **targeted changes only**
+  - [x] Implement `registerRoutingTasks()` (currently empty placeholder)
+  - [x] Register `SIMULATION_TASK_TYPE.ResolveOverlaps` using existing `ResolveOverlapsPayload` / `ResolveOverlapsResult` types
+  - [x] Implement AABB de-overlap algorithm using `workerNodeState`
 
 ### 4.4 — PlacementIndicator: Correctness-First (Three Sub-Phases)
 

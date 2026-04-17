@@ -267,6 +267,7 @@ export const SIMULATION_TASK_TYPE = {
   CheckPlacement: "simulation/check-placement",
   ResolveOverlaps: "simulation/resolve-overlaps",
   SyncSpatialHash: "simulation/sync-spatial-hash",
+  ValidateStructuralIntegrity: "simulation/validate-structural-integrity",
 } as const;
 
 export type SimulationTaskType =
@@ -319,6 +320,20 @@ export interface ResolveOverlapsResult {
     id: string;
     position: [number, number];
   }>;
+}
+
+export interface StructuralIntegrityPayload {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  type: string;
+}
+
+export interface StructuralIntegrityResult {
+  isValid: boolean;
+  overhang: number;
+  reason?: string;
 }
 
 export interface WorkerTaskStaleEnvelope extends WorkerEnvelopeBase {

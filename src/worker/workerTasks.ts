@@ -9,9 +9,14 @@ import {
   type CheckPlacementPayload,
   type CheckPlacementResult,
   type SyncSpatialHashPayload,
+  type StructuralIntegrityPayload,
+  type StructuralIntegrityResult,
+  type ResolveOverlapsPayload,
+  type ResolveOverlapsResult,
 } from "../shared/worker/protocol";
 import { validatePlacement } from "../features/roomPlacement/constraints/placementRules";
 import { FloorBucketIndex } from "../features/roomPlacement/constraints/spatialIndex";
+import { checkStructuralIntegrity } from "../features/roomPlacement/constraints/structuralIntegrity";
 
 import { getMaxCantileverLogic, type SimpleNode } from "../features/roomPlacement/constraints/structuralLogic";
 
@@ -32,6 +37,8 @@ export type WorkerTaskPayloadMap = {
   };
   [SIMULATION_TASK_TYPE.CheckPlacement]: CheckPlacementPayload;
   [SIMULATION_TASK_TYPE.SyncSpatialHash]: SyncSpatialHashPayload;
+  [SIMULATION_TASK_TYPE.ValidateStructuralIntegrity]: StructuralIntegrityPayload;
+  [SIMULATION_TASK_TYPE.ResolveOverlaps]: ResolveOverlapsPayload;
 };
 
 export type WorkerTaskResultMap = {
@@ -53,6 +60,8 @@ export type WorkerTaskResultMap = {
   };
   [SIMULATION_TASK_TYPE.CheckPlacement]: CheckPlacementResult;
   [SIMULATION_TASK_TYPE.SyncSpatialHash]: { success: boolean };
+  [SIMULATION_TASK_TYPE.ValidateStructuralIntegrity]: StructuralIntegrityResult;
+  [SIMULATION_TASK_TYPE.ResolveOverlaps]: ResolveOverlapsResult;
 };
 
 const normalizeRevisionPair = (
@@ -105,24 +114,23 @@ export const registerFoundationWorkerTasks = () => {
   );
 };
 
+const getWorkerSimulationNodes = () => {
+  return Array.from(workerNodeState.values()).map(n => ({
+    id: n.id,
+    type: n.type,
+    position: [n.x, n.y],
+    size: [n.w, n.h],
+    vertices: [] // Stub for worker-side collision math
+  })) as any as SimulationNode[];
+};
+
 export const registerLayoutTasks = () => {
   registerWorkerTask<CheckPlacementPayload, CheckPlacementResult>(
     SIMULATION_TASK_TYPE.CheckPlacement,
     (payload) => {
-      // 1. Transform worker state (flat format) into SimulationNode (nested format)
-      // This is VITAL because validatePlacement expects s.position[0] and s.size[0].
-      const nodes = Array.from(workerNodeState.values()).map(n => ({
-        id: n.id,
-        type: n.type,
-        position: [n.x, n.y],
-        size: [n.w, n.h],
-        vertices: [] // Stub for worker-side collision math
-      })) as any as SimulationNode[];
-      
-      // 2. Build the optimized floor bucket index
+      const nodes = getWorkerSimulationNodes();
       const index = new FloorBucketIndex(nodes);
 
-      // 3. Delegate to master validation engine
       return validatePlacement(
         payload.x,
         payload.y,
@@ -169,12 +177,60 @@ export const registerLayoutTasks = () => {
 };
 
 export const registerRoutingTasks = () => {
-  // Placeholder for future pathfinding and link resolving tasks
+  registerWorkerTask<ResolveOverlapsPayload, ResolveOverlapsResult>(
+    SIMULATION_TASK_TYPE.ResolveOverlaps,
+    (payload) => {
+      const patches: Array<{ id: string; position: [number, number] }> = [];
+      
+      // Simple O(N^2) overlap resolution for worker offloading
+      // In a production scenario, we'd use the SpatialHash here too.
+      for(let i=0; i<payload.shapes.length; i++) {
+        const a = payload.shapes[i];
+        for(let j=i+1; j<payload.shapes.length; j++) {
+          const b = payload.shapes[j];
+          
+          const dx = a.position[0] - b.position[0];
+          const dy = a.position[1] - b.position[1];
+          const minW = (a.size[0] + b.size[0]) / 2;
+          const minH = (a.size[1] + b.size[1]) / 2;
+          
+          if (Math.abs(dx) < minW && Math.abs(dy) < minH) {
+             // Overlap detected. Push A away from B.
+             const overlapX = minW - Math.abs(dx);
+             const pushX = dx > 0 ? overlapX : -overlapX;
+             patches.push({ id: a.id, position: [a.position[0] + pushX, a.position[1]] });
+          }
+        }
+      }
+      
+      return { patches };
+    }
+  );
 };
 
 export const registerAnalysisTasks = () => {
-  // Placeholder for metrics and validation tasks
+  registerWorkerTask<StructuralIntegrityPayload, StructuralIntegrityResult>(
+    SIMULATION_TASK_TYPE.ValidateStructuralIntegrity,
+    (payload) => {
+      const nodes = getWorkerSimulationNodes();
+      const index = new FloorBucketIndex(nodes);
+      
+      const { isValid, overhang } = checkStructuralIntegrity(
+        payload.x,
+        payload.y,
+        payload.w,
+        nodes,
+        payload.type,
+        50.1, // Max Cantilever
+        index
+      );
+
+      return { isValid, overhang };
+    }
+  );
 };
 
 registerFoundationWorkerTasks();
 registerLayoutTasks();
+registerRoutingTasks();
+registerAnalysisTasks();

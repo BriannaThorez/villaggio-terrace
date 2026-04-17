@@ -11,17 +11,17 @@ import { Scale, Note } from "tonal";
  */
 class AudioEngine {
     private static instance: AudioEngine;
-    
+
     // Master Bus components
     private masterFilter: Tone.Filter;
     private masterCompressor: Tone.Compressor;
     private masterReverb: Tone.Reverb;
-    
+
     // Synthesis Generators
     private buildThumpSynth: Tone.MembraneSynth;  // Sub-bass "ground hit"
     private buildTransientNoise: Tone.NoiseSynth; // Initial crack/impact transient
     private uiSynth: Tone.MonoSynth;
-    
+
     // Environment Ambience
     private envNoise: Tone.Noise;
     private envFilter: Tone.AutoFilter;
@@ -86,11 +86,11 @@ class AudioEngine {
         // BYPASS REVERB: Connected to compressor instead of reverb to eliminate 'airyness'
         this.uiSynth = new Tone.MonoSynth({
             oscillator: { type: "sine" },
-            envelope: { 
-                attack: 0.005, 
-                decay: 0.05, 
-                sustain: 0, 
-                release: 0.05 
+            envelope: {
+                attack: 0.005,
+                decay: 0.05,
+                sustain: 0,
+                release: 0.05
             }
         }).connect(this.masterCompressor);
 
@@ -101,7 +101,7 @@ class AudioEngine {
             baseFrequency: 400,
             octaves: 2.6
         }).connect(this.masterReverb);
-        
+
         this.envGain = new Tone.Gain(0).connect(this.envFilter);
         this.envNoise.connect(this.envGain);
 
@@ -140,7 +140,7 @@ class AudioEngine {
                 await (context as any).rawContext.resume();
             }
         }
-        
+
         if (this.isInitialized && Tone.Transport.state !== "started") {
             Tone.Transport.start();
             this.envNoise.start();

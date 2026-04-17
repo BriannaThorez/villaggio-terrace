@@ -476,6 +476,7 @@ export const SimulationNodes = () => {
     });
 
     meshRef.current.instanceMatrix.needsUpdate = true;
+    meshRef.current.count = renderedShapes.length; // PHASE 4: Manually update count
     meshRef.current.computeBoundingSphere();
     meshRef.current.computeBoundingBox();
     if (meshRef.current.geometry.attributes.aColor)
@@ -620,9 +621,8 @@ export const SimulationNodes = () => {
     <group>
       {/* Phase 1: High-Performance Instanced SDFs */}
       <instancedMesh
-        key={renderedShapes.length} // Recreate if count changes for simplicity, though dynamic update is possible
         ref={meshRef}
-        args={[null as any, null as any, renderedShapes.length]}
+        args={[null as any, null as any, 1000]} // Pre-allocate headroom
         frustumCulled={false}
         castShadow
         receiveShadow
