@@ -244,8 +244,54 @@ This is the core game loop. Every other feature (finance, tenancy rent, room hap
 
 ---
 
+
 > **🔗 Artifact Binding — Extended Features (Phases 7–11) Handshake**
 > At the completion of each Phase 7–11 planning or implementation checkpoint, synchronize with:
 > - Artifact Plan: `C:\Users\Administrator\.gemini\antigravity\brain\29d06573-813c-4d8b-9637-4f76e2979103\implementation_plan.md`
 > - Artifact Tasks: `C:\Users\Administrator\.gemini\antigravity\brain\29d06573-813c-4d8b-9637-4f76e2979103\task.md`
 > Mark corresponding phase [x] complete in both artifact and development-tasks before proceeding.
+
+---
+
+## Prerequisite: Hotel Room Class (Phase 10 / P17 Dependency)
+
+> **Artifact Augmentation Section**
+> Utilizing Antigravity's internal implementation plan and tasks **artifact system**, create artifact-implementation-plans and artifact-tasks, in parity of the current phase of its respective source of truth (development-implementation-plan.md and development-tasks.md). For the purpose of serving as an augmentation of the development sources of truth.
+> Ensure that each artifact's completion/transitionary component has a binding/handshake component at each completion/transitionary component, which will serve as a reference to return/update/reference/and proceed in accordance with the development sources of truth.
+> Ensure every development-source-of-truth phase and associated tasks includes this "Artifact Augmentation Section" verbatim as tooling inspiration and prompt.
+
+Population System Phase 10 (Hotel Guest Lifecycle / P17) depends on the **Hotel Room Class** being established as a first-class room category. The Hotel Room Class has its own dedicated development documents:
+
+- Plan: [development-implementation-plan-hotel_room_class.md](file:///c:/AIDev/AiDev_LLM/villaggio-terrace/development/implementationplan/development-implementation-plan-hotel_room_class.md)
+- Tasks: [development-tasks-hotel_room_class.md](file:///c:/AIDev/AiDev_LLM/villaggio-terrace/development/implementationplan/development-tasks-hotel_room_class.md)
+
+### Hotel Room Class — AmI (Axiomatic Intent)
+
+The Hotel class must exist as a recognized `roomMetadata.json` class with the same schema integrity as `Apartment`, `Office`, `Restaurant`, etc. The injection was performed via a deterministic Node script (no manual file editing) to ensure zero data loss. The class provides:
+
+- A **service-capacity model** (`Reception Desk → 10 units → Hotel Rooms`) that mirrors SimTower's desk-first mechanic.
+- A `permanent_tenants: false` flag that is the architectural assertion distinguishing Hotel from Apartment — this flag is referenced by `tenancyStore` to prevent permanent tenant assignment.
+- `HotelOccupancyConfig.type === 'transient'` — the population system's `HotelGuestLifecycle` reads this field to determine check-in/check-out timing.
+
+### Hotel Room Class — AlI (Axiological Intent)
+
+The Hotel class enables the **transient revenue loop** — the economic counterpart to apartment rent. Without hotel rooms, the population system's guest entities have nowhere to overnight-stay, and the `financeStore.weeklyGuestRevenue` accumulator has no hotel check-out events. The hotel is the bridge between the guest population lifecycle and the finance model.
+
+The **service-capacity mechanic** (desk capacity = 10 rooms) creates a natural progression curve: small hotels → one desk, medium hotels → 2-3 desks, full luxury hotel floor → specialized high-capacity desk. This gives the player meaningful expansion decisions.
+
+### Hotel Room Class — TlI (Teleological Intent)
+
+**Phase 10 handshake prerequisite:** `development-tasks-hotel_room_class.md` Phase H3 must be marked `COMPLETE` before Population System Phase 10 implementation begins. This is enforced by the binding handshake in both documents.
+
+**Specific Population Phase 10 dependencies on Hotel Room Class:**
+1. `HotelGuestLifecycle.ts` reads `room.metadata.occupancy.check_in_hour` and `check_out_hour` from `roomMetadata.json`
+2. `HotelOccupancyTracker.ts` reads `hotelCapacityEngine.buildHotelCapacityMap()` from `src/features/hotel/hotelCapacityEngine.ts`
+3. `hotelSpawnPolicy.ts` reads `room.metadata.nightly_rate_base` to compute expected revenue per spawned guest
+4. `tenancyStore.occupyHotelSlot()` validates `room.metadata.permanent_tenants === false` before assignment
+
+> **🔗 Artifact Binding — Hotel Class Prerequisite Handshake**
+> Before starting Population System Phase 10:
+> 1. Confirm [development-tasks-hotel_room_class.md](file:///c:/AIDev/AiDev_LLM/villaggio-terrace/development/implementationplan/development-tasks-hotel_room_class.md) Phase H3 is `[x]` COMPLETE.
+> 2. Confirm `hotelCapacityEngine.ts` exists and exports `buildHotelCapacityMap`.
+> 3. Confirm `simulationStore.hotelRoomServiceStatus` is live.
+> 4. Only then: begin `src/features/population/hotel/HotelGuestLifecycle.ts`.

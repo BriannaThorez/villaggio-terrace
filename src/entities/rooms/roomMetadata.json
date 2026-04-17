@@ -53,6 +53,16 @@
         "executive_club",
         "helicopter_charters",
         "limousine_services"
+      ],
+      "Hotel": [
+        "hotel_reception_services",
+        "housekeeping_services",
+        "concierge_services",
+        "room_service_delivery",
+        "laundry_services",
+        "valet_parking_services",
+        "luggage_storage_services",
+        "security_services"
       ]
     }
   },
@@ -134,6 +144,24 @@
     "FootTraffic": {
       "description": "Vertical and horizontal movement solutions.",
       "masterTraitList": []
+    },
+    "Hotel": {
+      "description": "Transient hospitality modules for short-stay guests. No permanent tenants. Hotel Rooms consume Hotel Reception service capacity.",
+      "masterTraitList": [
+        "hotel_reception_services",
+        "housekeeping_services",
+        "concierge_services",
+        "room_service_delivery",
+        "laundry_services",
+        "valet_parking_services",
+        "luggage_storage_services",
+        "security_services"
+      ],
+      "serviceCapacityModel": {
+        "provider": "hotel-reception-desk",
+        "consumerKey": "hotel_reception_services",
+        "description": "Each Hotel Reception Desk provides up to 10 units of hotel reception service. Each Hotel Room consumes 1 unit."
+      }
     }
   },
   "rooms": [
@@ -2945,6 +2973,111 @@
         ]
       },
       "specificDescription": "A high-efficiency standard wealth adviser services module."
+    },
+    {
+      "id": "hotel-reception-desk",
+      "class": "Hotel",
+      "name": "Hotel Reception Desk",
+      "price": 280000,
+      "dimensions": {
+        "width": 6,
+        "height": 1
+      },
+      "metadata": {
+        "tenancy_table": null,
+        "permanent_tenants": false,
+        "utilities": {
+          "electricity": 1,
+          "phone": 1,
+          "cable_tv": "o"
+        },
+        "services": {
+          "hotel_reception_services": {
+            "capacity": 10,
+            "role": "provider",
+            "description": "Provides up to 10 units of hotel_reception_services to Hotel Rooms on the same tower."
+          },
+          "security_services": "x",
+          "concierge_services": "x"
+        },
+        "size": "Small",
+        "form": "Reception",
+        "specialization": "Hospitality",
+        "quality": "Standard",
+        "average_rent": 0,
+        "nightly_rate_base": 0,
+        "upkeep_cost": 3200,
+        "wallTexture": "beige_wall_1",
+        "floorTexture": "marble_floor_1",
+        "ceilingTexture": "beige_wall_1",
+        "tags": [
+          "hotel",
+          "reception",
+          "service_provider"
+        ]
+      },
+      "specificDescription": "A Hotel Reception Desk staffed 24/7. Provides hotel reception service capacity for up to 10 Hotel Rooms in the tower. Each tower must have at least one Reception Desk operational to accept hotel guests."
+    },
+    {
+      "id": "hotel-room-basic",
+      "class": "Hotel",
+      "name": "Hotel Room Basic",
+      "price": 120000,
+      "dimensions": {
+        "width": 4,
+        "height": 1
+      },
+      "metadata": {
+        "tenancy_table": null,
+        "permanent_tenants": false,
+        "utilities": {
+          "electricity": 1,
+          "water": 1,
+          "cable_tv": "o",
+          "phone": "o",
+          "trash_bins": 1
+        },
+        "services": {
+          "hotel_reception_services": {
+            "capacity": 1,
+            "role": "consumer",
+            "description": "Consumes 1 unit of hotel_reception_services from any operational Hotel Reception Desk in the tower."
+          },
+          "housekeeping_services": "x",
+          "room_service_delivery": "o",
+          "laundry_services": "o"
+        },
+        "size": "Small",
+        "form": "Hotel Room",
+        "specialization": "Hospitality",
+        "quality": "Basic",
+        "average_rent": 0,
+        "nightly_rate_base": 180,
+        "upkeep_cost": 450,
+        "occupancy": {
+          "type": "transient",
+          "max_guests_per_room": 2,
+          "min_stay_hours": 8,
+          "max_stay_hours": 72,
+          "check_in_hour": 15,
+          "check_out_hour": 11
+        },
+        "satisfaction_factors": [
+          "elevator_wait_tolerance",
+          "noise_tolerance",
+          "amenity_proximity"
+        ],
+        "wallTexture": "beige_wall_1",
+        "floorTexture": "wood_floor_1",
+        "ceilingTexture": "beige_wall_1",
+        "tags": [
+          "hotel",
+          "room",
+          "transient",
+          "service_consumer"
+        ]
+      },
+      "specificDescription": "A compact Basic Hotel Room (4 wide × 1 high). Accepts transient guests only — no permanent tenants. Requires 1 unit of hotel_reception_services from an operational Hotel Reception Desk. Guests check in at 3pm and out at 11am."
     }
   ],
   "residence": {
