@@ -1,5 +1,39 @@
 
 ---
+## 2026-04-20 — Predictions from: Texture Pipeline & Performance Settings
+
+### New Feature Predictions
+
+**P-KTX2 — KTX2/Basis Universal Texture Compression**
+Convert all source PNGs to KTX2 (Basis Universal) at build time. GPU-native compressed formats decompress directly on the GPU with zero CPU involvement — eliminating the main-thread decode stall entirely. File sizes are 4–8× smaller than PNG. Three.js has native `KTX2Loader` support. On devices with hardware S3TC/ASTC/ETC2 support, this also saves VRAM.
+
+**P-OPFS — Origin Private File System Texture Cache**
+Persist decoded texture buffers to the browser's OPFS API after the first load. On return visits, bypass HTTP entirely and serve 4K textures from local disk. Eliminates all network latency for returning players. Pairs with the textureQuality setting to cache the correct resolution tier.
+
+**P-OFFSCREEN — OffscreenCanvas Worker-Side Texture Decode**
+Decode PNG textures on a Web Worker via `OffscreenCanvas`. Transfer the `ImageBitmap` to the main thread and upload to GPU directly via `THREE.CanvasTexture`. Removes texture decode from the main thread entirely, enabling background loading without any frame drops.
+
+**P-VRAM-BUDGET — VRAM Budget Manager**
+A `VRAMBudgetManager` that tracks estimated VRAM usage (texture resolution × maps per material × material count) and dynamically degrades texture quality for rooms far from the camera or outside the view frustum. Near the camera = Ultra; distant rooms = Medium. Invisible rooms = Low.
+
+**P-STREAMING-PROGRESS — LoadingManager Progress HUD**
+Wire `THREE.LoadingManager.onProgress` to a slim progress bar during the initialization prewarmer. Players see "Warming textures... 24/40" instead of a blank loading screen. Pairs with `loadingGate` phases for granular progress steps.
+
+### Enrichments to Existing Features
+
+**E-SETTINGS-AUDIO — Settings Panel: Audio Category**
+Full "Audio" tab: Master Volume, Music Volume, SFX Volume sliders + toggles for ambient audio. Wire to `audioEngine` gain nodes. Store in `settingsStore`.
+
+**E-SETTINGS-DISPLAY — Settings Panel: Display Category**
+Full "Display" tab: Antialiasing toggle (MSAA on/off), Shadow Quality (4 steps), Ambient Occlusion toggle. Each maps to existing Three.js renderer parameters.
+
+**E-HOVER-CATEGORY — Hover Prewarmer: Category-Level Warming**
+When the user hovers a category tab (e.g. "Apartment"), pre-warm all rooms in that category simultaneously in a background batch — not one-by-one on individual room hover.
+
+**E-QUALITY-PER-SURFACE — Per-Surface Quality Override**
+Allow `roomMetadata.json` entries to specify `textureQualityOverride: "ultra"` for architecturally important rooms (e.g. Penthouse). Overrides the global quality setting for that room only.
+
+---
 ## 2026-04-16 — Predictions from: Affirmative Asset Preloading & Worker Audit
 
 ### New Feature Predictions

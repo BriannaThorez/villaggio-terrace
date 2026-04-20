@@ -16,6 +16,7 @@ interface FinanceState {
     water: number;
     internet: number;
   };
+  hotelNightlyRevenue: number;
   processWeeklyFinances: () => void;
   updateBalances: () => void;
 }
@@ -25,6 +26,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   totalExpenses: 0,
   resourceUsage: { power: 0, water: 0, internet: 0 },
   resourceCapacity: { power: 0, water: 0, internet: 0 },
+  hotelNightlyRevenue: 0,
 
   updateBalances: () => {
     const shapes = useSimulationStore.getState().shapes;
@@ -37,6 +39,10 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     let powerCap = 100; // Baseline
     let waterCap = 100;
     let internetCap = 100;
+    let hotelIncome = 0;
+
+    const simulationState = useSimulationStore.getState();
+    const hotelStatus = simulationState.hotelRoomServiceStatus;
 
     shapes.forEach((shape) => {
       const roomMeta = (roomMetadata.rooms as any[]).find(r => r.id === shape.metadataId);
@@ -50,6 +56,19 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       
       if (roomMeta.metadata?.upkeep_cost) {
         income -= roomMeta.metadata.upkeep_cost;
+      }
+
+      // Hotel Revenue Handling
+      if (roomMeta.class === "Hotel") {
+        if (roomMeta.id === "hotel-room-basic") {
+          const isServiced = hotelStatus[shape.id] === "SERVICED";
+          if (isServiced) {
+            // Baseline nightly revenue (e.g., $150/night -> $1050/wk)
+            const nightlyRate = (roomMeta.metadata as any).nightly_rate_base || 150;
+            hotelIncome += nightlyRate;
+            income += (nightlyRate * 7); // Projecting weekly for unified balance
+          }
+        }
       }
 
       // Resource usage from numeric numeric mapping
@@ -69,6 +88,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
 
     set({
       totalIncome: income,
+      hotelNightlyRevenue: hotelIncome,
       resourceUsage: { power: powerUse, water: waterUse, internet: internetUse },
       resourceCapacity: { power: powerCap, water: waterCap, internet: internetCap },
     });

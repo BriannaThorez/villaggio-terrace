@@ -33,8 +33,6 @@ import { useToolPreloader } from "../features/assetPreloader/hooks/useToolPreloa
 import { useAudioController } from "../features/audio-engine/hooks/useAudioController";
 import { audioEngine } from "../features/audio-engine/AudioEngine";
 import { AudioListenerSync } from "../features/audio-engine/components/AudioListenerSync";
-import { getWorkerPool } from "../worker/client";
-import { SIMULATION_TASK_TYPE } from "../shared/worker/protocol";
 
 // RAIN_COUNT constants moved to modular features/weather.
 
@@ -145,39 +143,6 @@ const PlacementIndicator = () => {
           clashSize[1],
           activeTool
         );
-
-      // Phase 4.4a: Baseline Diagnostic
-      console.debug('[PI-Sync] valid=%s pos=%s,%s', isValidSync, snappedX, snappedY);
-
-      // Phase 4.4b: Worker Mirror as Secondary
-      // We dispatch the task but do NOT await it for the UI path.
-      // The worker result is logged only for correctness parity verification.
-      const pool = getWorkerPool();
-      const taskKey = `pi-check-${activeTool}`;
-      pool.submit({
-        taskType: SIMULATION_TASK_TYPE.CheckPlacement,
-        payload: {
-          x: snappedX,
-          y: snappedY,
-          w: clashSize[0],
-          h: clashSize[1],
-          type: activeTool,
-        },
-        sceneRevision: state.clock.elapsedTime, // Use clock for pseudo-revision
-        clientRevision: 0,
-        role: "layout",
-        key: taskKey, // Aggressive cancellation of stale frames
-        silent: true
-      }).promise.then(result => {
-        const res = result as any;
-        if (res.isValid !== isValidSync) {
-          console.warn('[PI-Worker-Mismatch] sync=%s worker=%s pos=%s,%s', isValidSync, res.isValid, snappedX, snappedY);
-        } else {
-          console.debug('[PI-Worker-ACK] valid=%s', res.isValid);
-        }
-      }).catch(() => {
-        // Task cancelled (normal behavior for 60fps queue)
-      });
 
       isValidRef.current = isValidSync;
 
@@ -833,9 +798,6 @@ const CanvasScene = () => {
       if (controls) {
         (controls as any).target.x -= dx;
         (controls as any).target.y -= dy;
-        // Guide-rail: focal point locked to X/Y plane (tower-sim constraint)
-        (controls as any).target.z = 0;
-        (controls as any).update();
       }
       return;
     }
@@ -847,23 +809,26 @@ const CanvasScene = () => {
   };
 
   const gridRef = useRef<any>(null);
+  const groundPlane = useMemo(
+    () => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0),
+    [],
+  );
+  const raycastResult = useMemo(() => new THREE.Vector3(), []);
 
   useFrame((state) => {
-    // Guide-rail safety: ensure the orbit focal point never drifts in Z.
-    // Enforced here as a continuous backstop — primary enforcement is in onChange + pan handler.
-    if (state.controls) {
-      const orbitTarget = (state.controls as any).target as THREE.Vector3;
-      if (Math.abs(orbitTarget.z) > 0.001) {
-        orbitTarget.z = 0;
-        (state.controls as any).update();
-      }
-    }
+    if (gridRef.current) {
+      // Find the screen center in world space on the ground plane (y=0)
+      state.raycaster.setFromCamera(new THREE.Vector2(0, 0), state.camera);
+      const intersect = state.raycaster.ray.intersectPlane(
+        groundPlane,
+        raycastResult,
+      );
 
-    // Grid follows the camera focal point directly — no raycaster needed.
-    if (gridRef.current && state.controls) {
-      const target = (state.controls as any).target as THREE.Vector3;
-      gridRef.current.position.x = Math.round(target.x / 10) * 10;
-      gridRef.current.position.z = Math.round(target.z / 10) * 10;
+      if (intersect) {
+        // Snap the grid center to 10-unit increments to prevent line-shifting
+        gridRef.current.position.x = Math.round(intersect.x / 10) * 10;
+        gridRef.current.position.z = Math.round(intersect.z / 10) * 10;
+      }
     }
   });
 
@@ -1003,12 +968,6 @@ const CanvasScene = () => {
         onChange={() => {
           wasPanningRef.current = true;
 
-          // Guide-rail: focal point must stay in X/Y plane regardless of orbit angle.
-          // Clamp before syncing camera state so Z drift never persists to the store.
-          if (controls) {
-            (controls as any).target.z = 0;
-          }
-
           // Event-driven camera sync (Industry Leading Optimization)
           const now = performance.now();
           if (now - lastSyncTimeRef.current > 100) {
@@ -1072,12 +1031,12 @@ const CanvasScene = () => {
       {/* <SimPeopleManager /> */}
       <GrassField
         width={1000}
-        instances={300000}
+        instances={250000}
         joints={3}
         bladeWidth={0.25}
-        bladeHeight={0.5}
+        bladeHeight={1.0}
         position={[0, 0.2, 0]}
-        uMaxDistance={880}
+        uMaxDistance={380}
       />
 
       <mesh

@@ -33,6 +33,7 @@ interface ResidentialRoomProps {
   onPointerDown?: (e: any) => void;
   onDoubleClick?: (e: any) => void;
   roomType?: string;
+  metadataId?: string;
 }
 
 /**
@@ -53,6 +54,7 @@ export const ResidentialRoom: React.FC<ResidentialRoomProps> = ({
   onPointerDown,
   onDoubleClick,
   roomType = "residential",
+  metadataId,
 }) => {
   const depth = 40;
 
@@ -98,16 +100,42 @@ export const ResidentialRoom: React.FC<ResidentialRoomProps> = ({
   );
 
   const textureMeta = useMemo(() => {
-    // Attempt to parse metadata for dynamic textures
-    const parsedMeta = (roomMetadata as any).rooms?.find((r: any) => r.id === roomType)?.metadata;
-    // Fallback if none exist, grab generic residence
+    // THREE-LEVEL TEXTURE FALLBACK CHAIN:
+    // 1. Individual room by metadataId (e.g. "apartment-studio-basic")
+    // 2. Class-level defaultTextures (e.g. classLibrary.Office.defaultTextures)
+    // 3. Generic residence root-level fallback
+
+    const lookupKey = metadataId || roomType;
+    const roomEntry = (roomMetadata as any).rooms?.find((r: any) => r.id === lookupKey);
+    const roomMeta = roomEntry?.metadata || {};
+
+    // Level 2: Class-level fallback from classLibrary.defaultTextures
+    const roomClass = roomEntry?.class;
+    const classMeta = roomClass
+      ? (roomMetadata as any).classLibrary?.[roomClass]?.defaultTextures || {}
+      : {};
+
+    // Level 3: Generic residence root-level fallback
     const generic = (roomMetadata as any).residence || {};
+
     return {
-      wallTextureId: parsedMeta?.wallTexture || generic.wallTexture || "beige_wall_1",
-      floorTextureId: parsedMeta?.floorTexture || generic.floorTexture || "wood_floor_1",
-      ceilingTextureId: parsedMeta?.ceilingTexture || generic.ceilingTexture || "beige_wall_1",
+      wallTextureId:
+        roomMeta.wallTexture ||
+        classMeta.wallTexture ||
+        generic.wallTexture ||
+        "beige_wall_1",
+      floorTextureId:
+        roomMeta.floorTexture ||
+        classMeta.floorTexture ||
+        generic.floorTexture ||
+        "wood_floor_1",
+      ceilingTextureId:
+        roomMeta.ceilingTexture ||
+        classMeta.ceilingTexture ||
+        generic.ceilingTexture ||
+        "beige_wall_1",
     };
-  }, [roomType]);
+  }, [roomType, metadataId]);
 
   return (
     <group

@@ -97,40 +97,46 @@ const RoomMeshCSGInner: React.FC<RoomMeshCSGProps> = ({
   );
 
   const meshRef = React.useRef<THREE.Mesh>(null);
-
+  // Track geometry identity AND vertex count to detect CSG buffer swaps reliably
   const lastGeoRef = React.useRef<THREE.BufferGeometry | null>(null);
+  const lastVertexCount = React.useRef<number>(-1);
 
-  React.useLayoutEffect(() => {
+  const applyMaterialGroups = React.useCallback(() => {
     if (!meshRef.current || !Array.isArray(material)) return;
     const geo = meshRef.current.geometry;
-    
-    // PHASE 3.5 Optimization: Only re-calc groups if the identity of the geometry has changed
-    // (e.g. after a CSG operation finishes and swaps the geometry buffer)
-    if (lastGeoRef.current === geo) return;
+    if (!geo || !geo.attributes.normal) return;
+
+    const vertCount = geo.attributes.normal.count;
+
+    // Skip only if BOTH the geometry object identity AND vertex count are unchanged.
+    // CSG sometimes reuses the same buffer object but rewrites its contents.
+    if (lastGeoRef.current === geo && lastVertexCount.current === vertCount) return;
     lastGeoRef.current = geo;
+    lastVertexCount.current = vertCount;
 
-    if (!geo.attributes.normal) return;
-
-    const floorIdx = 2; 
-    const ceilingIdx = 3; 
+    // Material slot mapping:
+    //   0 = wall  (returned as [wall, wall, floor, ceiling, wall, wall] from getRoomMaterialsFromMetadata)
+    //   2 = floor (upward-facing normal, ny > 0.5)
+    //   3 = ceiling (downward-facing normal, ny < -0.5)
+    // NOTE: After CSG subtraction, the visible interior floor faces have upward normals (+Y)
+    //       and visible interior ceiling faces have downward normals (-Y).
+    const floorIdx = 2;
+    const ceilingIdx = 3;
     const wallIdx = 0;
 
     const normals = geo.attributes.normal;
     const count = normals.count;
-    
+
     geo.clearGroups();
 
-    // Batch group creation to avoid re-calculating on every frame
-    const groups: { start: number, count: number, materialIndex: number }[] = [];
-    
+    const groups: { start: number; count: number; materialIndex: number }[] = [];
+
     for (let i = 0; i < count; i += 3) {
       const ny = normals.getY(i);
       let targetIdx = wallIdx;
-      
       if (ny > 0.5) targetIdx = floorIdx;
       else if (ny < -0.5) targetIdx = ceilingIdx;
-      
-      // Merge contiguous triangles with same material index into one group for performance
+
       const lastGroup = groups[groups.length - 1];
       if (lastGroup && lastGroup.materialIndex === targetIdx) {
         lastGroup.count += 3;
@@ -139,9 +145,21 @@ const RoomMeshCSGInner: React.FC<RoomMeshCSGProps> = ({
       }
     }
 
-    groups.forEach(g => geo.addGroup(g.start, g.count, g.materialIndex));
+    groups.forEach((g) => geo.addGroup(g.start, g.count, g.materialIndex));
     meshRef.current.material = material;
-  }, [material, width, height, depth]);
+  }, [material]);
+
+  // Run after every render so we catch geometry swaps from the CSG library
+  React.useLayoutEffect(() => {
+    applyMaterialGroups();
+  });
+
+  // Also run when key dimensions change to handle geometry rebuilds
+  React.useEffect(() => {
+    // Reset geometry tracker when dimensions change so next layoutEffect re-groups
+    lastGeoRef.current = null;
+    lastVertexCount.current = -1;
+  }, [width, height, depth, hasLeftWall, hasRightWall, hasBackWall]);
 
   return (
     <group position={[0, height / 2, -depth / 2]}>

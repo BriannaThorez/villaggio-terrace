@@ -40,17 +40,12 @@ export const getMaxCantilever = (
     ? index.getSupportNodes(y)
     : allShapes.filter(s => Math.abs(s.position[1] - (y - FLOOR_HEIGHT)) < 10);
 
-  const supportsAbove = index
-    ? index.getAboveNodes(y)
-    : allShapes.filter(s => Math.abs(s.position[1] - (y + FLOOR_HEIGHT)) < 10);
-
   return getMaxCantileverLogic(
     x,
     y,
     width,
     mapToSimpleNodes(floorNodes),
-    mapToSimpleNodes(supportsBelow),
-    mapToSimpleNodes(supportsAbove),
+    mapToSimpleNodes(supportsBelow)
   );
 };
 

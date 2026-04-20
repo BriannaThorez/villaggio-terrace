@@ -119,66 +119,31 @@
         "executive_club",
         "helicopter_charters",
         "limousine_services"
-      ],
-      "defaultTextures": {
-        "wallTexture": "concrete_wall_1",
-        "floorTexture": "concrete_floor_1",
-        "ceilingTexture": "concrete_wall_1"
-      }
+      ]
     },
     "Apartment": {
       "description": "Residential living modules for long-term tenancy.",
-      "masterTraitList": [],
-      "defaultTextures": {
-        "wallTexture": "beige_wall_1",
-        "floorTexture": "wood_floor_1",
-        "ceilingTexture": "beige_wall_1"
-      }
+      "masterTraitList": []
     },
     "Restaurant": {
       "description": "Food and beverage commercial modules.",
-      "masterTraitList": [],
-      "defaultTextures": {
-        "wallTexture": "beige_wall_1",
-        "floorTexture": "wood_floor_1",
-        "ceilingTexture": "beige_wall_1"
-      }
+      "masterTraitList": []
     },
     "Store": {
       "description": "Retail commercial modules.",
-      "masterTraitList": [],
-      "defaultTextures": {
-        "wallTexture": "beige_wall_1",
-        "floorTexture": "wood_floor_1",
-        "ceilingTexture": "beige_wall_1"
-      }
+      "masterTraitList": []
     },
     "Services": {
       "description": "Essential infrastructure and support modules.",
-      "masterTraitList": [],
-      "defaultTextures": {
-        "wallTexture": "concrete_wall_1",
-        "floorTexture": "concrete_floor_1",
-        "ceilingTexture": "concrete_wall_1"
-      }
+      "masterTraitList": []
     },
     "Lobby": {
       "description": "Entry and transition nodes.",
-      "masterTraitList": [],
-      "defaultTextures": {
-        "wallTexture": "beige_wall_1",
-        "floorTexture": "grey_cartago_tiles",
-        "ceilingTexture": "concrete_wall_1"
-      }
+      "masterTraitList": []
     },
     "FootTraffic": {
       "description": "Vertical and horizontal movement solutions.",
-      "masterTraitList": [],
-      "defaultTextures": {
-        "wallTexture": "concrete_wall_1",
-        "floorTexture": "concrete_floor_1",
-        "ceilingTexture": "concrete_wall_1"
-      }
+      "masterTraitList": []
     },
     "Hotel": {
       "description": "Transient hospitality modules for short-stay guests. No permanent tenants. Hotel Rooms consume Hotel Reception service capacity.",
@@ -196,11 +161,6 @@
         "provider": "hotel-reception-desk",
         "consumerKey": "hotel_reception_services",
         "description": "Each Hotel Reception Desk provides up to 10 units of hotel reception service. Each Hotel Room consumes 1 unit."
-      },
-      "defaultTextures": {
-        "wallTexture": "beige_wall_1",
-        "floorTexture": "wood_floor_1",
-        "ceilingTexture": "beige_wall_1"
       }
     }
   },

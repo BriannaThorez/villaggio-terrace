@@ -148,8 +148,10 @@ class TextureLODManager {
    */
   public injectBundle(assetName: string, bundle: TextureBundle): void {
     if (!this.memoryCache.has(assetName)) {
-      console.debug(`[TextureLOD] Injected warm bundle for: ${assetName}`);
+      console.debug(`[TextureLODHandler] memoryCache WRITE: "${assetName}" (${bundle.isPlaceholder ? 'PLACEHOLDER' : '4K-bundle'})`);
       this.memoryCache.set(assetName, bundle);
+    } else {
+      console.debug(`[TextureLODHandler] memoryCache HIT (dedup skip): "${assetName}"`);
     }
   }
 

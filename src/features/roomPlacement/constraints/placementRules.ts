@@ -1,6 +1,8 @@
 import type { SimulationNode } from "../../../shared/utils/store";
 import { checkStructuralIntegrity } from "./structuralIntegrity";
 import { FloorBucketIndex, STRUCTURAL_CONSTANTS } from "./spatialIndex";
+import { buildHotelCapacityMap } from "../../hotel/hotelCapacityEngine";
+import roomMetadata from "../../../entities/rooms/roomMetadata.json";
 
 const { COLLISION_EPSILON } = STRUCTURAL_CONSTANTS;
 
@@ -9,6 +11,7 @@ export interface PlacementResult {
   error?: "collision" | "structural" | "ground";
   collidingId?: string;
   overhang?: number;
+  warnings?: ("NO_RECEPTION_DESK" | "DESK_AT_CAPACITY")[];
 }
 
 /**
@@ -100,6 +103,24 @@ export const validatePlacement = (
       error: "structural",
       overhang: structuralResult.overhang,
     };
+  }
+
+  // 3. Hotel Capacity Check (Warnings only)
+  if (type === "hotel") {
+    const tempShapes = [...allShapes, { id: "temp", metadataId: ignoreId || "", position: [x, y], size: [width, height], type } as any];
+    const capacityMap = buildHotelCapacityMap(tempShapes);
+    const roomStatus = capacityMap.rooms["temp"];
+    
+    if (roomStatus) {
+      if (roomStatus.status === "NO_RECEPTION") {
+        // Distinguish between no desk existing vs desks full
+        const hostDesks = allShapes.filter(s => s.metadataId === "hotel-reception-desk");
+        return { 
+          isValid: true, 
+          warnings: hostDesks.length === 0 ? ["NO_RECEPTION_DESK"] : ["DESK_AT_CAPACITY"] 
+        };
+      }
+    }
   }
 
   return { isValid: true };

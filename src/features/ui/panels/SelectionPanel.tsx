@@ -9,7 +9,7 @@ import { useSimulationStore } from "../../../shared/utils/store";
 import { useTenancyStore } from "../../tenancy/store/tenancyStore";
 import roomMetadata from "../../../entities/rooms/roomMetadata.json";
 import { resolveTraitsByCategory, getIconComponent } from "../../../shared/utils/metadataUtils";
-import { UserPlus, UserMinus, Users } from "lucide-react";
+import { UserPlus, UserMinus, Users, Bed, ConciergeBell, AlertTriangle, ShieldCheck } from "lucide-react";
 
 export const SelectionPanel = () => {
     const selectedId = useSimulationStore((state) => state.selectedId);
@@ -19,6 +19,8 @@ export const SelectionPanel = () => {
     const setUIPosition = useSimulationStore((state) => state.setUIPosition);
 
     const { occupants, assignTenant, evictTenant } = useTenancyStore();
+    const hotelStatus = useSimulationStore((state) => state.hotelRoomServiceStatus);
+    const hotelCapacity = useSimulationStore((state) => state.hotelReceptionCapacity);
 
     const shape = shapes.find((s) => s.id === selectedId);
     const pos = uiPositions["selection-panel"] || { x: 20, y: 80 };
@@ -156,6 +158,42 @@ export const SelectionPanel = () => {
                         </button>
                     )}
                 </div>
+                )}
+
+                {/* Hotel Status Section */}
+                {metadata?.class === 'Hotel' && (
+                    <div className="flex flex-col gap-2">
+                        <span className="text-[9px] font-bold text-text/30 uppercase tracking-[0.2em]">Hospitality Management</span>
+                        {metadata.id === 'hotel-reception-desk' ? (
+                            <div className="flex items-center justify-between p-3 bg-accent/5 border border-accent/20 rounded-xl">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-accent/10 rounded-lg text-accent">
+                                        <ConciergeBell size={16} />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-xs font-bold text-text">Service Availability</span>
+                                        <span className="text-[9px] text-text/40">{hotelCapacity[shape.id] ?? 0} units remaining</span>
+                                    </div>
+                                </div>
+                                <ShieldCheck size={14} className="text-emerald-400" />
+                            </div>
+                        ) : (
+                            <div className={`flex items-center justify-between p-3 border rounded-xl ${hotelStatus[shape.id] === 'SERVICED' ? 'bg-emerald-400/5 border-emerald-400/20' : 'bg-red-400/5 border-red-400/20'}`}>
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2 rounded-lg ${hotelStatus[shape.id] === 'SERVICED' ? 'bg-emerald-400/10 text-emerald-400' : 'bg-red-400/10 text-red-100'}`}>
+                                        <Bed size={16} />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-xs font-bold text-text">Room Status</span>
+                                        <span className={`text-[9px] ${hotelStatus[shape.id] === 'SERVICED' ? 'text-emerald-400' : 'text-red-400'}`}>
+                                            {hotelStatus[shape.id] === 'SERVICED' ? 'ACTIVE / SERVICED' : 'OFFLINE / NO DESK'}
+                                        </span>
+                                    </div>
+                                </div>
+                                {hotelStatus[shape.id] === 'SERVICED' ? <ShieldCheck size={14} className="text-emerald-400" /> : <AlertTriangle size={14} className="text-red-400" />}
+                            </div>
+                        )}
+                    </div>
                 )}
 
                 {/* [Description] */}

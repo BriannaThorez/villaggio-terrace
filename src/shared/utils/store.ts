@@ -11,6 +11,7 @@ import { FloorBucketIndex } from "../../features/roomPlacement/constraints/spati
 import simulationSettings from "@/src/simulationSettings.json";
 import { reconstructVacancy } from "../../features/structuralScaffold/api/emptyRoomsSpawning";
 import roomMetadata from "../../entities/rooms/roomMetadata.json";
+import { buildHotelCapacityMap } from "../../features/hotel/hotelCapacityEngine";
 
 const globalHash = new SpatialHash(100);
 
@@ -43,6 +44,7 @@ export type SimulationNodeType =
   | "lobby"
   | "elevator"
   | "structure"
+  | "hotel"
   | "empty_floor";
 
 // The visual grid unit is 4 StructuralCells wide by 1 StructuralCell high.
@@ -151,6 +153,10 @@ export interface SimulationState {
   resources: Resources;
   spendableMoney: number;
   towerGrid: Map<string, string>; // "x,y" -> shapeId
+  
+  // Hotel Capacity & Service Status
+  hotelReceptionCapacity: Record<string, number>; // deskId -> remaining units (0-10)
+  hotelRoomServiceStatus: Record<string, "SERVICED" | "NO_RECEPTION">; // roomId -> status
   activeTool: string;
   activeModuleId: string | null; // The specific ID from roomMetadata.json
   selectedId: string | null;
@@ -180,6 +186,7 @@ export interface SimulationState {
     fromPort?: PortType,
     toPort?: PortType,
   ) => void;
+  recomputeHotelCapacity: () => void;
   placeModule: (x: number, y: number, moduleId: string) => void;
   removeModule: (x: number, y: number) => void;
   setActiveTool: (tool: SimulationState["activeTool"]) => void;
@@ -376,6 +383,8 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
     resources: { power: 50, water: 50, internet: 50 },
     spendableMoney: initialSpendableMoney,
     towerGrid: new Map(),
+    hotelReceptionCapacity: {},
+    hotelRoomServiceStatus: {},
     activeTool: "select",
     activeModuleId: null,
     lastDeletedNodeType: null,
@@ -404,6 +413,26 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
         // Force a state update to trigger computeStructuralMetadata
         return {
           shapes: computeStructuralMetadata([...state.shapes]),
+        };
+      });
+    },
+
+    recomputeHotelCapacity: () => {
+      set((state) => {
+        const map = buildHotelCapacityMap(state.shapes);
+        const hotelReceptionCapacity: Record<string, number> = {};
+        Object.entries(map.desks).forEach(([id, data]) => {
+          hotelReceptionCapacity[id] = data.totalCapacity - data.usedCapacity;
+        });
+
+        const hotelRoomServiceStatus: Record<string, "SERVICED" | "NO_RECEPTION"> = {};
+        Object.entries(map.rooms).forEach(([id, data]) => {
+          hotelRoomServiceStatus[id] = data.status;
+        });
+
+        return {
+          hotelReceptionCapacity,
+          hotelRoomServiceStatus,
         };
       });
     },
@@ -781,6 +810,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           );
         }
       }
+      get().recomputeHotelCapacity();
     },
     updateShape: (id, updates, skipHistory = false) => {
       if (!skipHistory) {
@@ -855,6 +885,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
         });
         return { shapes: computeStructuralMetadata(updatedShapes) };
       });
+      get().recomputeHotelCapacity();
     },
     deleteShape: (id, isMerge = false) => {
       const shapeToDelete = get().shapes.find((s) => s.id === id);
@@ -950,6 +981,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           stateAfter.setSelectedId(null);
         }
       }
+      get().recomputeHotelCapacity();
     },
     addLink: (from, to, fromPort, toPort) => {
 

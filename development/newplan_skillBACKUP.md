@@ -29,14 +29,15 @@ Prediction output:
 Output aforementioned predictions as suggestions but do not add them to the plan unless I explicity request it. Append the predictions, using a tool(do not edit), as either new features or as enrichments to existing features, at the end of development>implementationplan>feature-predictions.md, which serves as an accumulation point for all predicted ideas.
 
 # Artifact augmentation section
-Utilize Antigravity's internal implementation plan **artifact system** to exclusively read the following, where "name" is the actual name of our current source of truth document. This way the artifact system essentially only serves as a compass to the intended source of truth.
+Utilize Antigravity's internal implementation plan and tasks **artifact system** to create artifact-implementation-plans and artifact-tasks.
+Ensure artifact-implementation-plan and artifact-tasks are in 1:1 parity with the current specific phase of its respective source of truth (development-implementation-plan.md and development-tasks.md). 
+For the purpose of serving as persistent augmentation of the development sources of truth. 
+Ensure artifact-implementation-plan and artifact-tasks feature explicit calls to query the associated development-tasks for updates and changes.
+
+Ensure that each artifact's completion/transitionary component has a binding/handshake component to serve as return instruction to the associated development-implementation-plan and development-tasks:
 ```
-Utilize the source of truth directly to obtain all instructions, steps, completions and updates.
-Source of truth: src/development/implementationplan/[development-implementation-plan-[name].md, development-tasks-[name].md]
-Phase: [phase]
-Steps: [step]-[step]
-Sub-steps: [sub-step]-[sub-step]
-Phase Lines: [line]-[line]
+Artifact Augmentation of development-[implementation-plan or tasks]-[name].md; Return to source of truth at each completion/transitionary checkpoint and ensure parity.
 ```
+Ensure every development-source-of-truth phase and associated tasks includes this "Artifact Augmentation Section" verbatim as as tooling inspiration and prompt. 
 
 # Requests:

@@ -204,6 +204,23 @@ export interface SerializedStructuralRoom {
   version?: number;
 }
 
+export interface HotelOccupancyConfig extends RoomRecord {
+  type: "transient";
+  max_guests_per_room: number;
+  min_stay_hours: number;
+  max_stay_hours: number;
+  check_in_hour: number;
+  check_out_hour: number;
+}
+
+export interface HotelRoomMetadata extends RoomRecord {
+  permanent_tenants: false;
+  nightly_rate_base: number;
+  upkeep_cost: number;
+  occupancy: HotelOccupancyConfig;
+  tags: string[];
+}
+
 export type RoomPrimitive = string | number | boolean | null;
 export type RoomRecord = {
   [key: string]:

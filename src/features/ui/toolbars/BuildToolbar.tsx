@@ -454,6 +454,7 @@ export const BuildToolbar = () => {
                                     normalizeToolType(sub.type, cat.id),
                                   );
                                   setActiveModuleId(sub.id);
+                                  console.debug(`[BuildToolbar-Select Prewarmer] Module selected for placement: ${sub.id}`);
                                 }}
                                 className="whitespace-nowrap px-4 py-2 text-[11px] font-medium text-text/70 hover:text-primary hover:bg-primary/10 rounded-full transition-colors flex items-center gap-3 border border-white/10 hover:border-primary/20 shadow-sm"
                               >
