@@ -146,3 +146,25 @@ When an entity is selected, render a faint dotted line showing its upcoming NavP
 
 **E11 — Enrichment: TowerGraph → Stair Nodes**
 Stairs as a second connector type: `travelTime > elevator` but `capacity = infinite`. Entities on low floors (±2 floors) prefer stairs; high-floor entities prefer elevators. Mirrors real building behavior and reduces elevator congestion naturally.
+
+---
+## 2026-04-21 — Predictions from: Modular Room Volumes & Dynamic Snap Points
+
+### New Feature Predictions
+
+**P21 — Data-Driven Furniture Catalogs**
+Instead of hardcoded interior logic, rooms query a `propRegistry.json` that defines the meshes, required cell footprint, and allowable snap point types for all furniture. This allows modding/JSON-based expansion of the furniture catalog.
+
+**P22 — Placement Collision Detection Matrix**
+When an object is placed on a snap point, it reserves adjacent snap points based on its dimensional footprint (e.g., a large desk reserves `[x, y]` and `[x+1, y]`). This system prevents overlapping props and validates room capacity dynamically.
+
+**P23 — Room Satisfaction Multipliers via Props**
+Objects placed on snap points carry metadata (e.g., `comfort: +5`, `prestige: +10`). The total sum of a room's props calculates its overall "Room Grade" which influences tenant happiness or hotel guest spending rates.
+
+### Enrichments to Existing Features
+
+**E12 — Enrichment: PlacementHologram → Dynamic Snap Visualizer**
+Update the `PlacementHologram` grid to highlight valid vs. invalid snap points when a user is actively dragging a new piece of furniture. (Green = valid/empty, Red = collision/occupied).
+
+**E13 — Enrichment: RoomMeshCSG → Recessed Snap Sockets**
+Instead of just a flat floor, `RoomMeshCSG` could procedurally generate subtle visual floor sockets or utility hardpoints (like floor outlets) at valid snap point coordinates based on the room's class.

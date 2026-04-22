@@ -1,0 +1,32 @@
+{
+  "_comment": "Single source of truth for hardcoded (non-manifest) room surface textures. Referenced by MaterialParser.ts, EmptyRoom.tsx, and all prewarmers. Changing a texture here propagates everywhere automatically.",
+  "lobby": {
+    "wall": "beige_wall_1",
+    "floor": "grey_cartago_tiles",
+    "ceiling": "concrete_wall_1"
+  },
+  "emptyFloor": {
+    "_comment": "Vacant structural scaffold — the 'Empty Floor' placement type.",
+    "wall": "concrete_wall_1",
+    "floor": "concrete_floor_1",
+    "ceiling": "concrete_wall_1"
+  },
+  "emptyRoom": {
+    "_comment": "EmptyRoom.tsx entity — rendered when an empty floor cell is placed. Floor must match emptyFloor.",
+    "wall": "concrete_wall_1",
+    "floor": "concrete_floor_1",
+    "ceiling": "concrete_wall_1"
+  },
+  "structure": {
+    "_comment": "Structural scaffold shell — concrete columns and beams rendered in SimulationNodes.tsx.",
+    "wall": "concrete_wall_1",
+    "floor": "concrete_floor_1",
+    "ceiling": "concrete_wall_1"
+  },
+  "structureFrame": {
+    "_comment": "Frame material used for structural window trim and getEmptyRoomMaterials frameMaterial.",
+    "wall": "concrete_wall_1",
+    "floor": "concrete_floor_1",
+    "ceiling": "concrete_wall_1"
+  }
+}

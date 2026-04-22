@@ -1,7 +1,7 @@
 # Architectural Texture Pipeline Audit
 
 **Generated**: 2026-04-16
-**Updated**: 2026-04-20 (Phase 3.5.2 — Pipeline Verified & Fully Operational)
+**Updated**: 2026-04-22 (Phase 3.6 — Multi-Resolution LOD & Live Shifting Operational)
 **Workflow Status**: ✅ All Regressions Resolved
 
 ---
@@ -12,17 +12,17 @@ Textures are auto-discovered at build time via `import.meta.glob` in `materials.
 
 | Texture Name | Maps | Referenced By | Status |
 |---|---|---|---|
-| `beige_wall_1` | diff, arm, nor, disp | Apartments, Hotel, generic fallback, Lobby walls | ✅ |
-| `concrete_floor_1` | diff, arm, nor, disp | EmptyFloor, Structural, hardcoded | ✅ |
-| `concrete_wall_1` | diff, arm, nor, disp | EmptyFloor, Structural, Office class default, hardcoded | ✅ |
-| `concrete_wall_2` | diff, arm, nor, disp | Available, not yet referenced | ✅ |
-| `grey_cartago_tiles` | diff, arm, nor, disp | Lobby floor (hardcoded `getLobbyMaterials()`), Lobby class default | ✅ |
-| `metal_plate_1` | diff, arm, nor, disp | Available, not yet referenced | ✅ |
-| `oak_veneer_01` | diff, arm, nor, disp | Window casings | ✅ |
+| `beige_wall_1` | diff, arm, nor, disp | Apartments, Hotel, generic fallback, Lobby walls | ✅ 512-4K |
+| `concrete_floor_1` | diff, arm, nor, disp | EmptyFloor, Structural, hardcoded | ✅ 512-4K |
+| `concrete_wall_1` | diff, arm, nor, disp | EmptyFloor, Structural, Office class default, hardcoded | ✅ 512-4K |
+| `concrete_wall_2` | diff, arm, nor, disp | Available, not yet referenced | ✅ 512-4K |
+| `grey_cartago_tiles` | diff, arm, nor, disp | Lobby floor (hardcoded `getLobbyMaterials()`), Lobby class default | ✅ 512-4K |
+| `metal_plate_1` | diff, arm, nor, disp | Available, not yet referenced | ✅ 512-4K |
+| `oak_veneer_01` | diff, arm, nor, disp | Window casings | ✅ 512-4K |
 | `painted_plaster_wall` | arm, nor, disp | **No diff map** — `normalizeTextureName()` silently redirects → `beige_wall_1` | ⚠️ Redirect active |
-| `rocky_terrain_2` | diff, arm, nor, disp, spec | Terrain/environment | ✅ |
-| `wood_floor_1` | diff, arm, nor, disp | Apartments, Hotel rooms, generic fallback | ✅ |
-| `wood_worn_1` | diff, arm, nor, disp | Window frames | ✅ |
+| `rocky_terrain_2` | diff, arm, nor, disp, spec | Terrain/environment | ✅ 512-4K |
+| `wood_floor_1` | diff, arm, nor, disp | Apartments, Hotel rooms, generic fallback | ✅ 512-4K |
+| `wood_worn_1` | diff, arm, nor, disp | Window frames | ✅ 512-4K |
 
 ---
 
@@ -101,7 +101,8 @@ Textures are auto-discovered at build time via `import.meta.glob` in `materials.
 ## 📊 Stats
 - **Total Rooms in Metadata**: 100+
 - **Unique Visual Signatures**: ~6 after class defaults applied
-- **GPU Shader Compilation**: Forced via `renderer.compile()` at boot — zero stutter on first placement
+- **Texture Variants**: 84 generated (512, 1k, 2k) across 11 material sets
+- **GPU Shader Compilation**: Forced via `renderer.compile()` at boot + Quality Shift re-warm
 
 ---
 
@@ -112,10 +113,12 @@ Textures are auto-discovered at build time via `import.meta.glob` in `materials.
 | All rooms showing identical beige texture | CSG geometry grouping ran before CSG computed — groups never applied | 3.5.2 |
 | `lastGeoRef` guard blocked re-grouping after CSG buffer swap | Now tracks both object identity AND vertex count | 3.5.2 |
 | `grey_cartago_tiles` never loading for lobby floor | Added to explicit base seed in `preload.ts` | 3.5.1 |
-| `metadataId` not passed to renderer (all rooms shared same fallback) | `shape.metadataId` now piped through SimulationNodes → ResidentialRoom | 3.5.0 |
+| All rooms identical texture despite different IDs | `metadataId` not piped from `SimulationNodes` → `ResidentialRoom` | 3.5.0 |
 | Placeholders never swapping to 4K | Removed `if (isPlaceholder)` gate; universal swap with identity protection | 3.5.0 |
 | Class-level texture fallback missing | Added `defaultTextures` to all `classLibrary` entries via safe script | 3.5.2 |
 | `useHoverPreloader` not normalizing texture names | `normalize()` applied before `getBundleProgressiveSync()` call | 3.5.1 |
+| High VRAM usage / No LODs | Automated `sharp` build pipeline + `AssetPaths` variant mapping | 3.6.0 |
+| Stale quality on settings change | `textureLODHandler.clearCache()` + `triggerQualityShiftPrewarm()` | 3.6.0 |
 
 ---
 
@@ -124,7 +127,8 @@ Textures are auto-discovered at build time via `import.meta.glob` in `materials.
 > See `texture-pipeline.md §5` for the full agentic integration checklist.
 
 **Quick reference — adding a new texture:**
-1. Create `src/assets/textures/<name>/` with `*_diff.png`, `*_arm.png`, `*_nor_gl.png`, `*_disp.png`
-2. **Manifest room**: add to `rooms[].metadata` in `roomMetadata.json` under `wallTexture/floorTexture/ceilingTexture`
-3. **Hardcoded room** (Lobby/Structure/EmptyFloor): also add to base seed in `preload.ts` lines ~34–39
-4. Verify console shows: `[Program-Initialization Prewarmer] Injecting warm bundle → <name> (4K-bundle)`
+1. Create `src/assets/textures/<name>/` with master `*_4k.png` files
+2. **Automated LODs**: Run `npm run dev` or `npm run generate:textures` to create `_512`, `_1k`, `_2k`
+3. **Manifest room**: add to `rooms[].metadata` in `roomMetadata.json`
+4. **Hardcoded room** (Lobby/Structure/EmptyFloor): also add to base seed in `preload.ts`
+5. Verify console: `[Program-Initialization Prewarmer] Injecting warm bundle → <name> (tier-bundle)`

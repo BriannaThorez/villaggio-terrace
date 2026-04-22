@@ -13,6 +13,7 @@ import {
   getPaintedPlasterBundle,
 } from "../features/materialsEngine/presets/paintedPlaster";
 import { textureLODHandler } from "../features/materialsEngine/TextureLODHandler";
+import { STRUCTURAL_TEXTURES } from "../entities/rooms/structuralTextures";
 
 type RoomSurfaceTextureKey = "wallTexture" | "floorTexture" | "ceilingTexture";
 
@@ -258,10 +259,39 @@ export interface RoomSurfaceMetadata {
   ceilingTexture?: string;
 }
 
+// Generic residential fallback textures (for roomMetadata-driven rooms with no surface override)
+const RESIDENTIAL_FALLBACK = {
+  wall:    "beige_wall_1",
+  floor:   "wood_floor_1",
+  ceiling: "beige_wall_1",
+} as const;
+
+/**
+ * Shared glass singleton — transmission glass requires a dedicated GPU render pass.
+ * Creating a new MeshPhysicalMaterial({ transmission }) on every call forces a fresh
+ * shader compilation on each placement. One cached instance is shared across all rooms.
+ */
+let _glassMaterialSingleton: THREE.MeshPhysicalMaterial | null = null;
+export const getGlassMaterial = (): THREE.MeshPhysicalMaterial => {
+  if (_glassMaterialSingleton) return _glassMaterialSingleton;
+  _glassMaterialSingleton = new THREE.MeshPhysicalMaterial({
+    color: "#8090A0",
+    metalness: 0.9,
+    roughness: 0.05,
+    transmission: 0.95,
+    opacity: 0.2,
+    transparent: true,
+    ior: 1.5,
+    thickness: 0.1,
+    side: THREE.DoubleSide,
+  });
+  return _glassMaterialSingleton;
+};
+
 export const getRoomMaterialsFromMetadata = (metadata?: RoomSurfaceMetadata): THREE.Material[] => {
-  const wallTex = metadata?.wallTexture || "beige_wall_1";
-  const floorTex = metadata?.floorTexture || "wood_floor_1";
-  const ceilingTex = metadata?.ceilingTexture || "beige_wall_1";
+  const wallTex    = metadata?.wallTexture    || RESIDENTIAL_FALLBACK.wall;
+  const floorTex   = metadata?.floorTexture   || RESIDENTIAL_FALLBACK.floor;
+  const ceilingTex = metadata?.ceilingTexture || RESIDENTIAL_FALLBACK.ceiling;
 
   const wall = parseRoomMaterial({
     albedo: "#ffffff",
@@ -285,133 +315,120 @@ export const getRoomMaterialsFromMetadata = (metadata?: RoomSurfaceMetadata): TH
 };
 
 export const getEmptyFloorMaterials = (): THREE.Material[] => {
+  const tx = STRUCTURAL_TEXTURES.emptyFloor;
   const wall = parseRoomMaterial({
     albedo: "#ffffff",
     roughness: 1.0,
     metalness: 0.0,
-    wallTexture: "concrete_wall_1",
+    wallTexture: tx.wall,
   });
   const floor = parseRoomMaterial({
     albedo: "#ffffff",
     roughness: 1.0,
     metalness: 0.0,
-    floorTexture: "concrete_floor_1",
+    floorTexture: tx.floor!,
   });
   const ceiling = parseRoomMaterial({
     albedo: "#ffffff",
     roughness: 1.0,
     metalness: 0.0,
-    ceilingTexture: "concrete_wall_1",
+    ceilingTexture: tx.ceiling!,
   });
   return [wall, wall, floor, ceiling, wall, wall];
 };
 
 export const getLobbyMaterials = (): THREE.Material[] => {
+  const tx = STRUCTURAL_TEXTURES.lobby;
   const wall = parseRoomMaterial({
     albedo: "#ffffff",
     roughness: 1.0,
     metalness: 0.0,
-    wallTexture: "beige_wall_1",
+    wallTexture: tx.wall,
   });
   const floor = parseRoomMaterial({
     albedo: "#ffffff",
     roughness: 1.0,
     metalness: 0.0,
-    floorTexture: "grey_cartago_tiles",
+    floorTexture: tx.floor!,
   });
   const ceiling = parseRoomMaterial({
     albedo: "#ffffff",
     roughness: 1.0,
     metalness: 0.0,
-    ceilingTexture: "concrete_wall_1",
+    ceilingTexture: tx.ceiling!,
   });
   return [wall, wall, floor, ceiling, wall, wall];
 };
 
 export const getStructuralConcreteMaterials = () => {
+  const tx = STRUCTURAL_TEXTURES.structure;
+  const fr = STRUCTURAL_TEXTURES.structureFrame;
   const wall = parseRoomMaterial({
     albedo: "#ffffff",
     roughness: 1.0,
     metalness: 0.0,
-    wallTexture: "concrete_wall_1",
+    wallTexture: tx.wall,
   });
   const floor = parseRoomMaterial({
     albedo: "#ffffff",
     roughness: 1.0,
     metalness: 0.0,
-    floorTexture: "concrete_floor_1",
+    floorTexture: tx.floor!,
   });
   const ceiling = parseRoomMaterial({
     albedo: "#ffffff",
     roughness: 1.0,
     metalness: 0.0,
-    ceilingTexture: "concrete_wall_1",
+    ceilingTexture: tx.ceiling!,
   });
   const frameMaterial = parseRoomMaterial({
     albedo: "#808080",
     roughness: 0.3,
     metalness: 0.8,
-    wallTexture: "concrete_wall_1",
+    wallTexture: fr.wall,
   });
-  const glassMaterial = new THREE.MeshPhysicalMaterial({
-    color: "#8090A0",
-    metalness: 0.9,
-    roughness: 0.05,
-    transmission: 0.95,
-    opacity: 0.2,
-    transparent: true,
-    ior: 1.5,
-    thickness: 0.1,
-    side: THREE.DoubleSide,
-  });
+  const glassMaterial = getGlassMaterial();
   return { frameMaterial, glassMaterial, ceiling, floor, wall };
 };
 
 export const getEmptyRoomMaterials = () => {
+  const tx = STRUCTURAL_TEXTURES.emptyRoom;
+  const fr = STRUCTURAL_TEXTURES.structureFrame;
   const frameMaterial = parseRoomMaterial({
     albedo: "#808080",
     roughness: 0.3,
     metalness: 0.8,
-    wallTexture: "concrete_wall_1",
+    wallTexture: fr.wall,
   });
   const wallMaterial = parseRoomMaterial({
     albedo: "#ffffff",
     roughness: 1.0,
     metalness: 0.0,
-    wallTexture: "concrete_wall_1",
+    wallTexture: tx.wall,
   });
   const floorMaterial = parseRoomMaterial({
     albedo: "#ffffff",
     roughness: 0.9,
     metalness: 0.0,
-    floorTexture: "concrete_wall_1",
+    floorTexture: tx.floor!,  // FIX: was concrete_wall_1 (bug), correct is concrete_floor_1
   });
-  const glassMaterial = new THREE.MeshPhysicalMaterial({
-    color: "#8090A0",
-    metalness: 0.9,
-    roughness: 0.05,
-    transmission: 0.95,
-    opacity: 0.2,
-    transparent: true,
-    ior: 1.5,
-    thickness: 0.1,
-    side: THREE.DoubleSide,
-  });
+  const glassMaterial = getGlassMaterial();
   return { frameMaterial, glassMaterial, wallMaterial, floorMaterial };
 };
 
 export const getStructuralShellMaterials = () => {
+  const tx = STRUCTURAL_TEXTURES.structure;
   const wallMaterial = parseRoomMaterial({
     albedo: "#ffffff",
     roughness: 1.0,
     metalness: 0.0,
-    wallTexture: "concrete_wall_1",
+    wallTexture: tx.wall,
   });
   const floorMaterial = parseRoomMaterial({
     albedo: "#ffffff",
     roughness: 1.0,
     metalness: 0.0,
-    floorTexture: "concrete_floor_1",
+    floorTexture: tx.floor!,
   });
   return { wallMaterial, floorMaterial };
 };

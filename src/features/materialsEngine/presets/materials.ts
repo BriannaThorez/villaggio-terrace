@@ -57,11 +57,31 @@ export interface TextureBundle {
 }
 
 interface AssetPaths {
+  /** Albedo/Diffuse variants */
   diff: string;
+  diff_512?: string;
+  diff_1k?: string;
+  diff_2k?: string;
+  /** ARM (AO, Roughness, Metalness) variants */
   arm: string;
+  arm_512?: string;
+  arm_1k?: string;
+  arm_2k?: string;
+  /** Normal variants */
   nor: string;
+  nor_512?: string;
+  nor_1k?: string;
+  nor_2k?: string;
+  /** Displacement variants */
   disp: string;
+  disp_512?: string;
+  disp_1k?: string;
+  disp_2k?: string;
+  /** Specular variants (optional) */
   spec?: string;
+  spec_512?: string;
+  spec_1k?: string;
+  spec_2k?: string;
 }
 
 // AUTO-DISCOVERY ENGINE (import.meta.glob)
@@ -89,11 +109,23 @@ const buildRegistryFromGlob = (glob: Record<string, string>): Record<string, Ass
       registry[folderName] = { diff: "", arm: "", nor: "", disp: "" };
     }
 
-    if (fileName.includes("_diff")) registry[folderName].diff = url;
-    else if (fileName.includes("_arm")) registry[folderName].arm = url;
-    else if (fileName.includes("_nor")) registry[folderName].nor = url;
-    else if (fileName.includes("_disp")) registry[folderName].disp = url;
-    else if (fileName.includes("_spec")) registry[folderName].spec = url;
+    // MAP TYPE & QUALITY PARSING:
+    // Pattern: [name]_[type]_[resolution].png or [name]_[type].png
+    const match = fileName.match(/_([a-z_]+)_(512|1k|2k|4k)\.png$/);
+    if (match) {
+      let [, type, res] = match;
+      if (type === "nor_gl") type = "nor"; // Normalize gl variant to standard nor key
+      
+      const key = (res === "4k") ? type : `${type}_${res}`;
+      (registry[folderName] as any)[key] = url;
+    } else {
+      // Fallback for files without resolution suffix (legacy/PBR)
+      if (fileName.includes("_diff")) registry[folderName].diff = url;
+      else if (fileName.includes("_arm"))  registry[folderName].arm  = url;
+      else if (fileName.includes("_nor"))  registry[folderName].nor  = url;
+      else if (fileName.includes("_disp")) registry[folderName].disp = url;
+      else if (fileName.includes("_spec")) registry[folderName].spec = url;
+    }
   });
 
   return registry;
@@ -131,17 +163,58 @@ if (import.meta.env.DEV) {
   printTextureRegistryAudit();
 }
 
-export const getTextureBundle = async (assetName: string): Promise<TextureBundle> => {
+import type { TextureQuality } from "../../settings/store/settingsStore";
+
+/**
+ * Selects the correct diff path for the requested quality tier.
+ * Falls back to the next available tier if the requested one wasn't generated.
+ */
+/**
+ * Selects the correct path for the requested map type and quality tier.
+ * Falls back to the next available tier if the requested one wasn't generated.
+ */
+const selectMapPath = (paths: AssetPaths, type: keyof AssetPaths, quality: TextureQuality): string => {
+  const p = paths as any;
+  const t = type as string;
+
+  switch (quality) {
+    case "low":    return p[`${t}_512`] ?? p[`${t}_1k`]  ?? p[`${t}_2k`] ?? p[t];
+    case "medium": return p[`${t}_1k`]  ?? p[`${t}_512`] ?? p[`${t}_2k`] ?? p[t];
+    case "high":   return p[`${t}_2k`]  ?? p[`${t}_1k`]  ?? p[t];
+    case "ultra":  return p[t];
+    default:       return p[t];
+  }
+};
+
+export const getTextureBundle = async (assetName: string, quality?: TextureQuality): Promise<TextureBundle> => {
     const paths = ASSET_REGISTRY[assetName];
     if (!paths) throw new Error(`Asset ${assetName} not found in registry`);
 
-    const diffuseMapLoad = loadTextureArgs(paths.diff, { name: `${assetName}-diff`, colorSpace: THREE.SRGBColorSpace });
-    const armMapLoad = loadTextureArgs(paths.arm, { name: `${assetName}-arm`, colorSpace: THREE.NoColorSpace });
-    const normalMapLoad = loadTextureArgs(paths.nor, { name: `${assetName}-normal`, colorSpace: THREE.NoColorSpace, flipY: false });
-    const dispMapLoad = loadTextureArgs(paths.disp, { name: `${assetName}-disp`, colorSpace: THREE.NoColorSpace });
+    // Resolve quality from settingsStore if not explicitly provided
+    let resolvedQuality: TextureQuality = quality ?? "ultra";
+    if (!quality) {
+      try {
+        // Dynamic import to avoid circular dependency at module init time
+        const { useSettingsStore } = await import("../../settings/store/settingsStore");
+        resolvedQuality = useSettingsStore.getState().textureQuality;
+      } catch {
+        resolvedQuality = "ultra";
+      }
+    }
 
-    const specMapLoad = paths.spec
-      ? loadTextureArgs(paths.spec, {
+    const diffPath = selectMapPath(paths, "diff", resolvedQuality);
+    const armPath  = selectMapPath(paths, "arm",  resolvedQuality);
+    const norPath  = selectMapPath(paths, "nor",  resolvedQuality);
+    const dispPath = selectMapPath(paths, "disp", resolvedQuality);
+
+    const diffuseMapLoad = loadTextureArgs(diffPath, { name: `${assetName}-diff`, colorSpace: THREE.SRGBColorSpace });
+    const armMapLoad     = loadTextureArgs(armPath,  { name: `${assetName}-arm`,  colorSpace: THREE.NoColorSpace });
+    const normalMapLoad  = loadTextureArgs(norPath,  { name: `${assetName}-normal`, colorSpace: THREE.NoColorSpace, flipY: false });
+    const dispMapLoad    = loadTextureArgs(dispPath, { name: `${assetName}-disp`, colorSpace: THREE.NoColorSpace });
+
+    const specPath = paths.spec ? selectMapPath(paths, "spec", resolvedQuality) : null;
+    const specMapLoad = specPath
+      ? loadTextureArgs(specPath, {
           name: `${assetName}-spec`,
           colorSpace: THREE.NoColorSpace,
         })

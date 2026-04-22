@@ -22,6 +22,7 @@ import themes from "../themes/palettes/color_palettes.json";
 import { useFinanceStore } from "../../finance/store/financeStore";
 import { useTenancyStore } from "../../tenancy/store/tenancyStore";
 import { useTimeStore } from "../../time/store/timeStore";
+import { SettingsPanel } from "../../settings/ui/SettingsPanel";
 
 const GUI_SPACING_SCALE = 0.85;
 const HEADER_VERTICAL_SCALE = 0.9;
@@ -79,6 +80,7 @@ export const MainToolbar = () => {
   const redo = useSimulationStore((state) => state.redo);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showMainMenu, setShowMainMenu] = useState(false);
+  const [showSettingsPanel, setShowSettingsPanel] = useState(false);
 
   const { resourceUsage, resourceCapacity, updateBalances } = useFinanceStore();
   const occupants = useTenancyStore(state => state.occupants);
@@ -253,6 +255,21 @@ export const MainToolbar = () => {
               <CheckmarkCircle01Icon size={14} className="text-primary" />
             )}
           </button>
+          {/* --- Settings separator & entry --- */}
+          <div style={{ height: "1px", background: "rgba(255,255,255,0.06)", margin: "4px 0" }} />
+          <button
+            onClick={() => {
+              setShowSettingsPanel(true);
+              setShowMainMenu(false);
+            }}
+            className="flex items-center gap-2 rounded-lg text-xs transition-all text-text/60 hover:text-text hover:bg-primary/5"
+            style={{
+              padding: `${GUI_SPACING_REM}rem ${GUI_SPACING_REM * 2}rem`,
+            }}
+          >
+            <Settings01Icon size={14} />
+            <span>Performance Settings</span>
+          </button>
         </div>
       )}
     </div>
@@ -285,6 +302,8 @@ export const MainToolbar = () => {
 
   return (
     <div className="absolute top-4 left-4 z-[60]">
+      <SettingsPanel isOpen={showSettingsPanel} onClose={() => setShowSettingsPanel(false)} />
+
       <div
         className="inline-flex items-center rounded-2xl border border-text/10 bg-background/90 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.4)]"
         style={{

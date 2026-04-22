@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { createTextureCache } from "./api";
 import type { TextureBundle } from "./presets/materials";
 import { getTextureBundle as getOriginalBundle } from "./presets/materials";
+import { useSettingsStore } from "../settings/store/settingsStore";
 
 export interface CameraMetrics {
   position: [number, number, number];
@@ -78,31 +79,29 @@ class TextureLODManager {
   }
 
   public getBundleProgressiveSync(assetName: string, fallbackColor: string = "#808080"): { progressive: TextureBundle, promise: Promise<TextureBundle> } {
-    const cached = this.memoryCache.get(assetName);
+    const quality = useSettingsStore.getState().textureQuality;
+    const cacheKey = `${assetName}:${quality}`;
+
+    const cached = this.memoryCache.get(cacheKey);
     if (cached) {
       return { progressive: cached, promise: Promise.resolve(cached) };
     }
 
     const placeholder = this.createSolidPlaceholder(fallbackColor);
 
-    if (!this.activeLoads.has(assetName)) {
-      const loadPromise = new Promise<TextureBundle>((resolve, reject) => {
-        setTimeout(() => {
-            getOriginalBundle(assetName)
-              .then(bundle => {
-                  this.memoryCache.set(assetName, bundle);
-                  resolve(bundle);
-              })
-              .catch(reject);
-        }, 50);
-      });
-      this.activeLoads.set(assetName, loadPromise);
+    if (!this.activeLoads.has(cacheKey)) {
+      const loadPromise = getOriginalBundle(assetName, quality)
+        .then(bundle => {
+          this.memoryCache.set(cacheKey, bundle);
+          return bundle;
+        });
+      this.activeLoads.set(cacheKey, loadPromise);
       loadPromise.finally(() => {
-        this.activeLoads.delete(assetName);
+        this.activeLoads.delete(cacheKey);
       });
     }
 
-    return { progressive: placeholder, promise: this.activeLoads.get(assetName)! };
+    return { progressive: placeholder, promise: this.activeLoads.get(cacheKey)! };
   }
 
 
@@ -142,18 +141,43 @@ class TextureLODManager {
   }
 
   /**
+   * PURGE POINT (Phase 2.4)
+   * Clears the entire texture cache. Used when the global texture quality
+   * setting changes to ensure the next load fetches the correct resolution tier.
+   */
+  public clearCache() {
+    this.memoryCache.clear();
+    console.debug(`[TextureLODHandler] memoryCache PURGED for quality shift`);
+  }
+
+  /**
    * INJECTION POINT (Phase 1.5.5)
    * Hand over pre-warmed bundles from the startup preloader or hover-warming
    * to the persistent memory cache.
    */
   public injectBundle(assetName: string, bundle: TextureBundle): void {
-    if (!this.memoryCache.has(assetName)) {
-      console.debug(`[TextureLODHandler] memoryCache WRITE: "${assetName}" (${bundle.isPlaceholder ? 'PLACEHOLDER' : '4K-bundle'})`);
-      this.memoryCache.set(assetName, bundle);
+    const quality = useSettingsStore.getState().textureQuality;
+    const cacheKey = `${assetName}:${quality}`;
+    
+    if (!this.memoryCache.has(cacheKey)) {
+      console.debug(`[TextureLODHandler] memoryCache WRITE: "${cacheKey}" (${bundle.isPlaceholder ? 'PLACEHOLDER' : 'high-fidelity'})`);
+      this.memoryCache.set(cacheKey, bundle);
     } else {
-      console.debug(`[TextureLODHandler] memoryCache HIT (dedup skip): "${assetName}"`);
+      console.debug(`[TextureLODHandler] memoryCache HIT (dedup skip): "${cacheKey}"`);
     }
   }
+
+  /**
+   * Deduplication gate for the initialization prewarmer.
+   * Returns true if a full (non-placeholder) bundle is already in the memory cache.
+   */
+  public hasCachedBundle(assetName: string): boolean {
+    const quality = useSettingsStore.getState().textureQuality;
+    const cacheKey = `${assetName}:${quality}`;
+    const cached = this.memoryCache.get(cacheKey);
+    return !!cached && !cached.isPlaceholder;
+  }
+
 
   /**
    * PROMOTION POINT (Phase 3)
@@ -162,10 +186,13 @@ class TextureLODManager {
    * UI can prioritize the high-fidelity asset over the placeholder.
    */
   public promoteToForeground(assetName: string): Promise<TextureBundle> {
-    const cached = this.memoryCache.get(assetName);
+    const quality = useSettingsStore.getState().textureQuality;
+    const cacheKey = `${assetName}:${quality}`;
+
+    const cached = this.memoryCache.get(cacheKey);
     if (cached) return Promise.resolve(cached);
 
-    const active = this.activeLoads.get(assetName);
+    const active = this.activeLoads.get(cacheKey);
     if (active) {
       return active;
     }

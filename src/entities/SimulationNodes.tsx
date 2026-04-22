@@ -33,8 +33,25 @@ import {
 } from "../engine/MaterialParser";
 import { EmptyFloorRoom } from "../features/roomPlacement/emptyFloor/EmptyFloorRoom";
 import { LobbyRoom } from "../features/roomPlacement/lobby/LobbyRoom";
+import { HotelCapacityIndicator } from "../features/hotel/components/HotelCapacityIndicator";
+import { RoomWarningOverlay } from "../features/hotel/components/RoomWarningOverlay";
 
 type RenderShape = StructuralShape<SimulationNode>;
+
+/**
+ * MODULE-LEVEL MATERIAL CONSTANTS
+ * getStructuralShellMaterials() and getStructuralConcreteMaterials() were previously
+ * called inside the SimulationNodes render body — triggering a material lookup per
+ * structure node on every re-render (every room placement). Hoisting to module level
+ * guarantees they are resolved exactly once, at module load time, from roomMaterialCache.
+ */
+const _structuralShell = getStructuralShellMaterials();
+const SCAFFOLD_WALL_MAT = _structuralShell.wallMaterial;
+const SCAFFOLD_FLOOR_MAT = _structuralShell.floorMaterial;
+// Set polygonOffset once at module level — prevents z-fighting with rooms above structure
+SCAFFOLD_WALL_MAT.polygonOffset = true;
+SCAFFOLD_WALL_MAT.polygonOffsetFactor = 1;
+SCAFFOLD_WALL_MAT.polygonOffsetUnits = 1;
 
 const RotateHandle = ({ rotation }: { rotation: number }) => {
   const [hovered, setHovered] = useState(false);
@@ -716,6 +733,14 @@ export const SimulationNodes = () => {
               <SelectionIndicator shape={shape} />
             )}
 
+            {shape.metadataId === "hotel-reception-desk" && (
+              <HotelCapacityIndicator deskId={shape.id} />
+            )}
+            
+            {shape.metadataId === "hotel-room-basic" && (
+              <RoomWarningOverlay shape={shape} />
+            )}
+
             {/* Text Rendering */}
             {(shape.text || editingId === shape.id) && (
               <Text
@@ -919,13 +944,9 @@ export const SimulationNodes = () => {
                     baseColor = roomAbove.themeColors[themeName] || baseColor;
                   }
                 }
-                const {
-                  wallMaterial: scaffoldWallMat,
-                  floorMaterial: scaffoldFloorMat,
-                } = getStructuralShellMaterials();
-                scaffoldWallMat.polygonOffset = true;
-                scaffoldWallMat.polygonOffsetFactor = 1;
-                scaffoldWallMat.polygonOffsetUnits = 1;
+                // Use module-level material constants — resolved once at load time from roomMaterialCache
+                const scaffoldWallMat = SCAFFOLD_WALL_MAT;
+                const scaffoldFloorMat = SCAFFOLD_FLOOR_MAT;
 
                 return (
                   <group

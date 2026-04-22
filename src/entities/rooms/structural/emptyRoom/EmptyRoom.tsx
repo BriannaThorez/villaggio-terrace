@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { parseRoomMaterial } from "@/src/engine/MaterialParser";
 import { RoomMeshCSG } from "../../visuals/RoomMeshCSG";
 import { generateWindowCutouts } from "../../visuals/WindowGenerator";
+import { STRUCTURAL_TEXTURES } from "@/src/entities/rooms/structuralTextures";
 
 interface EmptyRoomVisualsProps {
   width: number;
@@ -30,23 +31,25 @@ export const EmptyRoom: React.FC<EmptyRoomVisualsProps> = ({
   const verticalCenteringOffset = 0.275;
 
   const { frameMaterial, glassMaterial, roomShellMaterials } = useMemo(() => {
+    const tx = STRUCTURAL_TEXTURES.emptyRoom;
+    const fr = STRUCTURAL_TEXTURES.structureFrame;
     const frameMaterial = parseRoomMaterial({
       albedo: "#808080",
       roughness: 0.3,
       metalness: 0.8,
-      wallTexture: "concrete_wall_1",
+      wallTexture: fr.wall,
     });
     const wallMaterial = parseRoomMaterial({
       albedo: "#ffffff",
       roughness: 1.0,
       metalness: 0.0,
-      wallTexture: "concrete_wall_1",
+      wallTexture: tx.wall,
     });
     const floorMaterial = parseRoomMaterial({
       albedo: "#ffffff",
       roughness: 0.9,
       metalness: 0.0,
-      floorTexture: "concrete_wall_1",
+      floorTexture: tx.floor!,  // FIX: was "concrete_wall_1" (bug) — now concrete_floor_1 via SOT
     });
     const glassMaterial = new THREE.MeshPhysicalMaterial({
       color: "#8090A0",

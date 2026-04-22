@@ -23,6 +23,8 @@ import {
   getIconComponent,
 } from "../../../shared/utils/metadataUtils";
 import { useHoverPreloader } from "../../assetPreloader/hooks/useHoverPreloader";
+import { useCategoryPreloader } from "../../assetPreloader/hooks/useCategoryPreloader";
+
 
 const TOOL_ALIASES: Record<string, string> = {
   studio: "residential",
@@ -216,6 +218,8 @@ export const BuildToolbar = () => {
   const activeTool = useSimulationStore((state) => state.activeTool);
   const activeModuleId = useSimulationStore((state) => state.activeModuleId);
   const { warmForModule } = useHoverPreloader();
+  const { warmForCategory } = useCategoryPreloader();
+
 
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [activeSizeTab, setActiveSizeTab] = useState<Record<string, string>>(
@@ -310,7 +314,13 @@ export const BuildToolbar = () => {
   }, [activeTool, activeModuleId, categories, setActiveModuleId]);
 
   const handleCategoryClick = (cat: BuildCategory) => {
+    // E-HOVER-CATEGORY: Batch-warm all textures for this category before tools activate
+    if ((cat as any).subTypes && (cat as any).subTypes.length > 0) {
+      warmForCategory(cat.id, (cat as any).subTypes);
+    }
+
     if (cat.subTypes && cat.subTypes.length > 0) {
+
       const sizeTabs = cat.sizes && cat.sizes.length > 0 ? cat.sizes : [];
       const preferredSize = activeSizeTab[cat.id] || sizeTabs[0] || "";
       const sizeFiltered = preferredSize
